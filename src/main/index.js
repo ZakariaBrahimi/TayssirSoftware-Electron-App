@@ -1,8 +1,20 @@
-import { app, shell, BrowserWindow, ipcMain, Notification } from 'electron'
+/* eslint-disable prettier/prettier */
+import { app, shell, BrowserWindow} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-
+const {ipcMain, fs} = require('electron')
+const createNewProduct = () => {
+    ipcMain.on('newProductData', (event, newProductData) =>{
+        console.log(newProductData)
+        fs.writeFile("C:\\Users\\HUAWEI\\Desktop\\motivation.txt", 'Content_For_Writing', (error)=>{
+            if(!error){console.log('there is an error created')}
+            else{
+                console.log(error)
+            }
+        });
+    })
+}
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -16,7 +28,8 @@ function createWindow() {
       sandbox: false
     }
   })
-
+  
+  
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -34,12 +47,11 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
-const NOTIFICATION_TITLE = 'Basic Notification'
-const NOTIFICATION_BODY = 'Notification from the Main process'
 
-function showNotification () {
-  new Notification({ title: NOTIFICATION_TITLE, body: NOTIFICATION_BODY }).show()
-}
+
+
+
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -58,12 +70,14 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
-
+  createNewProduct()
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -77,3 +91,17 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
+
+
+// Electron app consists of of two process:
+// 1. Main Process: - the entry point for the app
+//                  - runs in a Node.js environment
+//                  - is responsible for managing the lifecycle of the application
+//                  - and interacting with the operating system
+// 2. Renderer Process: - handle the user interface
+
+// Inter-Process Communication (IPC):
+//      - Electron provides a mechanism called IPC to facilitate communication between the main process and renderer processes.
+//      - IPC allows you to send messages, transfer data, and trigger actions between different parts of your application.
+//      - ipcRenderer.send('message', 'Hello from renderer process!') ===>> send a message with the channel name 'message' and the payload 'Hello from renderer process!' to the main process.
+//      - ipcMain.on('message', (event, message) => {console.log(message)}) ===> adds an event listener to the ipcMain module to handle messages on the 'message' channel from renderer processes.    

@@ -13,8 +13,23 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import Barcode from 'react-barcode';
+import { useState } from "react";
+// import { ipcRenderer } from "electron";
+// const {ipcRenderer} = require("electron")
 
 export default function AddProduct() {
+
+    const [newProductData, setNewProductData] = useState({
+        name: '',
+        quantity: 0,
+        purchasing_price: 0,
+        selling_price: 0,
+    })
+    const createNewProduct = (event)=>{
+        event.preventDefault()
+        // console.log(newProductData)
+        window.products.addNewProduct('newProductData', newProductData)
+    }
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -28,7 +43,7 @@ export default function AddProduct() {
             Make a new product here. Click save when you are done.
           </SheetDescription>
         </SheetHeader>
-        <div className="grid gap-4 py-4">
+        <form onSubmit={createNewProduct} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             
           {/* <Barcode format='MSI' value="HELLOWORLD" /> */}
@@ -43,32 +58,32 @@ export default function AddProduct() {
             <Label htmlFor="name" className="text-right">
               Name
             </Label>
-            <Input type='text' id="name" className="col-span-3" />
+            <Input value={newProductData?.name} onChange={(e)=>setNewProductData(prevState=>({...prevState, name: e.target.value }))} type='text' id="name" className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="purchasing_price" className="text-right">
             Purchasing price
             </Label>
-            <Input type="number" id="purchasing_price" className="col-span-3" />
+            <Input value={newProductData?.purchasing_price} onChange={(e)=>setNewProductData(prevState=>({...prevState, purchasing_price: e.target.value }))} type="number" id="purchasing_price" className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="selling_price" className="text-right">
             Selling price
             </Label>
-            <Input type="number" id="selling_price" className="col-span-3" />
+            <Input value={newProductData?.selling_price} onChange={(e)=>setNewProductData(prevState=>({...prevState, selling_price: e.target.value }))} type="number" id="selling_price" className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="quantity" className="text-right">
               Quantity
             </Label>
-            <Input type="number" id="quantity" className="col-span-1" />
+            <Input value={newProductData?.quantity} onChange={(e)=>setNewProductData(prevState=>({...prevState, quantity: e.target.value }))} type="number" id="quantity" className="col-span-1" />
           </div>
-        </div>
         <SheetFooter>
           <SheetClose asChild>
             <Button type="submit">Save changes</Button>
           </SheetClose>
         </SheetFooter>
+        </form>
       </SheetContent>
     </Sheet>
   )
