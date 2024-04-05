@@ -28,7 +28,7 @@ export default function AddProduct() {
     const createNewProduct = (event)=>{
         event.preventDefault()
         // console.log(newProductData)
-        window.products.addNewProduct('newProductData', newProductData)
+        window.products.addNewProduct.send('newProductData', newProductData)
     }
   return (
     <Sheet>
