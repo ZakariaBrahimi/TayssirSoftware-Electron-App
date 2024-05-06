@@ -4,15 +4,12 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 const {ipcMain, fs} = require('electron')
+import { addRxPlugin } from 'rxdb';
+import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
+addRxPlugin(RxDBDevModePlugin);
 const createNewProduct = () => {
     ipcMain.on('newProductData', (event, newProductData) =>{
-        console.log(newProductData)
-        fs.writeFile("C:\\Users\\HUAWEI\\Desktop\\motivation.txt", 'Content_For_Writing', (error)=>{
-            if(!error){console.log('there is an error created')}
-            else{
-                console.log(error)
-            }
-        });
+      
     })
 }
 function createWindow() {

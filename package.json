@@ -28,6 +28,8 @@
     "electron-updater": "^6.1.7",
     "lucide-react": "^0.363.0",
     "react-barcode": "^1.5.1",
+    "rxdb": "^15.19.0",
+    "rxjs": "^7.8.1",
     "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {
