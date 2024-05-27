@@ -15,6 +15,8 @@ export default defineConfig({
       alias: {
         '@renderer': resolve('src/renderer/src'),
         "@": resolve(__dirname, "./src"),
+        // '@components': './src/renderer/src/components'
+        '@shadcn-components': resolve(__dirname, "src/renderer/src/components"),
       }
     },
     plugins: [react()]

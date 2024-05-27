@@ -3,15 +3,11 @@ import { app, shell, BrowserWindow} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-const {ipcMain, fs} = require('electron')
-import { addRxPlugin } from 'rxdb';
-import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
-addRxPlugin(RxDBDevModePlugin);
-const createNewProduct = () => {
-    ipcMain.on('newProductData', (event, newProductData) =>{
-      
-    })
-}
+// const db = require("../database/models");
+const db = require("../database/models");
+// const productControlers = require('/../src/controlers/productControler')
+const productControlers = require(__dirname + '/../../src/controlers/productControler')
+
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -28,6 +24,7 @@ function createWindow() {
   
   
   mainWindow.on('ready-to-show', () => {
+    mainWindow.webContents.openDevTools()
     mainWindow.show()
   })
 
@@ -43,6 +40,14 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  // Connecting Database
+  db.sequelize.sync({alter:true}).then(()=>{
+    console.log('connection established')
+  })
+  
+  productControlers.createNewProduct()
+  productControlers.getProducts()
+  
 }
 
 
@@ -63,11 +68,14 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
 
+  // ipcMain.on('newProductData', (event, newProductData) =>{
+  //   console.log('hello', newProductData)
+
+  // })
+  
   createWindow()
-  createNewProduct()
+
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
