@@ -1,7 +1,7 @@
 {
   "development": {
     
-    "storage": "src/tayssir.db",
+    "storage": "src/database/tayssir.db",
     
     "dialect": "sqlite"
   },

@@ -26,6 +26,7 @@ const createNewProduct = () => {
     });
 };
 
+
 // Function to get the list of products
 const getProducts = () => {
     ipcMain.on('getProducts', async (event) => {
@@ -47,5 +48,33 @@ const getProducts = () => {
     });
 };
 
+// Function to delete a product by ID
+const deleteProductById = () => {
+    ipcMain.on('deleteProductById', async (event, productId) => {
+        console.log('Deleting product with ID:', productId);
+
+        try {
+            // This is soft-deletion, if you want hard-deletion add {force:true} to destroy options
+            const result = await db.Product.destroy({
+                where: { id: productId }
+            });
+            if (result) {
+                console.log('Product deleted successfully');
+                // Fetch all products to send back to the renderer process
+                const products = await db.Product.findAll();
+                event.reply('deleteProductById:response', { success: true, products: products });
+            } else {
+                console.log('Product not found');
+                event.reply('deleteProductById:response', { success: false, error: 'Product not found' });
+            }
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            event.reply('deleteProductById:response', { success: false, error: error.message });
+        }
+    });
+};
+
+
+
 // Export the functions to handle IPC events
-module.exports = { createNewProduct, getProducts };
+module.exports = { createNewProduct, getProducts, deleteProductById };

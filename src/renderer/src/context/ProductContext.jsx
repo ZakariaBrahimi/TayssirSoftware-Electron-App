@@ -32,11 +32,12 @@ export const ProductProvider = ({ children }) => {
     event.preventDefault()
     console.log('before everything')
     // Sending data to the main process on 'createNewProduct' channel
+    // TODO: should I do once() instead of send() !!!
     window.electron.ipcRenderer.send('createNewProduct', newProductData)
     console.log('sent done')
-    // Listen for the response from the main process
-    window.electron.ipcRenderer.on('createNewProduct:response', (event, response) => {
-      console.log('response recieved')
+    // Listen for the response from the main process using 'once' to ensure it's handled only once
+    window.electron.ipcRenderer.once('createNewProduct:response', (event, response) => {
+      console.log('response received')
       if (response.success) {
         console.log('success')
         setProducts(response.products )
@@ -49,7 +50,25 @@ export const ProductProvider = ({ children }) => {
     })
   }
   
-  const contextData = {getProducts, products, setProducts, createNewProduct, setNewProductData}
+  // Function to Delete a Product from Database
+  const deleteProductById = (productID)=>{
+    // Sending product Id to the Main Process on -deleteProductById- channel
+    window.electron.ipcRenderer.send('deleteProductById', productID)
+    // Listen for the response from the main process
+    // Memory Leaks: Use once for the response listener to prevent memory leaks. ==> Adds a one time listener function for the event. This listener is invoked only the next time a message is sent to channel, after which it is removed
+    window.electron.ipcRenderer.once('deleteProductById:response', (event, response)=>{
+      if(response.success){
+        console.log('Product deleted successfully', response.products)
+        setProducts(response.products)
+        
+        // TODO: push success notification
+      }else{
+        console.log( response.error)
+        // TODO: push error notification
+      }
+    })
+  }
+  const contextData = {getProducts, products, setProducts, createNewProduct, setNewProductData, deleteProductById}
   return (
     <ProductContext.Provider value={contextData}>
       {children}

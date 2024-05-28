@@ -3,10 +3,10 @@ import { app, shell, BrowserWindow} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-// const db = require("../database/models");
-const db = require("../database/models");
+const {ipcMain} = require('electron')
+const db = require("../../src/database/models");
 // const productControlers = require('/../src/controlers/productControler')
-const productControlers = require(__dirname + '/../../src/controlers/productControler')
+const productControlers = require(__dirname + '/../../src/database/controlers/productControler')
 
 function createWindow() {
   // Create the browser window.
@@ -47,6 +47,7 @@ function createWindow() {
   
   productControlers.createNewProduct()
   productControlers.getProducts()
+  productControlers.deleteProductById()
   
 }
 
