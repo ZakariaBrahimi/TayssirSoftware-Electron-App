@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import { useEffect, useContext, useState } from 'react'
+import { useEffect, useContext } from 'react'
 import ProductContext from '../context/ProductContext'
 import {
   Dialog,
@@ -12,10 +12,12 @@ import {
   DialogFooter
 } from '@shadcn-components/ui/dialog'
 import { Button } from '@shadcn-components/ui/button'
-const ProductsList = () => {
-  const { getProducts, products, deleteProductById } = useContext(ProductContext)
-  // const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+import { useToast } from '@shadcn-components/ui/use-toast'
+import EditProduct from './EditProduct'
 
+const ProductsList = () => {
+  const { getProducts, products, deleteProductById, updateProductById, updateData, setUpdateData } = useContext(ProductContext)
+  const { toast } = useToast()
   useEffect(() => {
     getProducts()
   }, [])
@@ -138,16 +140,16 @@ const ProductsList = () => {
                         <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                           {product?.quantity}
                         </td>
-
+                        
                         <td className="px-4 py-4 text-sm whitespace-nowrap">
                           <div className="flex items-center gap-x-6">
-                            <button className="text-gray-500 transition-colors duration-200 dark:hover:text-indigo-500 dark:text-gray-300 hover:text-indigo-500 focus:outline-none">
-                              Edit
-                            </button>
+                            
+                            <EditProduct product={product} updateProductByIdFunc={updateProductById} updateData={updateData} setUpdateData={setUpdateData}/>
                             <Dialog>
-                              <DialogTrigger className="text-red-500 transition-colors duration-200 hover:text-red-600 focus:outline-none">
+                              <DialogTrigger className="text-red-500 font-semibold transition-colors duration-200 hover:text-red-600 focus:outline-none">
                                 Delete
                               </DialogTrigger>
+                              
                               <DialogContent>
                                 <DialogHeader>
                                   <DialogTitle>Are you absolutely sure?</DialogTitle>
@@ -159,7 +161,13 @@ const ProductsList = () => {
                                 <DialogFooter>
                                   <Button
                                     variant="destructive"
-                                    onClick={() => deleteProductById(product?.id)} // Use onClick here
+                                    onClick={() => {
+                                      deleteProductById(product?.id)
+                                      toast({
+                                        description: 'Product Deleted successfully',
+                                        variant: "destructive"
+                                      })
+                                    }}
                                   >
                                     Delete
                                   </Button>

@@ -1,6 +1,6 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
 import { createContext, useState } from 'react';
-
 
 const ProductContext = createContext()
 export default ProductContext;
@@ -60,7 +60,7 @@ export const ProductProvider = ({ children }) => {
       if(response.success){
         console.log('Product deleted successfully', response.products)
         setProducts(response.products)
-        
+
         // TODO: push success notification
       }else{
         console.log( response.error)
@@ -68,7 +68,23 @@ export const ProductProvider = ({ children }) => {
       }
     })
   }
-  const contextData = {getProducts, products, setProducts, createNewProduct, setNewProductData, deleteProductById}
+
+  const [updateData, setUpdateData] = useState([])
+  // Function to Update a product data by ID
+  const updateProductById = (productId, updateData) => {
+    window.electron.ipcRenderer.send('updateProductById', { productId, updateData });
+
+    window.electron.ipcRenderer.once('updateProductById:response', (event, response) => {
+        if (response.success) {
+            console.log('Product updated successfully:', response.products);
+            // Handle success (e.g., update UI, show notification)
+            setProducts(response.products) // FIXME: should not updates all products (it could be 10,000 products, it will be problem to update)
+          } else {
+            console.error('Error:', response.error);
+        }
+    });
+};
+  const contextData = {getProducts, products, setProducts, createNewProduct, setNewProductData, deleteProductById, updateProductById, setUpdateData, updateData}
   return (
     <ProductContext.Provider value={contextData}>
       {children}

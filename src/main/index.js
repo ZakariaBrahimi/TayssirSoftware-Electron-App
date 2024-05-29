@@ -48,6 +48,7 @@ function createWindow() {
   productControlers.createNewProduct()
   productControlers.getProducts()
   productControlers.deleteProductById()
+  productControlers.updateProductById()
   
 }
 

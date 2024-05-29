@@ -73,8 +73,36 @@ const deleteProductById = () => {
         }
     });
 };
+// Function to Update a product data by ID
+const updateProductById = () => {
+    ipcMain.on('updateProductById', async (event, { productId, updateData }) => {
+        console.log('Updating product with ID:', productId, 'with data:', updateData);
+
+        try {
+            const [updated] = await db.Product.update(updateData, {
+                where: { id: productId }
+            });
+
+            if (updated) {
+                console.log('Product updated successfully');
+                // Fetch the updated product to send back to the renderer process
+                // const updatedProduct = await db.Product.findByPk(productId);
+                // event.reply('updateProductById:response', { success: true, product: updatedProduct });
+                // Fetch the updated products to send back to the renderer process
+                const updatedProducts = await db.Product.findAll();
+                event.reply('updateProductById:response', { success: true, products: updatedProducts });
+            } else {
+                console.log('Product not found or no changes made');
+                event.reply('updateProductById:response', { success: false, error: 'Product not found or no changes made' });
+            }
+        } catch (error) {
+            console.error('Error updating product:', error);
+            event.reply('updateProductById:response', { success: false, error: error.message });
+        }
+    });
+};
 
 
 
 // Export the functions to handle IPC events
-module.exports = { createNewProduct, getProducts, deleteProductById };
+module.exports = { createNewProduct, getProducts, deleteProductById, updateProductById };

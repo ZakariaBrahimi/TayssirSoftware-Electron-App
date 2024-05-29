@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable prettier/prettier */
 "use client";
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
@@ -26,7 +28,9 @@ const toastVariants = cva(
       variant: {
         default: "border bg-background text-foreground",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive font-semibold group border-destructive bg-destructive text-destructive-foreground",
+        success:
+          "destructive font-semibold group border-gray-300 bg-green-600 text-white",
       },
     },
     defaultVariants: {
