@@ -52,7 +52,7 @@ const EditeProduct = ({updateProductByIdFunc, setUpdateData, updateData, product
               Name
             </Label>
             <Input
-              required
+              
               type="text"
               id="product_name"
               defaultValue={product?.name}
