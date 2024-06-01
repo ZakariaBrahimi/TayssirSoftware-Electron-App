@@ -17,7 +17,7 @@ import {
   import { useToast } from '@shadcn-components/ui/use-toast'
 import { useState } from 'react'
 
-const EditeProduct = ({updateProductByIdFunc, setUpdateData, updateData, product}) => {
+const EditProduct = ({updateProductByIdFunc, setUpdateData, updateData, product}) => {
   const { toast } = useToast()
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const handleSubmit = (event)=>{
@@ -38,7 +38,7 @@ const EditeProduct = ({updateProductByIdFunc, setUpdateData, updateData, product
       </DialogTrigger>
       <DialogContent className="sm:min-w-[800px]">
         <DialogHeader>
-          <DialogTitle> Product Details</DialogTitle>
+          <DialogTitle>Product Details</DialogTitle>
           <DialogDescription>
             Make changes to this profile here. Click save when you are done.
           </DialogDescription>
@@ -116,4 +116,4 @@ const EditeProduct = ({updateProductByIdFunc, setUpdateData, updateData, product
   )
 }
 
-export default EditeProduct
+export default EditProduct
