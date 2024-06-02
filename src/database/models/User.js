@@ -5,7 +5,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Product extends Model {
+  class User extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -15,16 +15,15 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  Product.init({
-    name: DataTypes.STRING,
-    quantity: DataTypes.INTEGER,
-    purchasing_price: DataTypes.INTEGER,
-    selling_price: DataTypes.INTEGER,
-    // categoty:
+  User.init({
+    fullname: DataTypes.STRING,
+    email: DataTypes.INTEGER,
+    username: DataTypes.INTEGER,
+    password: DataTypes.STRING,
   }, {
     sequelize,
-    modelName: 'Product',
+    modelName: 'User',
     // FIXME: when I change model name, sequelize creates a new table , instead of updating only the model name
   });
-  return Product;
+  return User;
 };

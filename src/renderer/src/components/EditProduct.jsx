@@ -26,8 +26,15 @@ const EditProduct = ({updateProductByIdFunc, setUpdateData, updateData, product}
     setIsDialogOpen(false); // Close the dialog after successful update
     toast({description: "Product updated successfully.", variant: "success"})
   }
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setUpdateData((prevData) => ({ ...prevData, [name]: value }));
+  };
+  const handleKeyDown = (event) => {
+    event.stopPropagation();
+  };
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog  open={isDialogOpen} onOpenChange={setIsDialogOpen} onKeyDown={handleKeyDown}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
@@ -56,13 +63,11 @@ const EditProduct = ({updateProductByIdFunc, setUpdateData, updateData, product}
               type="text"
               id="product_name"
               defaultValue={product?.name}
-              onChange={(event) =>
-                setUpdateData((prevData) => ({ ...prevData, name: event.target.value }))
-              }
+              onChange={handleInputChange}
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="quantity" className="text-right">
               Quantity
             </Label>
@@ -103,7 +108,7 @@ const EditProduct = ({updateProductByIdFunc, setUpdateData, updateData, product}
               }
               className="col-span-3"
             />
-          </div>
+          </div> */}
 
           <DialogFooter>
             <Button className="mt-4" type="submit">

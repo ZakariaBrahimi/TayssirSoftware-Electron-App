@@ -4,6 +4,7 @@ import Inventory from "./components/Inventory.jsx"
 import SideNavbar from "./components/SideNavbar.jsx"
 import { Toaster } from "@shadcn-components/ui/toaster"
 import ProductContext from "./context/ProductContext"
+import  Dashboard  from "./components/Dashboard"
 
 function App() {
   const { getProducts } = useContext(ProductContext)
@@ -13,8 +14,9 @@ function App() {
   }, [])
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <SideNavbar/>
-      <Inventory/>
+      {/* <SideNavbar/>
+      <Inventory/> */}
+      <Dashboard/>
       <Toaster />
       </div>
   )
