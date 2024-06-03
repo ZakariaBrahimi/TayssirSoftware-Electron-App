@@ -1,12 +1,14 @@
 /* eslint-disable prettier/prettier */
 
 /* eslint-disable prettier/prettier */
-import AddProduct from './AddProduct'
+import { Link } from 'react-router-dom'
+import AddProduct from './AddProduct3'
 import  DataTable from './table/DataTable'
+import { buttonVariants } from "@shadcn-components/ui/button"
 
 const Inventory = () => {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full">
       <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
         <button
           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 w-9 shrink-0 md:hidden"
@@ -90,7 +92,14 @@ const Inventory = () => {
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold md:text-2xl">Inventory</h1>
-          <AddProduct />
+          {/* <AddProduct /> */}
+          {/* <Button
+          className="inline-flex items-center hover:text-white justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 mt-4"
+          variant="outline"
+        >
+          Add Product
+        </Button> */}
+        <Link to='add-new-product' className={'inline-flex items-center hover:text-white justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 mt-4'}>Add Product</Link>
         </div>
           <DataTable/>
       </main>

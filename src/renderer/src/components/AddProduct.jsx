@@ -1,120 +1,517 @@
 /* eslint-disable prettier/prettier */
-import { Button } from '@shadcn-components/ui/button'
-import { Input } from '@shadcn-components/ui/input'
-import { Label } from '@shadcn-components/ui/label'
+import { Link } from 'react'
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger
-} from '@shadcn-components/ui/sheet'
-import Barcode from 'react-barcode'
-import { useContext } from 'react'
-import ProductContext from '../context/ProductContext';
+  ChevronLeft,
+  Home,
+  LineChart,
+  Package,
+  Package2,
+  PanelLeft,
+  PlusCircle,
+  Search,
+  Settings,
+  ShoppingCart,
+  Upload,
+  Users2,
+} from "lucide-react"
 
-export default function AddProduct() {
-  
-  const {createNewProduct, newProductData, setNewProductData } = useContext(ProductContext)
-  
+import { Badge } from "@shadcn-components/ui/badge"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@shadcn-components/ui/breadcrumb"
+import { Button } from "@shadcn-components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@shadcn-components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@shadcn-components/ui/dropdown-menu"
+import { Input } from "@shadcn-components/ui/input"
+import { Label } from "@shadcn-components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@shadcn-components/ui/select"
+import { Sheet, SheetContent, SheetTrigger } from "@shadcn-components/ui/sheet"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@shadcn-components/ui/table"
+import { Textarea } from "@shadcn-components/ui/textarea"
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@shadcn-components/ui/toggle-group"
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipTrigger,
+// } from "@shadcn-components/ui/tooltip"
+
+const Add = () => {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          className="inline-flex items-center hover:text-white justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 mt-4"
-          variant="outline"
-        >
-          Add Product
-        </Button>
-      </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Add a New Product</SheetTitle>
-          <SheetDescription>
-            {/* Make changes to your profile here. Click save when re done. */}
-            Make a new product here. Click save when you are done.
-          </SheetDescription>
-        </SheetHeader>
-        <form onSubmit={createNewProduct} className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            {/* <Barcode format='MSI' value="HELLOWORLD" /> */}
-
-            <Label htmlFor="code_bar" className="text-right">
-              Code Bar
-            </Label>
-            <Barcode value="GHFGHFG" format="CODE128" width={2} height={100} />
-            {/* <Input type='number' id="code_bar" className="col-span-3" /> */}
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
+    <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="outline" className="sm:hidden">
+                <PanelLeft className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="sm:max-w-xs">
+              <nav className="grid gap-6 text-lg font-medium">
+                <Link
+                  to={"#"}
+                  className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                >
+                  <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
+                  <span className="sr-only">Acme Inc</span>
+                </Link>
+                <Link
+                  to={"#"}
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <Home className="h-5 w-5" />
+                  Dashboard
+                </Link>
+                <Link
+                  to={"#"}
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Orders
+                </Link>
+                <Link
+                  to={"#"}
+                  className="flex items-center gap-4 px-2.5 text-foreground"
+                >
+                  <Package className="h-5 w-5" />
+                  Products
+                </Link>
+                <Link
+                  to={"#"}
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <Users2 className="h-5 w-5" />
+                  Customers
+                </Link>
+                <Link
+                  to={"#"}
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <LineChart className="h-5 w-5" />
+                  Settings
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
+          <Breadcrumb className="hidden md:flex">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <a href="/">Dashboard</a>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <a href={"/"}>Products</a>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Edit Product</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              value={newProductData?.name}
-              onChange={(e) =>
-                setNewProductData((prevState) => ({ ...prevState, name: e.target.value }))
-              }
-              type="text"
-              id="name"
-              required
-              className="col-span-3"
+              type="search"
+              placeholder="Search..."
+              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="purchasing_price" className="text-right">
-              Purchasing price
-            </Label>
-            <Input
-              value={newProductData?.purchasing_price}
-              onChange={(e) =>
-                setNewProductData((prevState) => ({
-                  ...prevState,
-                  purchasing_price: e.target.value
-                }))
-              }
-              type="number"
-              id="purchasing_price"
-              className="col-span-3"
-            />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="overflow-hidden rounded-full"
+              >
+                <img
+                  src="/placeholder-user.jpg"
+                  width={36}
+                  height={36}
+                  alt="Avatar"
+                  className="overflow-hidden rounded-full"
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="icon" className="h-7 w-7">
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Back</span>
+              </Button>
+              <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
+                Pro Controller
+              </h1>
+              <Badge variant="outline" className="ml-auto sm:ml-0">
+                In stock
+              </Badge>
+              <div className="hidden items-center gap-2 md:ml-auto md:flex">
+                <Button variant="outline" size="sm">
+                  Discard
+                </Button>
+                <Button size="sm">Save Product</Button>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
+              <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+                <Card x-chunk="dashboard-07-chunk-0">
+                  <CardHeader>
+                    <CardTitle>Product Details</CardTitle>
+                    <CardDescription>
+                      Lipsum dolor sit amet, consectetur adipiscing elit
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-6">
+                      <div className="grid gap-3">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                          id="name"
+                          type="text"
+                          className="w-full"
+                          defaultValue="Gamer Gear Pro Controller"
+                        />
+                      </div>
+                      <div className="grid gap-3">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl nec ultricies ultricies, nunc nisl ultricies nunc, nec ultricies nunc nisl nec nunc."
+                          className="min-h-32"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card x-chunk="dashboard-07-chunk-1">
+                  <CardHeader>
+                    <CardTitle>Stock</CardTitle>
+                    <CardDescription>
+                      Lipsum dolor sit amet, consectetur adipiscing elit
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">SKU</TableHead>
+                          <TableHead>Stock</TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead className="w-[100px]">Size</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            GGPC-001
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="stock-1" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="stock-1"
+                              type="number"
+                              defaultValue="100"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="price-1" className="sr-only">
+                              Price
+                            </Label>
+                            <Input
+                              id="price-1"
+                              type="number"
+                              defaultValue="99.99"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ToggleGroup
+                              type="single"
+                              defaultValue="s"
+                              variant="outline"
+                            >
+                              <ToggleGroupItem value="s">S</ToggleGroupItem>
+                              <ToggleGroupItem value="m">M</ToggleGroupItem>
+                              <ToggleGroupItem value="l">L</ToggleGroupItem>
+                            </ToggleGroup>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            GGPC-002
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="stock-2" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="stock-2"
+                              type="number"
+                              defaultValue="143"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="price-2" className="sr-only">
+                              Price
+                            </Label>
+                            <Input
+                              id="price-2"
+                              type="number"
+                              defaultValue="99.99"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ToggleGroup
+                              type="single"
+                              defaultValue="m"
+                              variant="outline"
+                            >
+                              <ToggleGroupItem value="s">S</ToggleGroupItem>
+                              <ToggleGroupItem value="m">M</ToggleGroupItem>
+                              <ToggleGroupItem value="l">L</ToggleGroupItem>
+                            </ToggleGroup>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            GGPC-003
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="stock-3" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="stock-3"
+                              type="number"
+                              defaultValue="32"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="price-3" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="price-3"
+                              type="number"
+                              defaultValue="99.99"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ToggleGroup
+                              type="single"
+                              defaultValue="s"
+                              variant="outline"
+                            >
+                              <ToggleGroupItem value="s">S</ToggleGroupItem>
+                              <ToggleGroupItem value="m">M</ToggleGroupItem>
+                              <ToggleGroupItem value="l">L</ToggleGroupItem>
+                            </ToggleGroup>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                  <CardFooter className="justify-center border-t p-4">
+                    <Button size="sm" variant="ghost" className="gap-1">
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      Add Variant
+                    </Button>
+                  </CardFooter>
+                </Card>
+                <Card x-chunk="dashboard-07-chunk-2">
+                  <CardHeader>
+                    <CardTitle>Product Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-6 sm:grid-cols-3">
+                      <div className="grid gap-3">
+                        <Label htmlFor="category">Category</Label>
+                        <Select>
+                          <SelectTrigger
+                            id="category"
+                            aria-label="Select category"
+                          >
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="clothing">Clothing</SelectItem>
+                            <SelectItem value="electronics">
+                              Electronics
+                            </SelectItem>
+                            <SelectItem value="accessories">
+                              Accessories
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-3">
+                        <Label htmlFor="subcategory">
+                          Subcategory (optional)
+                        </Label>
+                        <Select>
+                          <SelectTrigger
+                            id="subcategory"
+                            aria-label="Select subcategory"
+                          >
+                            <SelectValue placeholder="Select subcategory" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">
+                              Sweatshirts
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                <Card x-chunk="dashboard-07-chunk-3">
+                  <CardHeader>
+                    <CardTitle>Product Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-6">
+                      <div className="grid gap-3">
+                        <Label htmlFor="status">Status</Label>
+                        <Select>
+                          <SelectTrigger id="status" aria-label="Select status">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="published">Active</SelectItem>
+                            <SelectItem value="archived">Archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card
+                  className="overflow-hidden" x-chunk="dashboard-07-chunk-4"
+                >
+                  <CardHeader>
+                    <CardTitle>Product Images</CardTitle>
+                    <CardDescription>
+                      Lipsum dolor sit amet, consectetur adipiscing elit
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-2">
+                      <img
+                        alt="Product image"
+                        className="aspect-square w-full rounded-md object-cover"
+                        height="300"
+                        src="/placeholder.svg"
+                        width="300"
+                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        <button>
+                          <img
+                            alt="Product image"
+                            className="aspect-square w-full rounded-md object-cover"
+                            height="84"
+                            src="/placeholder.svg"
+                            width="84"
+                          />
+                        </button>
+                        <button>
+                          <img
+                            alt="Product image"
+                            className="aspect-square w-full rounded-md object-cover"
+                            height="84"
+                            src="/placeholder.svg"
+                            width="84"
+                          />
+                        </button>
+                        <button className="flex aspect-square w-full items-center justify-center rounded-md border border-dashed">
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                          <span className="sr-only">Upload</span>
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card x-chunk="dashboard-07-chunk-5">
+                  <CardHeader>
+                    <CardTitle>Archive Product</CardTitle>
+                    <CardDescription>
+                      Lipsum dolor sit amet, consectetur adipiscing elit.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div></div>
+                    <Button size="sm" variant="secondary">
+                      Archive Product
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-2 md:hidden">
+              <Button variant="outline" size="sm">
+                Discard
+              </Button>
+              <Button size="sm">Save Product</Button>
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="selling_price" className="text-right">
-              Selling price
-            </Label>
-            <Input
-              value={newProductData?.selling_price}
-              onChange={(e) =>
-                setNewProductData((prevState) => ({ ...prevState, selling_price: e.target.value }))
-              }
-              type="number"
-              id="selling_price"
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="quantity" className="text-right">
-              Quantity
-            </Label>
-            <Input
-              value={newProductData?.quantity}
-              onChange={(e) =>
-                setNewProductData((prevState) => ({ ...prevState, quantity: e.target.value }))
-              }
-              type="number"
-              id="quantity"
-              className="col-span-1"
-            />
-          </div>
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button type="submit">Save changes</Button>
-            </SheetClose>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+        </main>
+      </div>
   )
 }
+
+export default Add

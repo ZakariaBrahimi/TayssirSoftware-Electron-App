@@ -40,6 +40,7 @@
     "path": "^0.12.7",
     "react-barcode": "^1.5.1",
     "react-hook-form": "^7.51.5",
+    "react-router-dom": "^6.23.1",
     "sequelize": "^6.37.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
