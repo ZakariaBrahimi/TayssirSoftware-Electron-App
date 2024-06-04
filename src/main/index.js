@@ -49,6 +49,7 @@ function createWindow() {
   productControlers.getProducts()
   productControlers.deleteProductById()
   productControlers.updateProductById()
+  productControlers.getCategories()
   
 }
 

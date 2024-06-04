@@ -47,6 +47,26 @@ const getProducts = () => {
         }
     });
 };
+// Function to get the list of Categories
+const getCategories = () => {
+    ipcMain.on('getCategories', async (event) => {
+        console.log('Getting Categories List');
+
+        try {
+            // Fetch all Categories from the database
+            const categories = await db.Category.findAll();
+            console.log('Categories List:', categories);
+
+            // Send a success message back to the renderer process
+            event.reply('getCategories:response', { success: true, categories: categories });
+        } catch (error) {
+            console.error('Error getting Categories list:', error);
+
+            // Send an error message back to the renderer process
+            event.reply('getCategories:response', { success: false, error: error.message });
+        }
+    });
+};
 
 // Function to delete a product by ID
 const deleteProductById = () => {
@@ -105,4 +125,4 @@ const updateProductById = () => {
 
 
 // Export the functions to handle IPC events
-module.exports = { createNewProduct, getProducts, deleteProductById, updateProductById };
+module.exports = { createNewProduct, getProducts, deleteProductById, updateProductById, getCategories };

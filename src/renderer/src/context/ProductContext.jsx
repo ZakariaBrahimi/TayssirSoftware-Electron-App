@@ -1,18 +1,39 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
 import { createContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@shadcn-components/ui/use-toast'
 
 const ProductContext = createContext()
 export default ProductContext;
 
 export const ProductProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
   const [newProductData, setNewProductData] = useState({
     name: '',
     quantity: 0,
     purchasing_price: 0,
     selling_price: 0
   })
+  const { toast } = useToast()
+  const getCategories = () => {
+    console.log('getting Categories list')
+
+    // Sending data to the main process on 'getCategories' channel
+    window.electron.ipcRenderer.send('getCategories')
+    // Listen for the response from the main process
+    window.electron.ipcRenderer.on('getCategories:response', (event, response) => {
+      if (response.success) {
+        console.log('Getting Products list successfully:', response.categories)
+        setCategories(response.products)
+        
+      } else {
+        console.error('Error Getting Products list:', response.error)
+      }
+    })
+  }
   const getProducts = () => {
     console.log('getting products list')
 
@@ -23,6 +44,7 @@ export const ProductProvider = ({ children }) => {
       if (response.success) {
         console.log('Getting Products list successfully:', response.products)
         setProducts(response.products)
+        
       } else {
         console.error('Error Getting Products list:', response.error)
       }
@@ -41,6 +63,17 @@ export const ProductProvider = ({ children }) => {
       if (response.success) {
         console.log('success')
         setProducts(response.products )
+        navigate('/inventory');
+        setNewProductData({
+          name: '',
+          quantity: 0,
+          purchasing_price: 0,
+          selling_price: 0
+        })
+        toast({
+          description: 'Product Created successfully',
+          variant: 'success',
+        })
         console.log('Product created successfully:', response.products)
 
       } else {
@@ -84,7 +117,7 @@ export const ProductProvider = ({ children }) => {
         }
     });
 };
-  const contextData = {getProducts, products, setProducts, createNewProduct, setNewProductData, deleteProductById, updateProductById, setUpdateData, updateData}
+  const contextData = {getProducts, products, setProducts, createNewProduct, setNewProductData, deleteProductById, updateProductById, setUpdateData, updateData, getCategories, categories, setCategories}
   return (
     <ProductContext.Provider value={contextData}>
       {children}

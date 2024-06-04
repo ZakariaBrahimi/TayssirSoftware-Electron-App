@@ -5,7 +5,7 @@ import SideNavbar from "./components/SideNavbar.jsx"
 import { Toaster } from "@shadcn-components/ui/toaster"
 import ProductContext from "./context/ProductContext"
 import  Dashboard  from "./components/Dashboard"
-import Add from "./components/AddProduct.jsx"
+import AddProduct from "./components/AddProduct"
 import {
   Routes ,
   Route,
@@ -30,8 +30,8 @@ function App() {
 
 
       <Routes>
-        {/* <Route path="home" element={ <Dashboard/> }/> */}
-        <Route path="inventory/add-new-product" element={ <Add/> }/>
+        <Route path="home" element={ <Dashboard/> }/>
+        <Route path="inventory/add-new-product" element={ <AddProduct/> }/>
         <Route path="inventory" element={ <Inventory/> }/>
         
         {/* <Route path="/user/:userId" element={<User />} /> */}

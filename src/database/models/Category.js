@@ -5,7 +5,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Product extends Model {
+  class Category extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,29 +13,18 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      // Product.belongsTo(models.Category, {
-      //   foreignKey: 'categoryId',
-      //   as: 'category'
-      // });
+      Category.hasMany(models.Product, {
+        foreignKey: 'categoryId',
+        as: 'products'
+      });
     }
   }
-  Product.init({
+  Category.init({
     name: DataTypes.STRING,
-    brand: DataTypes.STRING, // Product Brand Name
-    quantity: DataTypes.INTEGER,
-    purchasing_price: DataTypes.INTEGER,
-    selling_price: DataTypes.INTEGER,
-    categoryId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Categories', // refers to table name
-        key: 'id', // refers to column name in referenced table
-      }}
   }, {
     sequelize,
-    modelName: 'Product',
-
+    modelName: 'Category',
     // FIXME: when I change model name, sequelize creates a new table , instead of updating only the model name
   });
-  return Product;
+  return Category;
 };
