@@ -1,128 +1,158 @@
 /* eslint-disable prettier/prettier */
-const { ipcMain } = require('electron'); // Destructure ipcMain from electron
-const db = require('../models'); // Require the models
+const { ipcMain } = require('electron') // Destructure ipcMain from electron
+const db = require('../models') // Require the models
 
 // Function to create a new product
 const createNewProduct = () => {
-    ipcMain.on('createNewProduct', async (event, newProductData) => {
-        console.log('Received new product data:', newProductData);
+  ipcMain.on('createNewProduct', async (event, newProductData) => {
+    console.log('Received new product data:', newProductData)
 
-        try {
-            // Create a new product in the database
-            const newProduct = await db.Product.create(newProductData);
-            console.log('New product created:', newProduct);
+    try {
+      // Create a new product in the database
+      const newProduct = await db.Product.create(newProductData)
+      console.log('New product created:', newProduct)
 
-            // Fetch all products to send back to the renderer process
-            const products = await db.Product.findAll();
-            
-            // Send a success message back to the renderer process
-            event.reply('createNewProduct:response', { success: true, products: products });
-        } catch (error) {
-            console.error('Error creating new product:', error);
+      // Fetch all products to send back to the renderer process
+      const products = await db.Product.findAll()
 
-            // Send an error message back to the renderer process
-            event.reply('createNewProduct:response', { success: false, error: error.message });
-        }
-    });
-};
+      // Send a success message back to the renderer process
+      event.reply('createNewProduct:response', { success: true, products: products })
+    } catch (error) {
+      console.error('Error creating new product:', error)
 
+      // Send an error message back to the renderer process
+      event.reply('createNewProduct:response', { success: false, error: error.message })
+    }
+  })
+}
+// Function to create a new category
+const createNewCategory = () => {
+  ipcMain.on('createNewCategory', async (event, newCategory) => {
+    console.log('Received new category data:', newCategory)
+
+    try {
+      // Create a new category in the database
+      const newCategoryData = await db.Category.create(newCategory)
+      console.log('New category created:', newCategoryData)
+
+      // Fetch all categories to send back to the renderer process
+      const categories = await db.Category.findAll()
+
+      // Send a success message back to the renderer process
+      event.reply('createNewCategory:response', { success: true, categories: categories })
+    } catch (error) {
+      console.error('Error creating new category:', error)
+
+      // Send an error message back to the renderer process
+      event.reply('createNewCategory:response', { success: false, error: error.message })
+    }
+  })
+}
 
 // Function to get the list of products
 const getProducts = () => {
-    ipcMain.on('getProducts', async (event) => {
-        console.log('Getting Products List');
+  ipcMain.on('getProducts', async (event) => {
+    console.log('Getting Products List')
 
-        try {
-            // Fetch all products from the database
-            const products = await db.Product.findAll();
-            console.log('Products List:', products);
+    try {
+      // Fetch all products from the database
+      const products = await db.Product.findAll()
+      console.log('Products List:', products)
 
-            // Send a success message back to the renderer process
-            event.reply('getProducts:response', { success: true, products: products });
-        } catch (error) {
-            console.error('Error getting products list:', error);
+      // Send a success message back to the renderer process
+      event.reply('getProducts:response', { success: true, products: products })
+    } catch (error) {
+      console.error('Error getting products list:', error)
 
-            // Send an error message back to the renderer process
-            event.reply('getProducts:response', { success: false, error: error.message });
-        }
-    });
-};
+      // Send an error message back to the renderer process
+      event.reply('getProducts:response', { success: false, error: error.message })
+    }
+  })
+}
 // Function to get the list of Categories
 const getCategories = () => {
-    ipcMain.on('getCategories', async (event) => {
-        console.log('Getting Categories List');
+  ipcMain.on('getCategories', async (event) => {
+    console.log('Getting Categories List')
 
-        try {
-            // Fetch all Categories from the database
-            const categories = await db.Category.findAll();
-            console.log('Categories List:', categories);
+    try {
+      // Fetch all Categories from the database
+      const categories = await db.Category.findAll()
+      console.log('Categories List:', categories)
 
-            // Send a success message back to the renderer process
-            event.reply('getCategories:response', { success: true, categories: categories });
-        } catch (error) {
-            console.error('Error getting Categories list:', error);
+      // Send a success message back to the renderer process
+      event.reply('getCategories:response', { success: true, categories: categories })
+    } catch (error) {
+      console.error('Error getting Categories list:', error)
 
-            // Send an error message back to the renderer process
-            event.reply('getCategories:response', { success: false, error: error.message });
-        }
-    });
-};
+      // Send an error message back to the renderer process
+      event.reply('getCategories:response', { success: false, error: error.message })
+    }
+  })
+}
 
 // Function to delete a product by ID
 const deleteProductById = () => {
-    ipcMain.on('deleteProductById', async (event, productId) => {
-        console.log('Deleting product with ID:', productId);
+  ipcMain.on('deleteProductById', async (event, productId) => {
+    console.log('Deleting product with ID:', productId)
 
-        try {
-            // This is soft-deletion, if you want hard-deletion add {force:true} to destroy options
-            const result = await db.Product.destroy({
-                where: { id: productId }
-            });
-            if (result) {
-                console.log('Product deleted successfully');
-                // Fetch all products to send back to the renderer process
-                const products = await db.Product.findAll();
-                event.reply('deleteProductById:response', { success: true, products: products });
-            } else {
-                console.log('Product not found');
-                event.reply('deleteProductById:response', { success: false, error: 'Product not found' });
-            }
-        } catch (error) {
-            console.error('Error deleting product:', error);
-            event.reply('deleteProductById:response', { success: false, error: error.message });
-        }
-    });
-};
+    try {
+      // This is soft-deletion, if you want hard-deletion add {force:true} to destroy options
+      const result = await db.Product.destroy({
+        where: { id: productId }
+      })
+      if (result) {
+        console.log('Product deleted successfully')
+        // Fetch all products to send back to the renderer process
+        const products = await db.Product.findAll()
+        event.reply('deleteProductById:response', { success: true, products: products })
+      } else {
+        console.log('Product not found')
+        event.reply('deleteProductById:response', { success: false, error: 'Product not found' })
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      event.reply('deleteProductById:response', { success: false, error: error.message })
+    }
+  })
+}
 // Function to Update a product data by ID
 const updateProductById = () => {
-    ipcMain.on('updateProductById', async (event, { productId, updateData }) => {
-        console.log('Updating product with ID:', productId, 'with data:', updateData);
+  ipcMain.on('updateProductById', async (event, { productId, updateData }) => {
+    console.log('Updating product with ID:', productId, 'with data:', updateData)
 
-        try {
-            const [updated] = await db.Product.update(updateData, {
-                where: { id: productId }
-            });
+    try {
+      const [updated] = await db.Product.update(updateData, {
+        where: { id: productId }
+      })
 
-            if (updated) {
-                console.log('Product updated successfully');
-                // Fetch the updated product to send back to the renderer process
-                // const updatedProduct = await db.Product.findByPk(productId);
-                // event.reply('updateProductById:response', { success: true, product: updatedProduct });
-                // Fetch the updated products to send back to the renderer process
-                const updatedProducts = await db.Product.findAll();
-                event.reply('updateProductById:response', { success: true, products: updatedProducts });
-            } else {
-                console.log('Product not found or no changes made');
-                event.reply('updateProductById:response', { success: false, error: 'Product not found or no changes made' });
-            }
-        } catch (error) {
-            console.error('Error updating product:', error);
-            event.reply('updateProductById:response', { success: false, error: error.message });
-        }
-    });
-};
-
-
+      if (updated) {
+        console.log('Product updated successfully')
+        // Fetch the updated product to send back to the renderer process
+        // const updatedProduct = await db.Product.findByPk(productId);
+        // event.reply('updateProductById:response', { success: true, product: updatedProduct });
+        // Fetch the updated products to send back to the renderer process
+        const updatedProducts = await db.Product.findAll()
+        event.reply('updateProductById:response', { success: true, products: updatedProducts })
+      } else {
+        console.log('Product not found or no changes made')
+        event.reply('updateProductById:response', {
+          success: false,
+          error: 'Product not found or no changes made'
+        })
+      }
+    } catch (error) {
+      console.error('Error updating product:', error)
+      event.reply('updateProductById:response', { success: false, error: error.message })
+    }
+  })
+}
 
 // Export the functions to handle IPC events
-module.exports = { createNewProduct, getProducts, deleteProductById, updateProductById, getCategories };
+module.exports = {
+  createNewProduct,
+  getProducts,
+  deleteProductById,
+  updateProductById,
+  getCategories,
+  createNewCategory
+}

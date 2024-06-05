@@ -290,7 +290,7 @@ const DataTableColumns = () => {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Dialog>
-                  <DialogTrigger className="text-red-500 font-semibold transition-colors duration-200 hover:text-red-600 focus:outline-none">
+                  <DialogTrigger className=" w-full px-2 py-2 text-sm hover:bg-gray-100 transition-colors rounded-sm text-left">
                     Delete
                   </DialogTrigger>
 

@@ -53,7 +53,16 @@ import {
   SelectTrigger,
   SelectValue
 } from '@shadcn-components/ui/select'
-import { Sheet, SheetContent, SheetTrigger } from '@shadcn-components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from '@shadcn-components/ui/sheet'
 import {
   Table,
   TableBody,
@@ -85,7 +94,8 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const Add = () => {
-  const { createNewProduct, newProductData, setNewProductData, getCategories, categories } = useContext(ProductContext)
+  const { createNewProduct, newProductData, setNewProductData, getCategories, categories, createNewCategory, newCategory, setNewCategory } =
+    useContext(ProductContext)
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
@@ -116,9 +126,8 @@ const Add = () => {
     { label: 'Russian', value: 'ru' },
     { label: 'Japanese', value: 'ja' },
     { label: 'Korean', value: 'ko' },
-    { label: 'Chinese', value: 'zh' },
+    { label: 'Chinese', value: 'zh' }
   ])
-
 
   useEffect(() => {
     getCategories()
@@ -187,7 +196,7 @@ const Add = () => {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to='/inventory'>Products</Link>
+                <Link to="/inventory">Products</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -337,9 +346,11 @@ const Add = () => {
                     </div>
                     <div className="grid gap-6 sm:grid-cols-4">
                       <div className="grid gap-3 sm:col-span-2">
-                        <Label className='' htmlFor="category">Category</Label>
-                        <Popover className='bg-yellow-400' open={open} onOpenChange={setOpen}>
-                          <PopoverTrigger className='bg-blue-4' asChild>
+                        <Label className="" htmlFor="category">
+                          Category
+                        </Label>
+                        <Popover className="bg-yellow-400" open={open} onOpenChange={setOpen}>
+                          <PopoverTrigger className="bg-blue-4" asChild>
                             <Button
                               variant="outline"
                               role="combobox"
@@ -354,29 +365,70 @@ const Add = () => {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className=" w-[320px]  p-0">
-                            <Command className=' w-full '>
-                              <CommandInput className=' w-full bg-green-20' placeholder="Search or Create Category..." />
+                            <Command className=" w-full ">
+                              <CommandInput
+                                className="w-full bg-green-20"
+                                placeholder="Search or Create Category..."
+                              />
                               <CommandList>
-                                <CommandEmpty>No Category found.</CommandEmpty>
+                                <CommandEmpty className="flex gap-2 items-center justify-evenly my-3">
+                                  <span>No Category found.</span>
+                                  {/* <Button variant="ghost">Create Category</Button> */}
+                                  <Sheet>
+                                    <SheetTrigger asChild>
+                                      <Button variant="outline">Create Category</Button>
+                                    </SheetTrigger>
+                                    <SheetContent>
+
+                                      <SheetHeader>
+                                        <SheetTitle>Create A New Category</SheetTitle>
+                                        <SheetDescription>
+                                          Make changes to your Categories List here. Click save when you are
+                                          done.
+                                        </SheetDescription>
+                                      </SheetHeader>
+                                      <div className="grid gap-4 py-4">
+                                        <div className="flex flex-col justify-center items-start gap-4 mt-2">
+                                          <Label htmlFor="category_name" className="text-right">
+                                            Category Nameeeeeee
+                                          </Label>
+                                          <Input
+                                            id="category_name"
+                                            value={newCategory}
+                                            onChange={(event)=>setNewCategory(event.target.value)}
+                                            className="col-span-3"
+                                          />
+                                        </div>
+                                        
+                                      </div>
+                                      <SheetFooter>
+                                        <SheetClose asChild>
+                                          <Button type="button" onClick={createNewCategory}>Save changes</Button>
+                                        </SheetClose>
+                                      </SheetFooter>
+                                    </SheetContent>
+                                  </Sheet>
+                                </CommandEmpty>
                                 <CommandGroup>
-                                  {categories.map((category) => (
-                                    <CommandItem
-                                      key={category.value}
-                                      value={category.value}
-                                      onSelect={(currentValue) => {
-                                        setValue(currentValue === value ? '' : currentValue)
-                                        setOpen(false)
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          'mr-2 h-4 w-4',
-                                          value === category.value ? 'opacity-100' : 'opacity-0'
-                                        )}
-                                      />
-                                      {category.label}
-                                    </CommandItem>
-                                  ))}
+                                  {categories &&
+                                    categories.map((category) => (
+                                      <CommandItem
+                                        key={category?.dataValues?.id}
+                                        value={category?.dataValues?.name}
+                                        onSelect={(currentValue) => {
+                                          setValue(currentValue === value ? '' : currentValue)
+                                          setOpen(false)
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            'mr-2 h-4 w-4',
+                                            value === category?.dataValues?.value ? 'opacity-100' : 'opacity-0'
+                                          )}
+                                        />
+                                        {category?.dataValues?.name}
+                                      </CommandItem>
+                                    ))}
                                 </CommandGroup>
                               </CommandList>
                             </Command>

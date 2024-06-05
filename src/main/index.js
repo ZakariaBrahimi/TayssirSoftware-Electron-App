@@ -50,6 +50,7 @@ function createWindow() {
   productControlers.deleteProductById()
   productControlers.updateProductById()
   productControlers.getCategories()
+  productControlers.createNewCategory()
   
 }
 
