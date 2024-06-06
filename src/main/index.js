@@ -51,6 +51,8 @@ function createWindow() {
   productControlers.updateProductById()
   productControlers.getCategories()
   productControlers.createNewCategory()
+  productControlers.getProductBrands()
+  productControlers.createNewProductBrand()
   
 }
 

@@ -94,43 +94,23 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const Add = () => {
-  const { createNewProduct, newProductData, setNewProductData, getCategories, categories, createNewCategory, newCategory, setNewCategory } =
-    useContext(ProductContext)
+  const {
+    createNewProduct, newProductData, setNewProductData,
+    getCategories, categories, createNewCategory, newCategory, setNewCategory,
+
+    brands, getProductBrands, createNewProductBrand, newBrand, setNewBrand,
+
+  } = useContext(ProductContext)
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [brandsOpen, setBrandsOpen] = useState(false)
   const [value, setValue] = useState('')
-  const [languages, setLangueas] = useState([
-    { label: 'English', value: 'en' },
-    { label: 'French', value: 'fr' },
-    { label: 'German', value: 'de' },
-    { label: 'Spanish', value: 'es' },
-    { label: 'Portuguese', value: 'pt' },
-    { label: 'Russian', value: 'ru' },
-    { label: 'Japanese', value: 'ja' },
-    { label: 'Korean', value: 'ko' },
-    { label: 'Chinese', value: 'zh' },
-    { label: 'English', value: 'en' },
-    { label: 'French', value: 'fr' },
-    { label: 'German', value: 'de' },
-    { label: 'Spanish', value: 'es' },
-    { label: 'Portuguese', value: 'pt' },
-    { label: 'Russian', value: 'ru' },
-    { label: 'Japanese', value: 'ja' },
-    { label: 'Korean', value: 'ko' },
-    { label: 'Chinese', value: 'zh' },
-    { label: 'English', value: 'en' },
-    { label: 'French', value: 'fr' },
-    { label: 'German', value: 'de' },
-    { label: 'Spanish', value: 'es' },
-    { label: 'Portuguese', value: 'pt' },
-    { label: 'Russian', value: 'ru' },
-    { label: 'Japanese', value: 'ja' },
-    { label: 'Korean', value: 'ko' },
-    { label: 'Chinese', value: 'zh' }
-  ])
+  const [brandValue, setBrandValue] = useState('')
 
   useEffect(() => {
     getCategories()
+    getProductBrands()
+    // console.log('look2:', categories)
   }, [])
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
@@ -241,7 +221,7 @@ const Add = () => {
           className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4"
         >
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" className="h-7 w-7">
+            <Button onClick={()=>navigate('/inventory')} variant="outline" size="icon" className="h-7 w-7">
               <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Back</span>
             </Button>
@@ -358,14 +338,14 @@ const Add = () => {
                               className="w-full justify-between"
                             >
                               {value
-                                ? languages.find((framework) => framework.value === value)?.label
+                                ? categories.find((category) => category.dataValues.name === value)
+                                    ?.dataValues.name
                                 : 'Select Category...'}
-
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className=" w-[320px]  p-0">
-                            <Command className=" w-full ">
+                          <PopoverContent className="w-[320px] p-0">
+                            <Command className="w-full">
                               <CommandInput
                                 className="w-full bg-green-20"
                                 placeholder="Search or Create Category..."
@@ -373,60 +353,65 @@ const Add = () => {
                               <CommandList>
                                 <CommandEmpty className="flex gap-2 items-center justify-evenly my-3">
                                   <span>No Category found.</span>
-                                  {/* <Button variant="ghost">Create Category</Button> */}
                                   <Sheet>
                                     <SheetTrigger asChild>
                                       <Button variant="outline">Create Category</Button>
                                     </SheetTrigger>
                                     <SheetContent>
-
                                       <SheetHeader>
                                         <SheetTitle>Create A New Category</SheetTitle>
                                         <SheetDescription>
-                                          Make changes to your Categories List here. Click save when you are
-                                          done.
+                                          Make changes to your Categories List here. Click save when
+                                          you are done.
                                         </SheetDescription>
                                       </SheetHeader>
                                       <div className="grid gap-4 py-4">
                                         <div className="flex flex-col justify-center items-start gap-4 mt-2">
                                           <Label htmlFor="category_name" className="text-right">
-                                            Category Nameeeeeee
+                                            Category Name
                                           </Label>
                                           <Input
                                             id="category_name"
                                             value={newCategory}
-                                            onChange={(event)=>setNewCategory(event.target.value)}
+                                            onChange={(event) => setNewCategory(event.target.value)}
                                             className="col-span-3"
                                           />
                                         </div>
-                                        
                                       </div>
                                       <SheetFooter>
                                         <SheetClose asChild>
-                                          <Button type="button" onClick={createNewCategory}>Save changes</Button>
+                                          <Button
+                                            type="button"
+                                            onClick={() => createNewCategory(newCategory)}
+                                          >
+                                            Save changes
+                                          </Button>
                                         </SheetClose>
                                       </SheetFooter>
                                     </SheetContent>
                                   </Sheet>
                                 </CommandEmpty>
                                 <CommandGroup>
-                                  {categories &&
+                                  {categories.length > 0 &&
                                     categories.map((category) => (
                                       <CommandItem
-                                        key={category?.dataValues?.id}
-                                        value={category?.dataValues?.name}
+                                        key={category.dataValues.id}
                                         onSelect={(currentValue) => {
                                           setValue(currentValue === value ? '' : currentValue)
                                           setOpen(false)
+                                          setNewProductData((prevState) => ({ ...prevState, categoryId: category?.dataValues?.id }))
+                                          
                                         }}
                                       >
                                         <Check
                                           className={cn(
                                             'mr-2 h-4 w-4',
-                                            value === category?.dataValues?.value ? 'opacity-100' : 'opacity-0'
+                                            value === category.dataValues.name
+                                              ? 'opacity-100'
+                                              : 'opacity-0'
                                           )}
                                         />
-                                        {category?.dataValues?.name}
+                                        {category.dataValues.name}
                                       </CommandItem>
                                     ))}
                                 </CommandGroup>
@@ -463,8 +448,97 @@ const Add = () => {
                         </Select> */}
                       </div>
                       <div className="grid gap-3 sm:col-span-2">
-                        <Label htmlFor="subcategory">Subcategory (optional)</Label>
-                        <Select required>
+                        <Label htmlFor="brands">Brand Name (optional)</Label>
+                        <Popover className="bg-yellow-400" open={brandsOpen} onOpenChange={setBrandsOpen}>
+                          <PopoverTrigger className="bg-blue-4" asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={brandsOpen}
+                              className="w-full justify-between"
+                            >
+                              {brandValue
+                                ? brands.find((brand) => brand.dataValues.name === brandValue)
+                                    ?.dataValues.name
+                                : 'Select Brand...'}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[320px] p-0">
+                            <Command className="w-full">
+                              <CommandInput
+                                className="w-full bg-green-20"
+                                placeholder="Search or Create Brand..."
+                              />
+                              <CommandList>
+                                <CommandEmpty className="flex gap-2 items-center justify-evenly my-3">
+                                  <span>No Brand found.</span>
+                                  <Sheet>
+                                    <SheetTrigger asChild>
+                                      <Button variant="outline">Create Brand</Button>
+                                    </SheetTrigger>
+                                    <SheetContent>
+                                      <SheetHeader>
+                                        <SheetTitle>Create A New Brand</SheetTitle>
+                                        <SheetDescription>
+                                          Make changes to your Brands List here. Click save when
+                                          you are done.
+                                        </SheetDescription>
+                                      </SheetHeader>
+                                      <div className="grid gap-4 py-4">
+                                        <div className="flex flex-col justify-center items-start gap-4 mt-2">
+                                          <Label htmlFor="brand_name" className="text-right">
+                                            Brand Name
+                                          </Label>
+                                          <Input
+                                            id="brand_name"
+                                            value={newBrand}
+                                            onChange={(event) => setNewBrand(event.target.value)}
+                                            className="col-span-3"
+                                          />
+                                        </div>
+                                      </div>
+                                      <SheetFooter>
+                                        <SheetClose asChild>
+                                          <Button
+                                            type="button"
+                                            onClick={() => createNewProductBrand(newBrand)}
+                                          >
+                                            Save changes
+                                          </Button>
+                                        </SheetClose>
+                                      </SheetFooter>
+                                    </SheetContent>
+                                  </Sheet>
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {brands.length > 0 &&
+                                    brands.map((brand) => (
+                                      <CommandItem
+                                        key={brand.dataValues.id}
+                                        onSelect={(currentValue) => {
+                                          setBrandValue(currentValue === brandValue ? '' : currentValue)
+                                          setBrandsOpen(false)
+                                          setNewProductData((prevState) => ({ ...prevState, brandId: brand?.dataValues?.id }))
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            'mr-2 h-4 w-4',
+                                            brandValue === brand.dataValues.name
+                                              ? 'opacity-100'
+                                              : 'opacity-0'
+                                          )}
+                                        />
+                                        {brand.dataValues.name}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {/* <Select required>
                           <SelectTrigger id="subcategory" aria-label="Select subcategory">
                             <SelectValue placeholder="Select subcategory" />
                           </SelectTrigger>
@@ -472,8 +546,29 @@ const Add = () => {
                             <SelectItem value="t-shirts">T-Shirts</SelectItem>
                             <SelectItem value="hoodies">Hoodies</SelectItem>
                             <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                            <SelectItem value="hoodies">Hoodies</SelectItem>
+                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
                       </div>
                     </div>
                   </div>

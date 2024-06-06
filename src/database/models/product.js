@@ -13,15 +13,18 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      // Product.belongsTo(models.Category, {
-      //   foreignKey: 'categoryId',
-      //   as: 'category'
-      // });
+      Product.belongsTo(models.Category, {
+        foreignKey: 'categoryId',
+        as: 'category'
+      });
+      Product.belongsTo(models.Brand, {
+        foreignKey: 'brandId',
+        as: 'brand'
+      });
     }
   }
   Product.init({
     name: DataTypes.STRING,
-    brand: DataTypes.STRING, // Product Brand Name
     quantity: DataTypes.INTEGER,
     purchasing_price: DataTypes.INTEGER,
     selling_price: DataTypes.INTEGER,
@@ -30,7 +33,14 @@ module.exports = (sequelize, DataTypes) => {
       references: {
         model: 'Categories', // refers to table name
         key: 'id', // refers to column name in referenced table
-      }}
+      }},
+    brandId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Brands', // refers to table name
+        key: 'id', // refers to column name in referenced table
+      }},
+
   }, {
     sequelize,
     modelName: 'Product',

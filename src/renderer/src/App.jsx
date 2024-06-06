@@ -11,6 +11,7 @@ import {
   Route,
   Outlet,
 } from "react-router-dom";
+import Sales from "./components/Sales.jsx"
 function App() {
   const { getProducts } = useContext(ProductContext)
   useEffect(()=>{
@@ -33,6 +34,7 @@ function App() {
         <Route path="/" element={ <Dashboard/> }/>
         <Route path="inventory/add-new-product" element={ <AddProduct/> }/>
         <Route path="inventory" element={ <Inventory/> }/>
+        <Route path="sales" element={ <Sales/> }/>
         
         {/* <Route path="/user/:userId" element={<User />} /> */}
       </Routes>

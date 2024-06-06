@@ -13,10 +13,26 @@ const createNewProduct = () => {
       console.log('New product created:', newProduct)
 
       // Fetch all products to send back to the renderer process
-      const products = await db.Product.findAll()
+      const products = await db.Product.findAll({
+        include: [
+          {
+            model: db.Category,
+            as: 'category' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          },
+          {
+            model: db.Brand,
+            as: 'brand' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          }
+        ],
+        attributes: { exclude: ['categoryId', 'brandId'] }
+      })
+      // Convert Sequelize instances to plain objects
+      const plainProducts = products.map((product) => product.get({ plain: true }))
 
       // Send a success message back to the renderer process
-      event.reply('createNewProduct:response', { success: true, products: products })
+      event.reply('createNewProduct:response', { success: true, products: plainProducts })
     } catch (error) {
       console.error('Error creating new product:', error)
 
@@ -48,6 +64,29 @@ const createNewCategory = () => {
     }
   })
 }
+// Function to create a new brand
+const createNewProductBrand = () => {
+  ipcMain.on('createNewProductBrand', async (event, newBrand) => {
+    console.log('Received new brand name:', newBrand)
+
+    try {
+      // Create a new brand in the database
+      const newBrandData = await db.Brand.create(newBrand)
+      console.log('New brand created:', newBrandData)
+
+      // Fetch all brands to send back to the renderer process
+      const brands = await db.Brand.findAll()
+
+      // Send a success message back to the renderer process
+      event.reply('createNewProductBrand:response', { success: true, brands: brands })
+    } catch (error) {
+      console.error('Error creating new brand:', error)
+
+      // Send an error message back to the renderer process
+      event.reply('createNewProductBrand:response', { success: false, error: error.message })
+    }
+  })
+}
 
 // Function to get the list of products
 const getProducts = () => {
@@ -55,12 +94,28 @@ const getProducts = () => {
     console.log('Getting Products List')
 
     try {
-      // Fetch all products from the database
-      const products = await db.Product.findAll()
-      console.log('Products List:', products)
+      // Fetch all products from the database, including the associated category
+      const products = await db.Product.findAll({
+        include: [
+          {
+            model: db.Category,
+            as: 'category' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          },
+          {
+            model: db.Brand,
+            as: 'brand' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          }
+        ],
+        attributes: { exclude: ['categoryId', 'brandId'] }
+      })
+      // Convert Sequelize instances to plain objects
+      const plainProducts = products.map((product) => product.get({ plain: true }))
+      console.log('Products List:', plainProducts)
 
       // Send a success message back to the renderer process
-      event.reply('getProducts:response', { success: true, products: products })
+      event.reply('getProducts:response', { success: true, products: plainProducts })
     } catch (error) {
       console.error('Error getting products list:', error)
 
@@ -89,6 +144,26 @@ const getCategories = () => {
     }
   })
 }
+// Function to get the list of Categories
+const getProductBrands = () => {
+  ipcMain.on('getProductBrands', async (event) => {
+    console.log('Getting brands List')
+
+    try {
+      // Fetch all brands from the database
+      const brands = await db.Brand.findAll()
+      console.log('Brands List:', brands)
+
+      // Send a success message back to the renderer process
+      event.reply('getProductBrands:response', { success: true, brands: brands })
+    } catch (error) {
+      console.error('Error getting Categories list:', error)
+
+      // Send an error message back to the renderer process
+      event.reply('getProductBrands:response', { success: false, error: error.message })
+    }
+  })
+}
 
 // Function to delete a product by ID
 const deleteProductById = () => {
@@ -103,8 +178,25 @@ const deleteProductById = () => {
       if (result) {
         console.log('Product deleted successfully')
         // Fetch all products to send back to the renderer process
-        const products = await db.Product.findAll()
-        event.reply('deleteProductById:response', { success: true, products: products })
+      const products = await db.Product.findAll({
+        include: [
+          {
+            model: db.Category,
+            as: 'category' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          },
+          {
+            model: db.Brand,
+            as: 'brand' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          }
+        ],
+        attributes: { exclude: ['categoryId', 'brandId'] }
+      })
+      // Convert Sequelize instances to plain objects
+      const plainProducts = products.map((product) => product.get({ plain: true }))
+
+        event.reply('deleteProductById:response', { success: true, products: plainProducts })
       } else {
         console.log('Product not found')
         event.reply('deleteProductById:response', { success: false, error: 'Product not found' })
@@ -131,8 +223,26 @@ const updateProductById = () => {
         // const updatedProduct = await db.Product.findByPk(productId);
         // event.reply('updateProductById:response', { success: true, product: updatedProduct });
         // Fetch the updated products to send back to the renderer process
-        const updatedProducts = await db.Product.findAll()
-        event.reply('updateProductById:response', { success: true, products: updatedProducts })
+        // Fetch all products to send back to the renderer process
+      const products = await db.Product.findAll({
+        include: [
+          {
+            model: db.Category,
+            as: 'category' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          },
+          {
+            model: db.Brand,
+            as: 'brand' // Use the alias defined in the association
+            // attributes: ['id', 'name'] // Include only the necessary attributes
+          }
+        ],
+        attributes: { exclude: ['categoryId', 'brandId'] }
+      })
+      // Convert Sequelize instances to plain objects
+      const plainProducts = products.map((product) => product.get({ plain: true }))
+
+        event.reply('updateProductById:response', { success: true, products: plainProducts })
       } else {
         console.log('Product not found or no changes made')
         event.reply('updateProductById:response', {
@@ -154,5 +264,7 @@ module.exports = {
   deleteProductById,
   updateProductById,
   getCategories,
-  createNewCategory
+  createNewCategory,
+  createNewProductBrand,
+  getProductBrands
 }

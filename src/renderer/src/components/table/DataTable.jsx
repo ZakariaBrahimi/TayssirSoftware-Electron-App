@@ -59,7 +59,9 @@ export default function DataTable() {
       rowSelection
     }
   })
-  console.log(table.getRowModel().rows[0]) // array of rows
+  // console.log('table.getRowModel().rows[0]') // array of rows
+  // console.log(table.getRowModel().rows[0].original) // array of rows
+  // console.log((row.original))
   
   return (
     <div className="w-full">

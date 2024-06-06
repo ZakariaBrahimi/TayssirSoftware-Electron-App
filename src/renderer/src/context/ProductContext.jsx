@@ -1,5 +1,5 @@
-/* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
+/* eslint-disable react/prop-types */
 import { createContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@shadcn-components/ui/use-toast'
@@ -11,12 +11,18 @@ export const ProductProvider = ({ children }) => {
   const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [brands, setBrands] = useState([])
   const [newCategory, setNewCategory] = useState('')
+  const [newBrand, setNewBrand] = useState('')
+  const [categoryData, setCategoryData] = useState([])
+  const [brandData, setBrandData] = useState([])
   const [newProductData, setNewProductData] = useState({
     name: '',
     quantity: 0,
     purchasing_price: 0,
-    selling_price: 0
+    selling_price: 0,
+    brand:'',
+    category: ''
   })
   const { toast } = useToast()
   const getCategories = () => {
@@ -27,10 +33,55 @@ export const ProductProvider = ({ children }) => {
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getCategories:response', (event, response) => {
       if (response.success) {
-        console.log('Getting Products list successfully:', response.categories)
-        setCategories(response.products)
+        console.log('Getting Categories list successfully:', response.categories)
+        setCategories(response.categories)
       } else {
         console.error('Error Getting Products list:', response.error)
+      }
+    })
+  }
+  const getCategoryData = (categoryId) => {
+    console.log('getting Category list')
+
+    // Sending data to the main process on 'getCategoryData' channel
+    window.electron.ipcRenderer.send('getCategoryData')
+    // Listen for the response from the main process
+    window.electron.ipcRenderer.on('getCategoryData:response', (event, response) => {
+      if (response.success) {
+        console.log('Getting Category list successfully:', response.category)
+        setCategoryData(response.category)
+      } else {
+        console.error('Error Getting Category Data:', response.error)
+      }
+    })
+  }
+  const getBrandData = (brandId) => {
+    console.log('getting Brand Data')
+
+    // Sending data to the main process on 'getBrandData' channel
+    window.electron.ipcRenderer.send('getBrandData')
+    // Listen for the response from the main process
+    window.electron.ipcRenderer.on('getBrandData:response', (event, response) => {
+      if (response.success) {
+        console.log('Getting Brand list successfully:', response.brand)
+        setBrandData(response.brand)
+      } else {
+        console.error('Error Getting brand Data:', response.error)
+      }
+    })
+  }
+  const getProductBrands = () => {
+    console.log('getting brands list')
+
+    // Sending data to the main process on 'getProductBrands' channel
+    window.electron.ipcRenderer.send('getProductBrands')
+    // Listen for the response from the main process
+    window.electron.ipcRenderer.on('getProductBrands:response', (event, response) => {
+      if (response.success) {
+        console.log('Getting Brands list successfully:', response.brands)
+        setBrands(response.brands)
+      } else {
+        console.error('Error Getting Brands list:', response.error)
       }
     })
   }
@@ -43,6 +94,7 @@ export const ProductProvider = ({ children }) => {
     window.electron.ipcRenderer.on('getProducts:response', (event, response) => {
       if (response.success) {
         console.log('Getting Products list successfully:', response.products)
+        console.log('response2222: ', response)
         setProducts(response.products)
       } else {
         console.error('Error Getting Products list:', response.error)
@@ -62,12 +114,15 @@ export const ProductProvider = ({ children }) => {
       if (response.success) {
         console.log('success')
         setProducts(response.products)
+        console.log(response.products)
         navigate('/inventory')
         setNewProductData({
           name: '',
           quantity: 0,
           purchasing_price: 0,
-          selling_price: 0
+          selling_price: 0,
+          brand: '',
+          category: '',
         })
         toast({
           description: 'Product Created successfully',
@@ -104,6 +159,29 @@ export const ProductProvider = ({ children }) => {
       }
     })
   }
+  const createNewProductBrand = () => {
+    // event.preventDefault()
+    console.log('before everything')
+    window.electron.ipcRenderer.send('createNewProductBrand', {name:newBrand})
+    console.log('sent done')
+    // Listen for the response from the main process using 'once' to ensure it's handled only once
+    window.electron.ipcRenderer.once('createNewProductBrand:response', (event, response) => {
+      console.log('response received')
+      if (response.success) {
+        console.log('success')
+        setBrands(response.brands)
+        setNewBrand('')
+        toast({
+          description: 'New Brand Created successfully',
+          variant: 'success'
+        })
+        console.log('Brand created successfully:', response.brands)
+      } else {
+        console.log(response.error)
+        console.error('Error creating New Brand:', response.error)
+      }
+    })
+  }
 
   // Function to Delete a Product from Database
   const deleteProductById = (productID) => {
@@ -115,11 +193,9 @@ export const ProductProvider = ({ children }) => {
       if (response.success) {
         console.log('Product deleted successfully', response.products)
         setProducts(response.products)
-
-        // TODO: push success notification
+        console.log('response.productssssss', products)
       } else {
         console.log(response.error)
-        // TODO: push error notification
       }
     })
   }
@@ -154,7 +230,18 @@ export const ProductProvider = ({ children }) => {
     setCategories,
     createNewCategory,
     setNewCategory,
-    newCategory
+    newCategory,
+    getCategoryData,
+    categoryData,
+
+    getProductBrands,
+    brands,
+    setBrands,
+    newBrand, setNewBrand,
+    createNewProductBrand,
+    getBrandData,
+    brandData
+
   }
   return <ProductContext.Provider value={contextData}>{children}</ProductContext.Provider>
 }
