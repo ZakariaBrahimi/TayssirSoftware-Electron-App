@@ -110,7 +110,6 @@ const Add = () => {
   useEffect(() => {
     getCategories()
     getProductBrands()
-    // console.log('look2:', categories)
   }, [])
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
