@@ -11,9 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@shadcn-components/ui/dropdown-menu'
-import EditProduct from '../EditProduct'
 import { useContext } from 'react'
-import ProductContext from '../../context/ProductContext'
 import { useToast } from '@shadcn-components/ui/use-toast'
 import {
   Dialog,
@@ -24,11 +22,11 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@shadcn-components/ui/dialog'
-import { Label } from '@shadcn-components/ui/label'
-import { Input } from '@shadcn-components/ui/input'
 import { Link } from 'react-router-dom'
+import  SalesContext  from '../../../context/SalesContext'
 
-const DataTableColumns = () => {
+
+const Columns = () => {
   const columns = [
     {
       id: 'select',
@@ -123,7 +121,7 @@ const DataTableColumns = () => {
     {
       id: 'actions',
       cell: ({ row }) => {
-        const { deleteProductById } = useContext(ProductContext)
+        const { deleteProductById } = useContext(SalesContext)
         const { toast } = useToast()
         const payment = row.original
 
@@ -185,4 +183,4 @@ const DataTableColumns = () => {
   return columns
 }
 
-export default DataTableColumns
+export default Columns

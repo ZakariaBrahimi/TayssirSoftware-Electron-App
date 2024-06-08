@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 
 import { Link } from 'react-router-dom'
-import DataTable from '../../components/table/DataTable'
 import { Activity, CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-components/ui/popover'
@@ -9,6 +8,7 @@ import { Button } from '@shadcn-components/ui/button'
 import { Calendar } from '@shadcn-components/ui/calendar'
 import { format, addDays } from 'date-fns'
 import { useState } from 'react'
+import DataTable from './dataGrid/DataTable'
 // import { DateRange } from "react-day-picker"
 
 const Sales = () => {
@@ -21,7 +21,7 @@ const Sales = () => {
   return (
     <div className="flex flex-col w-full">
       <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-        <button
+        {/* <button
           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 w-9 shrink-0 md:hidden"
           type="button"
           aria-haspopup="dialog"
@@ -98,7 +98,7 @@ const Sales = () => {
             <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
           </svg>
           <span className="sr-only">Toggle user menu</span>
-        </button>
+        </button> */}
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 ">
         <div className="flex items-center justify-between">
@@ -143,11 +143,11 @@ const Sales = () => {
             <Link
             to="add-new-product"
             className={
-              'inline-flex gap-4 px-4 items-center hover:text-white justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 py-2 mt-'
+              'inline-flex gap-2 px-4 items-center hover:text-white justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 py-2 mt-'
             }
           >
             <Activity className="h-5 w-5" />
-            <span>Sell</span>
+            <span>Sell a Product</span>
           </Link>
           </div>
         </div>

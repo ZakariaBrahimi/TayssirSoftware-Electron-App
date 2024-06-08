@@ -30,8 +30,8 @@ import {
   TableHeader,
   TableRow
 } from '@shadcn-components/ui/table'
-import ProductContext from '../../context/ProductContext'
-import DataTableColumns from './DataTableColumns'
+import SalesContext from '../../../context/SalesContext'
+import Columns from './Columns'
 import {File} from "lucide-react"
 
 export default function DataTable() {
@@ -39,8 +39,8 @@ export default function DataTable() {
   const [columnFilters, setColumnFilters] = React.useState([])
   const [columnVisibility, setColumnVisibility] = React.useState({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const { products } = useContext(ProductContext)
-  const columns = DataTableColumns()
+  const { products } = useContext(SalesContext)
+  const columns = Columns()
   const table = useReactTable({
     data: products,
     columns,
@@ -120,7 +120,7 @@ export default function DataTable() {
       {/* Data Table */}
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          {/* <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -134,9 +134,9 @@ export default function DataTable() {
                 })}
               </TableRow>
             ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
+          </TableHeader> */}
+          {/* <TableBody>
+            {table.getRowModel().rows?.length  ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
@@ -148,22 +148,22 @@ export default function DataTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={DataTableColumns.length} className="h-24 text-center">
+                <TableCell colSpan={Columns.length} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>
             )}
-          </TableBody>
+          </TableBody> */}
         </Table>
       </div>
 
       {/* Pagination Section */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{' '}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {/* {table.getFilteredSelectedRowModel().rows.length} of{' '}
+          {table.getFilteredRowModel().rows.length} row(s) selected. */}
         </div>
-        <div className="space-x-2">
+        {/* <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
@@ -180,7 +180,7 @@ export default function DataTable() {
           >
             Next
           </Button>
-        </div>
+        </div> */}
       </div>
       {/* {table.getFooterGroups().map(footerGroup => (
             <tr key={footerGroup.id}>
