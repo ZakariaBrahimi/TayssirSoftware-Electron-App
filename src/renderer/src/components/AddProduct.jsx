@@ -537,37 +537,7 @@ const Add = () => {
                             </Command>
                           </PopoverContent>
                         </Popover>
-                        {/* <Select required>
-                          <SelectTrigger id="subcategory" aria-label="Select subcategory">
-                            <SelectValue placeholder="Select subcategory" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                            <SelectItem value="t-shirts">T-Shirts</SelectItem>
-                            <SelectItem value="hoodies">Hoodies</SelectItem>
-                            <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
-                          </SelectContent>
-                        </Select> */}
+                        
                       </div>
                     </div>
                   </div>

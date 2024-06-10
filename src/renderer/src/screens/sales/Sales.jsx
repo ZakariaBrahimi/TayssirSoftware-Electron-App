@@ -9,6 +9,7 @@ import { Calendar } from '@shadcn-components/ui/calendar'
 import { format, addDays } from 'date-fns'
 import { useState } from 'react'
 import DataTable from './dataGrid/DataTable'
+import NewProductSell from './NewProductSell'
 // import { DateRange } from "react-day-picker"
 
 const Sales = () => {
@@ -140,15 +141,7 @@ const Sales = () => {
                 />
               </PopoverContent>
             </Popover>
-            <Link
-            to="add-new-product"
-            className={
-              'inline-flex gap-2 px-4 items-center hover:text-white justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 py-2 mt-'
-            }
-          >
-            <Activity className="h-5 w-5" />
-            <span>Sell a Product</span>
-          </Link>
+            <NewProductSell/>
           </div>
         </div>
         <DataTable />
