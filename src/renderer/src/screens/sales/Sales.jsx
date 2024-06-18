@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import { Link } from 'react-router-dom'
-import { Activity, CalendarIcon } from 'lucide-react'
+import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-components/ui/popover'
 import { Button } from '@shadcn-components/ui/button'

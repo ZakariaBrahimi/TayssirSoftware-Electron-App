@@ -172,7 +172,7 @@ const NewProductSell = () => {
                           <TableHead className="text-center">Cost</TableHead>
                           <TableHead className="text-center">Price</TableHead>
                           <TableHead className="text-center">Discount</TableHead>
-                          <TableHead className="text-center">Total</TableHead>
+                          {/* <TableHead className="text-center">Total</TableHead> */}
                           <TableHead className="text-center">Net Profit</TableHead>
                           <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
@@ -198,9 +198,9 @@ const NewProductSell = () => {
                                 onChange={e=>setDiscount(e.target.value)}
                               />
                             </TableCell>
-                            <TableCell className="text-center">250.00 DA</TableCell>
+                            {/* <TableCell className="text-center">250.00 DA</TableCell> */}
                             <TableCell className="text-center text-green-500 font-semibold">
-                              {product?.selling_price - product?.purchasing_price - discount}
+                              {product?.purchasing_price - product?.selling_price - discount}
                             </TableCell>
                             <TableCell className="text-center text-red-600">
                               <Button onClick={()=>handleDelete(product?.id)} variant="ghost">
