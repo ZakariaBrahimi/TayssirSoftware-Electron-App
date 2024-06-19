@@ -43,34 +43,43 @@ import { useContext, useEffect, useState } from 'react'
 import ProductContext from '../../context/ProductContext'
 
 const NewProductSell = () => {
+  const { products } = useContext(ProductContext)
   const [open, setOpen] = useState(false)
-  const [discount, setDiscount] = useState(0)
+  const [dialogIsOpen, setDialogIsOpen] = useState(false)
+
+  const [discounts, setDiscounts] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [transactions, setTransactions] = useState([])
-  const { products } = useContext(ProductContext)
 
   const handleSelect = (product) => {
     setSelectedProduct(product)
     setOpen(false)
   }
-  const handleDelete = (productId) => {
+    const handleDelete = (productId) => {
     setTransactions((prevTransactions) =>
       prevTransactions.filter((transaction) => transaction.id !== productId)
-    )
-  }
+    );
+    setDiscounts((prevDiscounts) => {
+      const newDiscounts = { ...prevDiscounts };
+      delete newDiscounts[productId];
+      return newDiscounts;
+    });
+  };
   useEffect(() => {
     if (selectedProduct) {
       setTransactions((prevData) => [...prevData, selectedProduct])
-      console.log('selected Product: ', selectedProduct)
+      setSelectedProduct(null)
     }
   }, [selectedProduct])
-
-  useEffect(() => {
-    console.log('transactions List: ', transactions)
-  }, [transactions])
-
+  
+  const handleDiscountChange = (productId, value) => {
+    setDiscounts((prevDiscounts) => ({
+      ...prevDiscounts,
+      [productId]: value,
+    }));
+  };
   return (
-    <Dialog>
+    <Dialog open={dialogIsOpen} onOpenChange={setDialogIsOpen}>
       <DialogTrigger asChild>
         <Button>Sell a Product</Button>
       </DialogTrigger>
@@ -174,7 +183,7 @@ const NewProductSell = () => {
                           <TableHead className="text-center">Discount</TableHead>
                           {/* <TableHead className="text-center">Total</TableHead> */}
                           <TableHead className="text-center">Net Profit</TableHead>
-                          <TableHead className="text-center">Actions</TableHead>
+                          <TableHead className="text-center"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -186,24 +195,23 @@ const NewProductSell = () => {
                             <TableCell>
                               <div className="font-medium">{product?.name}</div>
                             </TableCell>
+                            <TableCell className="text-center">{product?.selling_price}</TableCell>
                             <TableCell className="text-center">
                               {product?.purchasing_price}
                             </TableCell>
-                            <TableCell className="text-center">{product?.selling_price}</TableCell>
                             <TableCell className="text-center">
                               <Input
                                 className="w-fit outline-none border-2"
                                 type="number"
-                                defaultValue={discount}
-                                onChange={e=>setDiscount(e.target.value)}
+                                value={discounts[product.id] || 0}
+                                onChange={(e) => handleDiscountChange(product.id, e.target.value)}
                               />
                             </TableCell>
-                            {/* <TableCell className="text-center">250.00 DA</TableCell> */}
                             <TableCell className="text-center text-green-500 font-semibold">
-                              {product?.purchasing_price - product?.selling_price - discount}
+                              {product?.purchasing_price - product?.selling_price - discounts[product.id] || 0}
                             </TableCell>
                             <TableCell className="text-center text-red-600">
-                              <Button onClick={()=>handleDelete(product?.id)} variant="ghost">
+                              <Button onClick={() => handleDelete(product?.id)} variant="ghost">
                                 <BadgeX />
                               </Button>
                             </TableCell>
@@ -220,7 +228,14 @@ const NewProductSell = () => {
           </main>
         </div>
         <DialogFooter>
-          <Button type="submit">Save changes</Button>
+          <div className="flex justify-between w-full">
+            <div className="flex gap-8 font-semibold">
+              <h1>Total Profits: </h1>
+              <h1>Total Products: {transactions.length} </h1>
+              {/* <h1>Total Profits: </h1> */}
+            </div>
+            <Button type="submit">Save changes</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
