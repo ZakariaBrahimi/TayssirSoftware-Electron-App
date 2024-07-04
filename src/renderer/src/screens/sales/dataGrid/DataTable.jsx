@@ -11,14 +11,13 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table'
-import {  ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 import { Button } from '@shadcn-components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-
   DropdownMenuTrigger
 } from '@shadcn-components/ui/dropdown-menu'
 import { Input } from '@shadcn-components/ui/input'
@@ -32,17 +31,17 @@ import {
 } from '@shadcn-components/ui/table'
 import SalesContext from '../../../context/SalesContext'
 import Columns from './Columns'
-import {File} from "lucide-react"
+import { File } from 'lucide-react'
 
 export default function DataTable() {
   const [sorting, setSorting] = React.useState([])
   const [columnFilters, setColumnFilters] = React.useState([])
   const [columnVisibility, setColumnVisibility] = React.useState({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const { products } = useContext(SalesContext)
+  const { soldProducts } = useContext(SalesContext)
   const columns = Columns()
   const table = useReactTable({
-    data: products,
+    data: soldProducts,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -62,7 +61,7 @@ export default function DataTable() {
   // console.log('table.getRowModel().rows[0]') // array of rows
   // console.log(table.getRowModel().rows[0].original) // array of rows
   // console.log((row.original))
-  
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center py-4">
@@ -72,15 +71,12 @@ export default function DataTable() {
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
-        <div className='flex gap-4'>
+        <div className="flex gap-4">
           <Button variant="outline" className="gap">
-                <File className="mr-2 h-4 w-4" />
-                <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                Export 
-
-                </span>
-              </Button>
-              {/* <Button size="sm" variant="outline" className="h-8 gap-1">
+            <File className="mr-2 h-4 w-4" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Export</span>
+          </Button>
+          {/* <Button size="sm" variant="outline" className="h-8 gap-1">
                   <File className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                     Export
@@ -91,7 +87,6 @@ export default function DataTable() {
               <Button variant="outline" className="ml-auto">
                 Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
-              
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {table
@@ -111,16 +106,13 @@ export default function DataTable() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-
         </div>
       </div>
-
-
 
       {/* Data Table */}
       <div className="rounded-md border">
         <Table>
-          {/* <TableHeader>
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -134,8 +126,8 @@ export default function DataTable() {
                 })}
               </TableRow>
             ))}
-          </TableHeader> */}
-          {/* <TableBody>
+          </TableHeader>
+          <TableBody>
             {table.getRowModel().rows?.length  ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
@@ -153,17 +145,17 @@ export default function DataTable() {
                 </TableCell>
               </TableRow>
             )}
-          </TableBody> */}
+          </TableBody>
         </Table>
       </div>
 
       {/* Pagination Section */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {/* {table.getFilteredSelectedRowModel().rows.length} of{' '}
-          {table.getFilteredRowModel().rows.length} row(s) selected. */}
+          {table.getFilteredSelectedRowModel().rows.length} of{' '}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        {/* <div className="space-x-2">
+        <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
@@ -180,7 +172,7 @@ export default function DataTable() {
           >
             Next
           </Button>
-        </div> */}
+        </div>
       </div>
       {/* {table.getFooterGroups().map(footerGroup => (
             <tr key={footerGroup.id}>

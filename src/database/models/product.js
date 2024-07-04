@@ -21,13 +21,17 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'brandId',
         as: 'brand'
       });
+      Product.hasMany(models.Sale, {
+        foreignKey: 'productId',
+        as: 'sales'
+      });
     }
   }
   Product.init({
     name: DataTypes.STRING,
     quantity: DataTypes.INTEGER,
-    purchasing_price: DataTypes.INTEGER,
-    selling_price: DataTypes.INTEGER,
+    cost: DataTypes.INTEGER, // cost == cost
+    price: DataTypes.INTEGER, // price == price
     categoryId: {
       type: DataTypes.INTEGER,
       references: {

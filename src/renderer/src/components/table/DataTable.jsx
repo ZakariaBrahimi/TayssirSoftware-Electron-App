@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client'
 
-import * as React from 'react'
+import React, {useEffect} from 'react'
 import { useContext } from 'react'
 import {
   flexRender,
@@ -39,8 +39,12 @@ export default function DataTable() {
   const [columnFilters, setColumnFilters] = React.useState([])
   const [columnVisibility, setColumnVisibility] = React.useState({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const { products } = useContext(ProductContext)
+  const { products, getProducts } = useContext(ProductContext)
   const columns = DataTableColumns()
+  useEffect(() => {
+    getProducts()
+  }, [])
+  
   const table = useReactTable({
     data: products,
     columns,

@@ -19,8 +19,8 @@ export const ProductProvider = ({ children }) => {
   const [newProductData, setNewProductData] = useState({
     name: '',
     quantity: 0,
-    purchasing_price: 0,
-    selling_price: 0,
+    cost: 0,
+    price: 0,
     brand:'',
     category: ''
   })
@@ -88,7 +88,7 @@ export const ProductProvider = ({ children }) => {
   const getProducts = () => {
     console.log('getting products list')
 
-    // Sending data to the main process on 'createNewProduct' channel
+    // Sending data to the main process on 'getProducts' channel
     window.electron.ipcRenderer.send('getProducts')
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getProducts:response', (event, response) => {
@@ -103,9 +103,8 @@ export const ProductProvider = ({ children }) => {
   }
   const createNewProduct = (event) => {
     event.preventDefault()
-    console.log('before everything')
     // Sending data to the main process on 'createNewProduct' channel
-    // TODO: should I do once() instead of send() !!!
+    console.log('Creating new Product: ', newProductData)
     window.electron.ipcRenderer.send('createNewProduct', newProductData)
     console.log('sent done')
     // Listen for the response from the main process using 'once' to ensure it's handled only once
@@ -119,8 +118,8 @@ export const ProductProvider = ({ children }) => {
         setNewProductData({
           name: '',
           quantity: 0,
-          purchasing_price: 0,
-          selling_price: 0,
+          cost: 0,
+          price: 0,
           brand: '',
           category: '',
         })

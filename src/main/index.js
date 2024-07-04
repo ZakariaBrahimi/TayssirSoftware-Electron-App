@@ -6,7 +6,8 @@ import icon from '../../resources/icon.png?asset'
 const {ipcMain} = require('electron')
 const db = require("../../src/database/models");
 // const productControlers = require('/../src/controlers/productControler')
-const productControlers = require(__dirname + '/../../src/database/controlers/productControler')
+const productControler = require(__dirname + '/../../src/database/controlers/productControler')
+const salesControler = require(__dirname + '/../../src/database/controlers/SalesControler')
 
 function createWindow() {
   // Create the browser window.
@@ -45,14 +46,18 @@ function createWindow() {
     console.log('connection established')
   })
   
-  productControlers.createNewProduct()
-  productControlers.getProducts()
-  productControlers.deleteProductById()
-  productControlers.updateProductById()
-  productControlers.getCategories()
-  productControlers.createNewCategory()
-  productControlers.getProductBrands()
-  productControlers.createNewProductBrand()
+  productControler.createNewProduct()
+  productControler.getProducts()
+  productControler.deleteProductById()
+  productControler.updateProductById()
+  productControler.getCategories()
+  productControler.createNewCategory()
+  productControler.getProductBrands()
+  productControler.createNewProductBrand()
+  // Sales
+  salesControler.newSoldProducts()
+  salesControler.getSoldProducts()
+  salesControler.getSoldProductsAtDateTime()
   
 }
 

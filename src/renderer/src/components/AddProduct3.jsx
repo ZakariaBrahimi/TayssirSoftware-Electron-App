@@ -64,33 +64,33 @@ export default function AddProduct() {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="purchasing_price" className="text-right">
+            <Label htmlFor="cost" className="text-right">
               Purchasing price
             </Label>
             <Input
-              value={newProductData?.purchasing_price}
+              value={newProductData?.cost}
               onChange={(e) =>
                 setNewProductData((prevState) => ({
                   ...prevState,
-                  purchasing_price: e.target.value
+                  cost: e.target.value
                 }))
               }
               type="number"
-              id="purchasing_price"
+              id="cost"
               className="col-span-3"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="selling_price" className="text-right">
+            <Label htmlFor="price" className="text-right">
               Selling price
             </Label>
             <Input
-              value={newProductData?.selling_price}
+              value={newProductData?.price}
               onChange={(e) =>
-                setNewProductData((prevState) => ({ ...prevState, selling_price: e.target.value }))
+                setNewProductData((prevState) => ({ ...prevState, price: e.target.value }))
               }
               type="number"
-              id="selling_price"
+              id="price"
               className="col-span-3"
             />
           </div>

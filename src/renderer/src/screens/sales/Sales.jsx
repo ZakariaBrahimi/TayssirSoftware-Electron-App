@@ -6,18 +6,27 @@ import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-components/ui/p
 import { Button } from '@shadcn-components/ui/button'
 import { Calendar } from '@shadcn-components/ui/calendar'
 import { format, addDays } from 'date-fns'
-import { useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import DataTable from './dataGrid/DataTable'
 import NewProductSell from './NewProductSell'
+import SalesContext from '../../context/SalesContext'
 // import { DateRange } from "react-day-picker"
 
 const Sales = () => {
   // const [fromDate, setFromDate] = useState()
   // const [open, setOpen] = useState(false)
+  const { getSoldProducts, getSoldProductsAtDateTime } = useContext(SalesContext)
   const [date, setDate] = useState({
-    from: new Date(2024, 0, 20),
-    to: addDays(new Date(2024, 0, 20), 20)
+    from: null,
+    to: null
   })
+  useEffect(()=>{
+    
+    getSoldProductsAtDateTime(date)
+  }, [date])
+  useEffect(()=>{
+    getSoldProducts()
+  }, [])
   return (
     <div className="flex flex-col w-full">
       <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
@@ -104,7 +113,8 @@ const Sales = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold md:text-2xl">Sales</h1>
           <div className='flex gap-6 items-center'>
-          
+
+            
             <Popover>
               <PopoverTrigger asChild>
                 <Button

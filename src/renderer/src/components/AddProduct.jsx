@@ -275,34 +275,34 @@ const Add = () => {
                     </div>
                     <div className="flex gap-4">
                       <div className="grid gap-3 flex-1">
-                        <Label htmlFor="selling_price">Selling Price</Label>
+                        <Label htmlFor="cost">Product Cost</Label>
                         <Input
                           required
-                          value={newProductData?.selling_price}
+                          value={newProductData?.cost}
                           onChange={(e) =>
                             setNewProductData((prevState) => ({
                               ...prevState,
-                              selling_price: e.target.value
+                              cost: e.target.value
                             }))
                           }
                           type="number"
-                          id="selling_price"
+                          id="cost"
                           className="w-full"
                         />
                       </div>
                       <div className="grid gap-3 flex-1">
-                        <Label htmlFor="purchasing_price">Purchasing Price</Label>
+                        <Label htmlFor="price">Price</Label>
                         <Input
                           required
-                          value={newProductData?.purchasing_price}
+                          value={newProductData?.price}
                           onChange={(e) =>
                             setNewProductData((prevState) => ({
                               ...prevState,
-                              purchasing_price: e.target.value
+                              price: e.target.value
                             }))
                           }
                           type="number"
-                          id="purchasing_price"
+                          id="price"
                           className="w-full"
                         />
                       </div>

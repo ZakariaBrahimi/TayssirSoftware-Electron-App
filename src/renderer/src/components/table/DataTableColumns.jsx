@@ -94,11 +94,11 @@ const DataTableColumns = () => {
       }
     },
     {
-      accessorKey: 'purchasing_price',
+      accessorKey: 'cost',
       footer: (props) => props.column.id,
-      header: () => <div className="text-right">Purchasing Price</div>,
+      header: () => <div className="text-right">Product Cost</div>,
       cell: ({ row }) => {
-        const price = parseFloat(row.original?.purchasing_price)
+        const price = parseFloat(row.original?.cost)
         const formatted = new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'DZD'
@@ -107,11 +107,11 @@ const DataTableColumns = () => {
       }
     },
     {
-      accessorKey: 'selling_price',
+      accessorKey: 'price',
       footer: (props) => props.column.id,
-      header: () => <div className="text-right">Selling Price</div>,
+      header: () => <div className="text-right">Price</div>,
       cell: ({ row }) => {
-        const price = parseFloat(row.original?.selling_price)
+        const price = parseFloat(row.original?.price)
         const formatted = new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'DZD'
