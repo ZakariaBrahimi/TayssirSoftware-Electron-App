@@ -52,7 +52,7 @@ const SideNavbar = () => {
               className={({ isActive, isPending }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F4F4F5] text-[#71717A] text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
               }
-              to="home"
+              to="/"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
