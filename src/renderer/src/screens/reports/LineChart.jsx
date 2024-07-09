@@ -58,6 +58,7 @@ export default function Reports({ date }) {
       setChartData(newChartData)
     }
   }, [date, soldProducts])
+  
 
   const total = useMemo(
     () => ({
