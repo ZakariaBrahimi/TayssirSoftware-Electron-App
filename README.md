@@ -1,7 +1,3 @@
-Sure, here's a README file template for Tayssir POS Software. You can adjust the details as necessary to match the specifics of your project.
-
----
-
 # Tayssir POS Software
 
 Tayssir POS (Point of Sale) Software is a comprehensive and efficient solution for managing sales, inventory, and customer interactions. Built with modern technologies such as Electron.js, React.js, Shadcn, Sequelize, and PostgreSQL, it provides a seamless experience for businesses of all sizes.
@@ -96,7 +92,3 @@ For any inquiries or support, please contact:
 
 - **Email**: support@tayssir.com
 - **Website**: [www.tayssir.com](http://www.tayssir.com)
-
----
-
-Feel free to customize this template as needed. If you have specific sections or information you want to include, just let me know!
