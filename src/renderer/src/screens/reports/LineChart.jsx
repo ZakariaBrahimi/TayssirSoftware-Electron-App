@@ -15,7 +15,7 @@ import SalesContext from '../../context/SalesContext'
 
 const chartConfig = {
   views: {
-    label: 'Page Views'
+    label: 'Total'
   },
   revenue: {
     label: 'Revenue',
@@ -23,7 +23,7 @@ const chartConfig = {
   },
   netProfit: {
     label: 'Net Profit',
-    color: 'hsl(var(--chart-2))'
+    color: '#2196F3'
   }
 }
 
@@ -34,31 +34,78 @@ export default function Reports({ date }) {
 
   useEffect(() => {
     if (date?.from && date?.to) {
-      const start = format(new Date(date.from), 'yyyy-MM-dd')
-      const end = format(new Date(date.to), 'yyyy-MM-dd')
+      const start = format(new Date(date.from), 'yyyy-MM-dd');
+      const end = format(new Date(date.to), 'yyyy-MM-dd');
 
+      // Filter data based on the date range
       const filteredData = soldProducts.filter((soldProduct) => {
-        const currentDate = format(new Date(soldProduct.saleDate), 'yyyy-MM-dd')
-        return currentDate >= start && currentDate <= end
-      })
+        const currentDate = format(new Date(soldProduct.saleDate), 'yyyy-MM-dd');
+        return currentDate >= start && currentDate <= end;
+      });
 
-      const newChartData = filteredData.map((soldProduct) => {
-        const price = soldProduct.product.price
-        const cost = soldProduct.product.cost
-        const discount = soldProduct.discount
-        const quantity = soldProduct.quantity
-        const netProfit = (price - cost - discount) * quantity
-        const revenue = (price - discount) * quantity
-        return {
-          date: format(new Date(soldProduct.saleDate), 'yyyy-MM-dd'),
-          revenue: revenue,
-          netProfit: netProfit
+      // Aggregate data by date
+      const dateMap = new Map();
+
+      filteredData.forEach((soldProduct) => {
+        const currentDate = format(new Date(soldProduct.saleDate), 'yyyy-MM-dd');
+        const price = soldProduct.product.price;
+        const cost  = soldProduct.product.cost;
+        const discount = soldProduct.discount;
+        const quantity = soldProduct.quantity;
+
+        if (!dateMap.has(currentDate)) {
+          dateMap.set(currentDate, { revenue: 0, netProfit: 0 });
         }
-      })
-      setChartData(newChartData)
+
+        const currentData = dateMap.get(currentDate);
+        currentData.revenue += (price - discount) * quantity;
+        currentData.netProfit += (price - cost - discount) * quantity;
+      });
+
+      // Convert the Map to an array for charting
+      const newChartData = Array.from(dateMap.entries()).map(([date, { revenue, netProfit }]) => ({
+        date,
+        revenue,
+        netProfit,
+      }));
+
+      setChartData(newChartData);
     }
-  }, [date, soldProducts])
-  
+  }, [date, soldProducts]);
+  // useEffect(() => {
+  //   if (date?.from && date?.to) {
+  //     // debugger
+  //     const start = format(new Date(date.from), 'yyyy-MM-dd')
+  //     const end = format(new Date(date.to), 'yyyy-MM-dd')
+
+  //     const filteredData = soldProducts.filter((soldProduct) => {
+  //       const currentDate = format(new Date(soldProduct.saleDate), 'yyyy-MM-dd')
+  //       return currentDate >= start && currentDate <= end
+  //     })
+
+  //     const newChartData = filteredData.map((soldProduct) => {
+  //       const currentDate = format(new Date(soldProduct.saleDate), 'yyyy-MM-dd')
+  //       const dateMap = new Map()
+
+  //       if (!dateMap.has(currentDate)) {
+  //         dateMap.set(currentDate, { revenue: 0, netProfit: 0 })
+  //       }
+  //       const price = soldProduct.product.price
+  //       const cost = soldProduct.product.cost
+  //       const discount = soldProduct.discount
+  //       const quantity = soldProduct.quantity
+  //       dateMap[soldProduct.saleDate].netProfit += (price - cost - discount) * quantity
+  //       dateMap[soldProduct.saleDate].revenue += (price - discount) * quantity
+
+  //       return {
+  //         date: format(new Date(soldProduct.saleDate), 'yyyy-MM-dd'),
+  //         revenue: dateMap[soldProduct.saleDate].revenue,
+  //         netProfit: dateMap[soldProduct.saleDate].netProfit
+  //       }
+  //     })
+  //     setChartData(newChartData)
+  //   }
+  // }, [date, soldProducts])
 
   const total = useMemo(
     () => ({
@@ -67,7 +114,9 @@ export default function Reports({ date }) {
     }),
     [chartData]
   )
-
+  useEffect(() => {
+    console.log('chartData', chartData)
+  }, [chartData])
   return (
     <Card>
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">

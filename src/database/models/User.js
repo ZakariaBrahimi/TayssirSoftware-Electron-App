@@ -1,9 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable no-unused-vars */
-'use strict';
-const {
-  Model
-} = require('sequelize');
+'use strict'
+const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -15,15 +13,22 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  User.init({
-    fullname: DataTypes.STRING,
-    email: DataTypes.INTEGER,
-    username: DataTypes.INTEGER,
-    password: DataTypes.STRING,
-  }, {
-    sequelize,
-    modelName: 'User',
-    // FIXME: when I change model name, sequelize creates a new table , instead of updating only the model name
-  });
-  return User;
-};
+  User.init(
+    {
+      username: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false
+      }
+    },
+    {
+      sequelize,
+      modelName: 'User'
+    }
+  )
+  return User
+}

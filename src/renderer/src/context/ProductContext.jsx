@@ -18,6 +18,7 @@ export const ProductProvider = ({ children }) => {
   const [brandData, setBrandData] = useState([])
   const [newProductData, setNewProductData] = useState({
     name: '',
+    barcode: null,
     quantity: 0,
     cost: 0,
     price: 0,
@@ -103,18 +104,14 @@ export const ProductProvider = ({ children }) => {
   }
   const createNewProduct = (event) => {
     event.preventDefault()
-    // Sending data to the main process on 'createNewProduct' channel
-    console.log('Creating new Product: ', newProductData)
+    
     window.electron.ipcRenderer.send('createNewProduct', newProductData)
-    console.log('sent done')
     // Listen for the response from the main process using 'once' to ensure it's handled only once
     window.electron.ipcRenderer.once('createNewProduct:response', (event, response) => {
-      console.log('response received')
       if (response.success) {
-        console.log('success')
         setProducts(response.products)
-        console.log(response.products)
         navigate('/inventory')
+        console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhh: ', newProductData)
         setNewProductData({
           name: '',
           quantity: 0,
@@ -134,6 +131,7 @@ export const ProductProvider = ({ children }) => {
       }
     })
   }
+
   const createNewCategory = () => {
     // event.preventDefault()
     console.log('before everything')

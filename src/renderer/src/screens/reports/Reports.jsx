@@ -63,8 +63,8 @@ const Reports = () => {
   }, [])
 
   const [date, setDate] = useState({
-    from: null,
-    to: null
+    from: new Date(new Date().setDate(new Date().getDate() - 7)), // starting a week before the todays date
+    to: new Date()
   })
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -171,7 +171,7 @@ const Reports = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{products.length}</div>
+              <div className="text-2xl font-bold">{products.length+ ' '}Products</div>
               <p className="text-xs text-muted-foreground">+201 since last hour</p>
             </CardContent>
           </Card>

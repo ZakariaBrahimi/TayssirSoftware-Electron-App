@@ -73,15 +73,10 @@ import {
   CommandList
 } from '@shadcn-components/ui/command'
 
-// import {
-//   Tooltip,
-//   TooltipContent,
-//   TooltipTrigger,
-// } from "@shadcn-components/ui/tooltip"
-// import product_placeholder from '../assets/product-placeholder'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import ProductContext from '../context/ProductContext'
+import BarcodeGenerator from './BarcodeGenerator'
 
 const EditProduct = () => {
   const {
@@ -118,7 +113,13 @@ const EditProduct = () => {
     navigate('/inventory')
     toast({ description: 'Product updated successfully.', variant: 'success' })
   }
-
+  const [text, setText] = useState('')
+  const [test, setTest] = useState(null)
+  useEffect(()=>{
+    if(product){
+      setText(product?.name)
+    }
+  }, [])
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -268,14 +269,20 @@ const EditProduct = () => {
                         defaultValue={product?.name}
                         id="name"
                         type="text"
-                        onChange={(event) =>
+                        onChange={(event) =>{
                           setUpdateData((prevData) => ({
                             ...prevData,
                             name: event.target.value
                           }))
-                        }
+                          setTest(event.target.value)
+                        }}
                         className="w-full"
                       />
+                    </div>
+                    <div className="grid gap-3">
+                      <Label htmlFor="codeBar">Code Bar</Label>
+                      
+                      <BarcodeGenerator text={text} setTest={setTest} test={test} setText={setText} setNewProductData={setUpdateData}  />
                     </div>
 
                     <div className="grid gap-3">

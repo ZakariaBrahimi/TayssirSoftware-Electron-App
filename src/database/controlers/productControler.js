@@ -256,6 +256,26 @@ const updateProductById = () => {
     }
   })
 }
+const generateCodeBar = () => {
+  ipcMain.on('generateCodeBar', async (event, productName) => {
+    console.log('hello world')
+    try {
+      const product = await db.Product.findOne({
+        where: { name: productName }
+      })
+      if (product) {
+        event.reply('generateCodeBar:response', { success: false, message: 'Product name found, change the name' })
+      } else {
+        event.reply('generateCodeBar:response', {
+          success: true,
+          message: 'Product Name not found'
+        })
+      }
+    } catch (error) {
+      event.reply('generateCodeBar:response', { success: false, error: error.message })
+    }
+  })
+}
 
 // Export the functions to handle IPC events
 module.exports = {
@@ -266,5 +286,6 @@ module.exports = {
   getCategories,
   createNewCategory,
   createNewProductBrand,
-  getProductBrands
+  getProductBrands,
+  generateCodeBar
 }

@@ -16,6 +16,7 @@ import Sales from "./screens/sales/Sales.jsx"
 import EditProduct from "./components/EditProduct.jsx"
 import SalesContext from "./context/SalesContext.jsx"
 import Reports from './screens/reports/Reports.jsx'
+import Login from "./screens/auth/Login.jsx"
 
 function App() {
   const { getProducts } = useContext(ProductContext)
@@ -40,6 +41,8 @@ function App() {
         <Route path="inventory" element={ <Inventory/> }/>
         <Route path="sales" element={ <Sales/> }/>
         <Route path="analytics" element={ <Reports/> }/>
+        <Route path="analytics" element={ <Reports/> }/>
+        <Route path="login" element={ <Login/> }/>
         
         {/* <Route path="/user/:userId" element={<User />} /> */}
       </Routes>

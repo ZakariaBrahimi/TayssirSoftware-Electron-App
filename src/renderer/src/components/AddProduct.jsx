@@ -8,14 +8,15 @@ import {
   Package,
   Package2,
   PanelLeft,
-  PlusCircle,
+  // PlusCircle,
   Search,
-  Settings,
+  // Settings,
   ShoppingCart,
   Upload,
   Users2,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Barcode
 } from 'lucide-react'
 
 import { Badge } from '@shadcn-components/ui/badge'
@@ -32,7 +33,7 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
+  // CardFooter,
   CardHeader,
   CardTitle
 } from '@shadcn-components/ui/card'
@@ -46,13 +47,13 @@ import {
 } from '@shadcn-components/ui/dropdown-menu'
 import { Input } from '@shadcn-components/ui/input'
 import { Label } from '@shadcn-components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@shadcn-components/ui/select'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue
+// } from '@shadcn-components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -63,16 +64,16 @@ import {
   SheetHeader,
   SheetTitle
 } from '@shadcn-components/ui/sheet'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@shadcn-components/ui/table'
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow
+// } from '@shadcn-components/ui/table'
 import { Textarea } from '@shadcn-components/ui/textarea'
-import { ToggleGroup, ToggleGroupItem } from '@shadcn-components/ui/toggle-group'
+// import { ToggleGroup, ToggleGroupItem } from '@shadcn-components/ui/toggle-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-components/ui/popover'
 import {
   Command,
@@ -92,14 +93,24 @@ import ProductContext from '../context/ProductContext'
 // import product_placeholder from '../assets/product-placeholder'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import BarcodeGenerator from './BarcodeGenerator'
 
 const Add = () => {
   const {
-    createNewProduct, newProductData, setNewProductData,
-    getCategories, categories, createNewCategory, newCategory, setNewCategory,
+    createNewProduct,
+    newProductData,
+    setNewProductData,
+    getCategories,
+    categories,
+    createNewCategory,
+    newCategory,
+    setNewCategory,
 
-    brands, getProductBrands, createNewProductBrand, newBrand, setNewBrand,
-
+    brands,
+    getProductBrands,
+    createNewProductBrand,
+    newBrand,
+    setNewBrand
   } = useContext(ProductContext)
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -111,6 +122,10 @@ const Add = () => {
     getCategories()
     getProductBrands()
   }, [])
+  const [text, setText] = useState('')
+  const [test, setTest] = useState(null)
+  
+  
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -220,7 +235,12 @@ const Add = () => {
           className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4"
         >
           <div className="flex items-center gap-4">
-            <Button onClick={()=>navigate('/inventory')} variant="outline" size="icon" className="h-7 w-7">
+            <Button
+              onClick={() => navigate('/inventory')}
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+            >
               <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Back</span>
             </Button>
@@ -257,11 +277,17 @@ const Add = () => {
                         value={newProductData?.name}
                         id="name"
                         type="text"
-                        onChange={(e) =>
+                        onChange={(e) =>{
                           setNewProductData((prevState) => ({ ...prevState, name: e.target.value }))
-                        }
+                          setTest(e.target.value)
+                        }}
                         className="w-full"
                       />
+                    </div>
+                    <div className="grid gap-3">
+                      <Label htmlFor="codeBar">Code Bar</Label>
+                      
+                      <BarcodeGenerator text={text} setTest={setTest} test={test} setText={setText} setNewProductData={setNewProductData}  />
                     </div>
 
                     <div className="grid gap-3">
@@ -398,8 +424,10 @@ const Add = () => {
                                         onSelect={(currentValue) => {
                                           setValue(currentValue === value ? '' : currentValue)
                                           setOpen(false)
-                                          setNewProductData((prevState) => ({ ...prevState, categoryId: category?.dataValues?.id }))
-                                          
+                                          setNewProductData((prevState) => ({
+                                            ...prevState,
+                                            categoryId: category?.dataValues?.id
+                                          }))
                                         }}
                                       >
                                         <Check
@@ -418,37 +446,15 @@ const Add = () => {
                             </Command>
                           </PopoverContent>
                         </Popover>
-                        {/* <Select required>
-                          <SelectTrigger id="category" aria-label="Select category">
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            
-                            {
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="accessories">Accessories</SelectItem>
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="accessories">Accessories</SelectItem>
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="accessories">Accessories</SelectItem>
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="accessories">Accessories</SelectItem>
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="accessories">Accessories</SelectItem>
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="accessories">Accessories</SelectItem>
-                          </SelectContent>
-                        </Select> */}
+                        
                       </div>
                       <div className="grid gap-3 sm:col-span-2">
                         <Label htmlFor="brands">Brand Name (optional)</Label>
-                        <Popover className="bg-yellow-400" open={brandsOpen} onOpenChange={setBrandsOpen}>
+                        <Popover
+                          className="bg-yellow-400"
+                          open={brandsOpen}
+                          onOpenChange={setBrandsOpen}
+                        >
                           <PopoverTrigger className="bg-blue-4" asChild>
                             <Button
                               variant="outline"
@@ -480,8 +486,8 @@ const Add = () => {
                                       <SheetHeader>
                                         <SheetTitle>Create A New Brand</SheetTitle>
                                         <SheetDescription>
-                                          Make changes to your Brands List here. Click save when
-                                          you are done.
+                                          Make changes to your Brands List here. Click save when you
+                                          are done.
                                         </SheetDescription>
                                       </SheetHeader>
                                       <div className="grid gap-4 py-4">
@@ -516,9 +522,14 @@ const Add = () => {
                                       <CommandItem
                                         key={brand.dataValues.id}
                                         onSelect={(currentValue) => {
-                                          setBrandValue(currentValue === brandValue ? '' : currentValue)
+                                          setBrandValue(
+                                            currentValue === brandValue ? '' : currentValue
+                                          )
                                           setBrandsOpen(false)
-                                          setNewProductData((prevState) => ({ ...prevState, brandId: brand?.dataValues?.id }))
+                                          setNewProductData((prevState) => ({
+                                            ...prevState,
+                                            brandId: brand?.dataValues?.id
+                                          }))
                                         }}
                                       >
                                         <Check
@@ -537,7 +548,6 @@ const Add = () => {
                             </Command>
                           </PopoverContent>
                         </Popover>
-                        
                       </div>
                     </div>
                   </div>

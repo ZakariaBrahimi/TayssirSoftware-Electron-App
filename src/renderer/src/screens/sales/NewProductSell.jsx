@@ -43,6 +43,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-components/ui/p
 import { useContext, useEffect, useState } from 'react'
 import ProductContext from '../../context/ProductContext'
 import SalesContext from '../../context/SalesContext'
+import { BarcodeScanner } from 'react-barcode-scanner'
+import "react-barcode-scanner/polyfill"
 
 const NewProductSell = () => {
   const { products } = useContext(ProductContext)
@@ -140,6 +142,7 @@ const NewProductSell = () => {
                     Searching for a Product by the Barcode.
                   </span>
                   <Input className="mt-8" type="number" placeholder="Product Barcode" />
+                  {/* <BarcodeScanner /> */}
                 </TabsContent>
                 <TabsContent className="mt-4 mb-6" value="Name">
                   <div className="grid gap-3 sm:col-span-2">
