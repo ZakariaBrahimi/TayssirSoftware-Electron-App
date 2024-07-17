@@ -20,7 +20,7 @@ const BarcodeGenerator = ({ text, setText, test, setTest, setNewProductData }) =
   }
   const [isExist, setIsExist] = useState(false)
   const [isEmpty, setIsEmpty] = useState(false)
-  const [numericCode, setNumericCode] = useState(null)
+  const [numericCode, setNumericCode] = useState()
   const generateCodeBar = () => {
     if (test) {
       console.log('generating code bargggggggggggggg')
@@ -70,9 +70,10 @@ const BarcodeGenerator = ({ text, setText, test, setTest, setNewProductData }) =
       <div className="flex-shrink w-full">
         <Input
           id="codeBar"
-          value={text ? numericCode : ''}
+          value={text && numericCode}
           type="text"
-          readOnly
+          // readOnly
+          required
 
           className=" w-full "
         />
