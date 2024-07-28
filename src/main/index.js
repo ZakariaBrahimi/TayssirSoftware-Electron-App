@@ -1,16 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { app, shell, BrowserWindow} from 'electron'
-import { join, resolve  } from 'path'
+import { join  } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 const db = require("../../resources/database/models");
-// const db = require("../../src/database/models");
-// const productControler = require(__dirname, '/../../src/database/controlers/productControler')
-// const salesControler = require(__dirname, '/../../src/database/controlers/SalesControler')
-// const userControlers = require(__dirname, '/../../src/database/controlers/userControlers')
-// const db = require(__dirname, '/../resources/database/models')
-
-
 const productControler = require('../../resources/database/controlers/productControler')
 const salesControler   = require('../../resources/database/controlers/salesControler')
 const userControler    = require('../../resources/database/controlers/userControler')

@@ -71,6 +71,10 @@ Once the application is running, you can access the following features:
 - **Inventory**: Add, update, or delete products from your inventory.
 - **Reports**: Generate and view detailed reports.
 
+## Next Features to Add
+- **Dynamic Input fields**: User can add any form field to the product creation form.
+- **To Do List**: User can write down today's tasks easily.
+
 ## Contributing
 
 We welcome contributions from the community! To contribute:
