@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: tayssirsoft-electron-app
+productName: tayssirSoftware
 directories:
   buildResources: build
 files:
