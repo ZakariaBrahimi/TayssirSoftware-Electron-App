@@ -8,7 +8,7 @@ import { Button } from '@shadcn-components/ui/button'
 import { Barcode, Printer } from 'lucide-react'
 import { Input } from '@shadcn-components/ui/input'
 
-const BarcodeGenerator = ({ productName, setNewProductData }) => {
+const BarcodeGenerator = ({ test, setNewProductData }) => {
   const barcodeRef = useRef(null)
   const printRef = useRef(null)
   const [text, setText] = useState('')
@@ -27,13 +27,16 @@ const BarcodeGenerator = ({ productName, setNewProductData }) => {
   }
 
   const generateCodeBar = () => {
-    if (productName) {
-      window.electron.ipcRenderer.send('generateCodeBar', productName)
+    if (test) {
+      console.log('generating code bargggggggggggggg')
+      window.electron.ipcRenderer.send('generateCodeBar', test)
       window.electron.ipcRenderer.once('generateCodeBar:response', (event, response) => {
+        console.log('response:', response)
         if (response.success) {
-          setText(productName)
+          setText(test)
           setIsExist(false)
           setIsEmpty(false)
+          console.log('Barcode generated')
         } else {
           console.log('Error generating barcode: ', response.message)
           setIsExist(true)

@@ -16,7 +16,6 @@ import {
   Users2,
   Check,
   ChevronsUpDown,
-  Barcode
 } from 'lucide-react'
 
 import { Badge } from '@shadcn-components/ui/badge'
@@ -122,8 +121,8 @@ const Add = () => {
     getCategories()
     getProductBrands()
   }, [])
-  const [text, setText] = useState('')
-  const [test, setTest] = useState(null)
+  
+  const [productName, setProductName] = useState(null)
   
   
   return (
@@ -279,7 +278,7 @@ const Add = () => {
                         type="text"
                         onChange={(e) =>{
                           setNewProductData((prevState) => ({ ...prevState, name: e.target.value }))
-                          setTest(e.target.value)
+                          setProductName(e.target.value)
                         }}
                         className="w-full"
                       />
@@ -287,7 +286,7 @@ const Add = () => {
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
                       
-                      <BarcodeGenerator text={text} setTest={setTest} test={test} setText={setText} setNewProductData={setNewProductData}  />
+                      <BarcodeGenerator setProductName={setProductName} productName={productName} setNewProductData={setNewProductData}  />
                     </div>
 
                     <div className="grid gap-3">
