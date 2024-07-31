@@ -98,6 +98,7 @@ const EditProduct = () => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
+  const [productName, setProductName] = useState(false)
   useEffect(() => {
     getCategories()
     getProductBrands()
@@ -113,11 +114,10 @@ const EditProduct = () => {
     navigate('/inventory')
     toast({ description: 'Product updated successfully.', variant: 'success' })
   }
-  const [text, setText] = useState('')
-  const [test, setTest] = useState(null)
+
   useEffect(()=>{
     if(product){
-      setText(product?.name)
+      setProductName(product?.name)
     }
   }, [])
   return (
@@ -274,7 +274,7 @@ const EditProduct = () => {
                             ...prevData,
                             name: event.target.value
                           }))
-                          setTest(event.target.value)
+                          setProductName(event.target.value)
                         }}
                         className="w-full"
                       />
@@ -282,7 +282,7 @@ const EditProduct = () => {
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
                       
-                      <BarcodeGenerator text={text} setTest={setTest} test={test} setText={setText} setNewProductData={setUpdateData}  />
+                      <BarcodeGenerator setProductName={setProductName} productName={productName} productPrice={450} setNewProductData={setUpdateData}  />
                     </div>
 
                     <div className="grid gap-3">

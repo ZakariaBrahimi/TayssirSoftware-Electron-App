@@ -122,6 +122,7 @@ const Add = () => {
     getProductBrands()
   }, [])
   
+  
   const [productName, setProductName] = useState(null)
   
   
@@ -286,7 +287,7 @@ const Add = () => {
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
                       
-                      <BarcodeGenerator setProductName={setProductName} productName={productName} setNewProductData={setNewProductData}  />
+                      <BarcodeGenerator setProductName={setProductName} productName={productName} setNewProductData={setNewProductData} newProductData={newProductData}  />
                     </div>
 
                     <div className="grid gap-3">

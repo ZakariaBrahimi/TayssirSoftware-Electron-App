@@ -1,98 +1,136 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react/prop-types */
-/* eslint-disable prettier/prettier */
-import { useEffect, useRef, useState } from 'react'
-import JsBarcode from 'jsbarcode'
-import { useReactToPrint } from 'react-to-print'
-import { Button } from '@shadcn-components/ui/button'
-import { Barcode, Printer } from 'lucide-react'
-import { Input } from '@shadcn-components/ui/input'
+import { useEffect, useRef, useState, useCallback } from 'react';
+import JsBarcode from 'jsbarcode';
+import { useReactToPrint } from 'react-to-print';
+import { Button } from '@shadcn-components/ui/button';
+import { Barcode, Printer } from 'lucide-react';
+import { Input } from '@shadcn-components/ui/input';
 
-const BarcodeGenerator = ({ productName, setNewProductData }) => {
-  const barcodeRef = useRef(null)
-  const printRef = useRef(null)
-  const [text, setText] = useState('')
-  const [isExist, setIsExist] = useState(false)
-  const [isEmpty, setIsEmpty] = useState(false)
-  const [numericCode, setNumericCode] = useState()
-
-  const stringToNumericCode = (str) => {
-    let hash = 0
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i)
-      hash = (hash << 5) - hash + char
-      hash = hash & hash // Convert to 32bit integer
-    }
-    return Math.abs(hash).toString()
+const stringToNumericCode = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
+  let code = Math.abs(hash).toString();
+  // Ensure the code is 12 digits long for UPC-A or 13 for EAN-13
+  if (code.length < 12) {
+    code = code.padStart(12, '0');
+  } else if (code.length > 12) {
+    code = code.substring(0, 12);
+  }
+  return code;
+};
 
-  const generateCodeBar = () => {
+const BarcodeGenerator = ({ productName, newProductData, setNewProductData }) => {
+  const barcodeRef = useRef(null);
+  const printRef = useRef(null);
+  const [state, setState] = useState({
+    text: '',
+    isExist: false,
+    isEmpty: false,
+    numericCode: '',
+    showExistError: false,
+  });
+
+  const generateCodeBar = useCallback(() => {
     if (productName) {
-      window.electron.ipcRenderer.send('generateCodeBar', productName)
+      window.electron.ipcRenderer.send('generateCodeBar', productName);
       window.electron.ipcRenderer.once('generateCodeBar:response', (event, response) => {
         if (response.success) {
-          setText(productName)
-          setIsExist(false)
-          setIsEmpty(false)
+          setState((prevState) => ({
+            ...prevState,
+            text: productName,
+            isExist: false,
+            isEmpty: false,
+          }));
         } else {
-          console.log('Error generating barcode: ', response.message)
-          setIsExist(true)
+          console.error('Error generating barcode: ', response.message);
+          setState((prevState) => ({
+            ...prevState,
+            isExist: true,
+            showExistError: true,
+          }));
+          setTimeout(() => setState((prevState) => ({ ...prevState, showExistError: false })), 10000); // Hide after 10 seconds
         }
-      })
+      });
     } else {
-      console.log("Barcode can't be generated, provide a product name please")
-      setIsEmpty(true)
+      console.error("Barcode can't be generated, provide a product name please");
+      setState((prevState) => ({ ...prevState, isEmpty: true }));
     }
-  }
+  }, [productName]);
 
   useEffect(() => {
-    setNumericCode(stringToNumericCode(text))
-    if (barcodeRef.current && text) {
-      try {
-        JsBarcode(barcodeRef.current, numericCode, {
-          format: 'CODE128',
-          lineColor: '#000',
-          width: 2,
-          height: 100,
-          displayValue: true
-        })
-        setNewProductData((prevState) => ({ ...prevState, barcode: numericCode }))
-      } catch (e) {
-        console.error('Error generating barcode:', e.message)
+    if (state.text) {
+      const code = stringToNumericCode(state.text);
+      setState((prevState) => ({ ...prevState, numericCode: code }));
+      if (barcodeRef.current) {
+        try {
+          JsBarcode(barcodeRef.current, code, {
+            format: 'CODE128',
+            lineColor: '#000',
+            width: 2,
+            height: 100,
+            displayValue: true,
+          });
+          setNewProductData((prevState) => ({ ...prevState, barcode: code }));
+        } catch (e) {
+          console.error('Error generating barcode:', e.message);
+        }
       }
     }
-  }, [text, numericCode])
+  }, [state.text, setNewProductData]);
+
+  const [barcodePrice, setBarcodePrice] = useState(null);
+  useEffect(() => {
+    if (newProductData?.price) {
+      setBarcodePrice(newProductData.price);
+    }
+  }, [newProductData]);
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current
-  })
+    content: () => printRef.current,
+  });
 
   return (
-    <div className="flex gap-4 w-full ">
+    <div className="flex gap-4 w-full">
       <div className="flex-shrink w-full">
-        <Input id="codeBar" value={text && numericCode} type="text" required className=" w-full " />
-        {isExist && <p className="text-red-500 text-sm pl-3 ">The Product Name already Exist.</p>}
-        {isEmpty && (
-          <p className="text-red-500 text-sm pl-3  ">
+        <Input
+          id="codeBar"
+          value={state.text && state.numericCode}
+          type="text"
+          required
+          className="w-full"
+        />
+        {state.isExist && state.showExistError && (
+          <p className="text-red-500 text-sm pl-3 fade-out">
+            The Product Name already exists.
+          </p>
+        )}
+        {state.isEmpty && (
+          <p className="text-red-500 text-sm pl-3">
             Please enter a product name to generate a barcode.
           </p>
         )}
       </div>
       <Button
         type="button"
-        variant=""
         onClick={generateCodeBar}
         className="generate-button w-fit flex gap-2"
       >
         <Barcode className="w-5" />
         <span>Generate</span>
       </Button>
-      <div ref={printRef} className="print-container hidden">
-        <p className="text-center font-bold">{1995}</p>
-        <svg ref={barcodeRef}></svg>
-      </div>
-      {text ? (
-        <Button type="button" className="flex gap-2" variant="outline" onClick={handlePrint}>
+      
+      {state.text ? (
+        <Button
+          type="button"
+          className="flex gap-2"
+          variant="outline"
+          onClick={handlePrint}
+        >
           <Printer className="w-5" />
           <span>Print Barcode</span>
         </Button>
@@ -102,8 +140,12 @@ const BarcodeGenerator = ({ productName, setNewProductData }) => {
           <span>Print Barcode</span>
         </Button>
       )}
+      <div ref={printRef} className="print-container">
+        <p className="text-center font-bold mb-0 pb-0">{barcodePrice} DA</p>
+        <svg className='pt-0 mt-0' ref={barcodeRef}></svg>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default BarcodeGenerator
+export default BarcodeGenerator;

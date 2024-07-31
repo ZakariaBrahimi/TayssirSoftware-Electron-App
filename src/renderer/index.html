@@ -8,6 +8,21 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     />
+    <style>
+      .fade-out {
+        animation: fadeOut 1s ease-in-out forwards;
+        animation-delay: 9s; /* Start fading out after 9 seconds */
+      }
+      
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+    </style>
   </head>
 
   <body>
