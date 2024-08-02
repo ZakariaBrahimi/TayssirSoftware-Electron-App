@@ -124,7 +124,7 @@ const Add = () => {
   
   
   const [productName, setProductName] = useState(null)
-  
+  const [barcodePrice, setBarcodePrice] = useState(null);
   
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
@@ -287,7 +287,7 @@ const Add = () => {
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
                       
-                      <BarcodeGenerator setProductName={setProductName} productName={productName} setNewProductData={setNewProductData} newProductData={newProductData}  />
+                      <BarcodeGenerator setProductName={setProductName} productName={productName} barcodePrice={barcodePrice} setNewProductData={setNewProductData} newProductData={newProductData}  />
                     </div>
 
                     <div className="grid gap-3">
@@ -321,12 +321,14 @@ const Add = () => {
                         <Input
                           required
                           value={newProductData?.price}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewProductData((prevState) => ({
                               ...prevState,
                               price: e.target.value
-                            }))
-                          }
+                            }));
+                            setBarcodePrice(e.target.value);
+                          }}
+                          
                           type="number"
                           id="price"
                           className="w-full"
