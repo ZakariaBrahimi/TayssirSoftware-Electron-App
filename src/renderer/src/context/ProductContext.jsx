@@ -27,14 +27,14 @@ export const ProductProvider = ({ children }) => {
   })
   const { toast } = useToast()
   const getCategories = () => {
-    console.log('getting Categories list')
+    // console.log('getting Categories list')
 
     // Sending data to the main process on 'getCategories' channel
     window.electron.ipcRenderer.send('getCategories')
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getCategories:response', (event, response) => {
       if (response.success) {
-        console.log('Getting Categories list successfully:', response.categories)
+        // console.log('Getting Categories list successfully:', response.categories)
         setCategories(response.categories)
       } else {
         console.error('Error Getting Products list:', response.error)
@@ -42,14 +42,14 @@ export const ProductProvider = ({ children }) => {
     })
   }
   const getCategoryData = (categoryId) => {
-    console.log('getting Category list')
+    // console.log('getting Category list')
 
     // Sending data to the main process on 'getCategoryData' channel
     window.electron.ipcRenderer.send('getCategoryData')
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getCategoryData:response', (event, response) => {
       if (response.success) {
-        console.log('Getting Category list successfully:', response.category)
+        // console.log('Getting Category list successfully:', response.category)
         setCategoryData(response.category)
       } else {
         console.error('Error Getting Category Data:', response.error)
@@ -57,14 +57,14 @@ export const ProductProvider = ({ children }) => {
     })
   }
   const getBrandData = (brandId) => {
-    console.log('getting Brand Data')
+    // console.log('getting Brand Data')
 
     // Sending data to the main process on 'getBrandData' channel
     window.electron.ipcRenderer.send('getBrandData')
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getBrandData:response', (event, response) => {
       if (response.success) {
-        console.log('Getting Brand list successfully:', response.brand)
+        // console.log('Getting Brand list successfully:', response.brand)
         setBrandData(response.brand)
       } else {
         console.error('Error Getting brand Data:', response.error)
@@ -72,14 +72,14 @@ export const ProductProvider = ({ children }) => {
     })
   }
   const getProductBrands = () => {
-    console.log('getting brands list')
+    // console.log('getting brands list')
 
     // Sending data to the main process on 'getProductBrands' channel
     window.electron.ipcRenderer.send('getProductBrands')
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getProductBrands:response', (event, response) => {
       if (response.success) {
-        console.log('Getting Brands list successfully:', response.brands)
+        // console.log('Getting Brands list successfully:', response.brands)
         setBrands(response.brands)
       } else {
         console.error('Error Getting Brands list:', response.error)
@@ -87,15 +87,14 @@ export const ProductProvider = ({ children }) => {
     })
   }
   const getProducts = () => {
-    console.log('getting products list')
+    // console.log('getting products list')
 
     // Sending data to the main process on 'getProducts' channel
     window.electron.ipcRenderer.send('getProducts')
     // Listen for the response from the main process
     window.electron.ipcRenderer.on('getProducts:response', (event, response) => {
       if (response.success) {
-        console.log('Getting Products list successfully:', response.products)
-        console.log('response2222: ', response)
+        // console.log('Getting Products list successfully:', response.products)
         setProducts(response.products)
       } else {
         console.error('Error Getting Products list:', response.error)
@@ -111,7 +110,6 @@ export const ProductProvider = ({ children }) => {
       if (response.success) {
         setProducts(response.products)
         navigate('/inventory')
-        console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhh: ', newProductData)
         setNewProductData({
           name: '',
           quantity: 0,
@@ -124,7 +122,7 @@ export const ProductProvider = ({ children }) => {
           description: 'Product Created successfully',
           variant: 'success'
         })
-        console.log('Product created successfully:', response.products)
+        // console.log('Product created successfully:', response.products)
       } else {
         console.log(response.error)
         console.error('Error creating product:', response.error)
@@ -134,22 +132,17 @@ export const ProductProvider = ({ children }) => {
 
   const createNewCategory = () => {
     // event.preventDefault()
-    console.log('before everything')
     window.electron.ipcRenderer.send('createNewCategory', {name:newCategory})
-    console.log('sent done')
     // Listen for the response from the main process using 'once' to ensure it's handled only once
     window.electron.ipcRenderer.once('createNewCategory:response', (event, response) => {
-      console.log('response received')
       if (response.success) {
-        console.log('success')
         setCategories(response.categories)
-        // navigate('/inventory');
         setNewCategory('')
         toast({
           description: 'New Category Created successfully',
           variant: 'success'
         })
-        console.log('Category created successfully:', response.categories)
+        // console.log('Category created successfully:', response.categories)
       } else {
         console.log(response.error)
         console.error('Error creating New Category:', response.error)
@@ -157,22 +150,17 @@ export const ProductProvider = ({ children }) => {
     })
   }
   const createNewProductBrand = () => {
-    // event.preventDefault()
-    console.log('before everything')
     window.electron.ipcRenderer.send('createNewProductBrand', {name:newBrand})
-    console.log('sent done')
     // Listen for the response from the main process using 'once' to ensure it's handled only once
     window.electron.ipcRenderer.once('createNewProductBrand:response', (event, response) => {
-      console.log('response received')
       if (response.success) {
-        console.log('success')
         setBrands(response.brands)
         setNewBrand('')
         toast({
           description: 'New Brand Created successfully',
           variant: 'success'
         })
-        console.log('Brand created successfully:', response.brands)
+        // console.log('Brand created successfully:', response.brands)
       } else {
         console.log(response.error)
         console.error('Error creating New Brand:', response.error)
@@ -188,9 +176,8 @@ export const ProductProvider = ({ children }) => {
     // Memory Leaks: Use once for the response listener to prevent memory leaks. ==> Adds a one time listener function for the event. This listener is invoked only the next time a message is sent to channel, after which it is removed
     window.electron.ipcRenderer.once('deleteProductById:response', (event, response) => {
       if (response.success) {
-        console.log('Product deleted successfully', response.products)
+        // console.log('Product deleted successfully', response.products)
         setProducts(response.products)
-        console.log('response.productssssss', products)
       } else {
         console.log(response.error)
       }
@@ -204,7 +191,7 @@ export const ProductProvider = ({ children }) => {
 
     window.electron.ipcRenderer.once('updateProductById:response', (event, response) => {
       if (response.success) {
-        console.log('Product updated successfully:', response.products)
+        // console.log('Product updated successfully:', response.products)
         // Handle success (e.g., update UI, show notification)
         setProducts(response.products) // FIXME: should not updates all products (it could be 10,000 products, it will be problem to update)
       } else {

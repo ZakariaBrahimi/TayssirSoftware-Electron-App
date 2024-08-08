@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
 'use client'
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react'
@@ -171,7 +172,7 @@ const DataTableColumns = () => {
                           deleteProductById(row.original?.id)
                           toast({
                             description: 'Product Deleted successfully',
-                            variant: 'destructive'
+                            variant: 'success'
                           })
                         }}
                       >

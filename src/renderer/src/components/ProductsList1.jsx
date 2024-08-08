@@ -165,7 +165,7 @@ const ProductsList = () => {
                                       deleteProductById(product?.id)
                                       toast({
                                         description: 'Product Deleted successfully',
-                                        variant: "destructive"
+                                        variant: "success"
                                       })
                                     }}
                                   >

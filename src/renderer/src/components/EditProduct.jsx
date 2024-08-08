@@ -76,7 +76,9 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import ProductContext from '../context/ProductContext'
-import BarcodeGenerator from './BarcodeGenerator'
+import EditProductBarcodeGenerator from './EditProductBarcodeGenerator'
+
+
 
 const EditProduct = () => {
   const {
@@ -98,7 +100,7 @@ const EditProduct = () => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
-  const [productName, setProductName] = useState(false)
+  const [productName, setProductName] = useState('')
   useEffect(() => {
     getCategories()
     getProductBrands()
@@ -107,18 +109,20 @@ const EditProduct = () => {
   const { product } = location.state
   const [value, setValue] = useState(product?.category?.name)
   const [brandValue, setBrandValue] = useState(product?.brand?.name)
-  console.log(categories)
   const handleSubmit = (event) => {
     event.preventDefault()
+    setUpdateData((prevData) => ({
+      ...prevData,
+      name: productName
+    }))
     updateProductById(product?.id, updateData)
     navigate('/inventory')
     toast({ description: 'Product updated successfully.', variant: 'success' })
   }
 
   useEffect(()=>{
-    if(product){
-      setProductName(product?.name)
-    }
+    product && setUpdateData(product)
+   
   }, [])
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
@@ -281,8 +285,8 @@ const EditProduct = () => {
                     </div>
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
-                      
-                      <BarcodeGenerator setProductName={setProductName} productName={productName} productPrice={450} setNewProductData={setUpdateData}  />
+                      <EditProductBarcodeGenerator setProductName={setProductName} productName={productName} barcodePrice={updateData?.price} setProductData={setUpdateData} productData={updateData}  />
+
                     </div>
 
                     <div className="grid gap-3">

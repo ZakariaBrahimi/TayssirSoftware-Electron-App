@@ -92,7 +92,7 @@ import ProductContext from '../context/ProductContext'
 // import product_placeholder from '../assets/product-placeholder'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import BarcodeGenerator from './BarcodeGenerator'
+import AddProductBarcodeGenerator from './AddProductBarcodeGenerator'
 
 const Add = () => {
   const {
@@ -123,7 +123,7 @@ const Add = () => {
   }, [])
   
   
-  const [productName, setProductName] = useState(null)
+  const [productName, setProductName] = useState('')
   const [barcodePrice, setBarcodePrice] = useState(null);
   
   return (
@@ -287,7 +287,7 @@ const Add = () => {
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
                       
-                      <BarcodeGenerator setProductName={setProductName} productName={productName} barcodePrice={barcodePrice} setNewProductData={setNewProductData} newProductData={newProductData}  />
+                      <AddProductBarcodeGenerator type={'addProduct'} setProductName={setProductName} productName={productName} barcodePrice={barcodePrice} setProductData={setNewProductData} productData={newProductData}  />
                     </div>
 
                     <div className="grid gap-3">

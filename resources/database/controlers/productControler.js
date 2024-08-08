@@ -207,6 +207,25 @@ const deleteProductById = () => {
     }
   })
 }
+const SearchByBarcode = () => {
+  ipcMain.on('SearchByBarcode', async (event, barcode) => {
+    console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')
+    try {
+      // 
+      const product = await db.Product.findOne({
+        where: { barcode: barcode }
+      })
+      if (product) {
+        event.reply('SearchByBarcode:response', { success: true, product: product })
+      } else {
+        event.reply('SearchByBarcode:response', { success: false, error: 'Product not found' })
+      }
+    } catch (error) {
+      console.error('Error founding product:', error)
+      event.reply('SearchByBarcode:response', { success: false, error: error.message })
+    }
+  })
+}
 // Function to Update a product data by ID
 const updateProductById = () => {
   ipcMain.on('updateProductById', async (event, { productId, updateData }) => {
@@ -260,8 +279,12 @@ const generateCodeBar = () => {
   ipcMain.on('generateCodeBar', async (event, productName) => {
     console.log('hello world')
     try {
+      // Is product Name exists in the database regardless of case (i.e., in both uppercase and lowercase)
       const product = await db.Product.findOne({
-        where: { name: productName }
+        where: db.Sequelize.where(
+          db.Sequelize.fn('LOWER', db.Sequelize.col('name')),
+          db.Sequelize.fn('LOWER', productName)
+        )
       })
       if (product) {
         event.reply('generateCodeBar:response', { success: false, message: 'Product name found, change the name' })
@@ -287,5 +310,6 @@ module.exports = {
   createNewCategory,
   createNewProductBrand,
   getProductBrands,
-  generateCodeBar
+  generateCodeBar,
+  SearchByBarcode
 }

@@ -94,9 +94,9 @@ const SideNavbar = () => {
                 <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
               </svg>
               Login
-              <div className="border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+              {/* <div className="border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                 6
-              </div>
+              </div> */}
             </NavLink>
             <NavLink
               className={({ isActive, isPending }) =>
@@ -121,9 +121,9 @@ const SideNavbar = () => {
                 <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
               </svg>
               Sales
-              <div className="border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+              {/* <div className="border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                 6
-              </div>
+              </div> */}
             </NavLink>
             <NavLink
               className={({ isActive, isPending }) =>
@@ -150,7 +150,7 @@ const SideNavbar = () => {
               </svg>
               Inventory{' '}
             </NavLink>
-            <NavLink
+            {/* <NavLink
               className={({ isActive, isPending }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F4F4F5] text-[#71717A] text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
               }
@@ -174,7 +174,7 @@ const SideNavbar = () => {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
               Staff Members
-            </NavLink>
+            </NavLink> */}
             <NavLink
               className={({ isActive, isPending }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 text-[#71717A] text-muted-foreground transition-all hover:text-primary  ${isActive ? "bg-[#F4F4F5]" : "hover:bg-[#F4F4F5]"}`
