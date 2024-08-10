@@ -41,8 +41,8 @@ import {
   TableRow
 } from '@shadcn-components/ui/table'
 import { useContext, useEffect, useState } from 'react'
-import SalesContext from '../context/SalesContext'
-import ProductContext from '../context/ProductContext'
+import SalesContext from '../../context/SalesContext'
+import ProductContext from '../../context/ProductContext'
 
 export default function Dashboard() {
   const { soldProducts } = useContext(SalesContext)

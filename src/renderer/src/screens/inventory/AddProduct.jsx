@@ -88,7 +88,7 @@ import {
 //   TooltipContent,
 //   TooltipTrigger,
 // } from "@shadcn-components/ui/tooltip"
-import ProductContext from '../context/ProductContext'
+import ProductContext from '../../context/ProductContext'
 // import product_placeholder from '../assets/product-placeholder'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'

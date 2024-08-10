@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
 /* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
@@ -75,10 +76,8 @@ import {
 
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import ProductContext from '../context/ProductContext'
+import ProductContext from '../../context/ProductContext'
 import EditProductBarcodeGenerator from './EditProductBarcodeGenerator'
-
-
 
 const EditProduct = () => {
   const {
@@ -111,19 +110,10 @@ const EditProduct = () => {
   const [brandValue, setBrandValue] = useState(product?.brand?.name)
   const handleSubmit = (event) => {
     event.preventDefault()
-    setUpdateData((prevData) => ({
-      ...prevData,
-      name: productName
-    }))
     updateProductById(product?.id, updateData)
     navigate('/inventory')
     toast({ description: 'Product updated successfully.', variant: 'success' })
   }
-
-  useEffect(()=>{
-    product && setUpdateData(product)
-   
-  }, [])
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -228,13 +218,16 @@ const EditProduct = () => {
         </DropdownMenu>
       </header>
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-        <form
-          onSubmit={handleSubmit}
-          className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4"
-        >
+        <div className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4">
           <div className="flex items-center gap-4">
             <Button
-              onClick={() => navigate('/inventory')}
+              onClick={() => {
+                setUpdateData((prevData) => {
+                  console.log('updated Data: ', [])
+                  return []
+                })
+                navigate('/inventory')
+              }}
               variant="outline"
               size="icon"
               className="h-7 w-7"
@@ -249,10 +242,21 @@ const EditProduct = () => {
               In stock
             </Badge>
             <div className="hidden items-center gap-2 md:ml-auto md:flex">
-              <Button onClick={() => navigate('/inventory')} variant="outline" size="sm">
+              <Button
+                onClick={() => {
+                  setUpdateData((prevData) => {
+                    console.log('updated Data: ', [])
+                    return []
+                  })
+                  navigate('/inventory')
+                }}
+                variant="outline"
+                size="sm"
+              >
                 Discard
               </Button>
-              <Button type="submit" size="sm">
+
+              <Button onClick={handleSubmit} type="button" size="sm">
                 Save Changes
               </Button>
             </div>
@@ -273,20 +277,22 @@ const EditProduct = () => {
                         defaultValue={product?.name}
                         id="name"
                         type="text"
-                        onChange={(event) =>{
+                        onChange={(event) => {
                           setUpdateData((prevData) => ({
                             ...prevData,
                             name: event.target.value
                           }))
-                          setProductName(event.target.value)
                         }}
                         className="w-full"
                       />
                     </div>
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
-                      <EditProductBarcodeGenerator setProductName={setProductName} productName={productName} barcodePrice={updateData?.price} setProductData={setUpdateData} productData={updateData}  />
-
+                      <EditProductBarcodeGenerator
+                        setUpdateData={setUpdateData}
+                        updateData={updateData}
+                        product={product}
+                      />
                     </div>
 
                     <div className="grid gap-3">
@@ -900,14 +906,24 @@ const EditProduct = () => {
             </div>
           </div>
           <div className="flex items-center justify-center gap-2 md:hidden">
-            <Button onClick={() => navigate('/inventory')} variant="outline" size="sm">
-              Discard
-            </Button>
-            <Button type="submit" size="sm">
+          <Button
+                onClick={() => {
+                  setUpdateData((prevData) => {
+                    console.log('updated Data: ', [])
+                    return []
+                  })
+                  navigate('/inventory')
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Discard
+              </Button>
+            <Button onClick={handleSubmit} type="button" size="sm">
               Save Changes
             </Button>
           </div>
-        </form>
+        </div>
       </main>
     </div>
   )

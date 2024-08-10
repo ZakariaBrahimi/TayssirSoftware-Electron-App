@@ -1,19 +1,19 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { useContext, useEffect } from "react"
-import Inventory from "./components/Inventory.jsx"
+import Inventory from "./screens/inventory/Inventory.jsx"
 import SideNavbar from "./components/SideNavbar.jsx"
 import { Toaster } from "@shadcn-components/ui/toaster"
 import ProductContext from "./context/ProductContext"
-import  Dashboard  from "./components/Dashboard"
-import AddProduct from "./components/AddProduct"
+import  Dashboard  from "./screens/dashboard/Dashboard.jsx"
+import AddProduct from "./screens/inventory/AddProduct.jsx"
 import {
   Routes ,
   Route,
   Outlet,
 } from "react-router-dom";
 import Sales from "./screens/sales/Sales.jsx"
-import EditProduct from "./components/EditProduct.jsx"
+import EditProduct from "./screens/inventory/EditProduct.jsx"
 import SalesContext from "./context/SalesContext.jsx"
 import Reports from './screens/reports/Reports.jsx'
 import Login from "./screens/auth/Login.jsx"

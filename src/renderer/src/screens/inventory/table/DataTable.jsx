@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow
 } from '@shadcn-components/ui/table'
-import ProductContext from '../../context/ProductContext'
+import ProductContext from '../../../context/ProductContext'
 import DataTableColumns from './DataTableColumns'
 import {File} from "lucide-react"
 

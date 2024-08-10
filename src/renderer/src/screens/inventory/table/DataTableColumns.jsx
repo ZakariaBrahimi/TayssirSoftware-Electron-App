@@ -14,7 +14,7 @@ import {
 } from '@shadcn-components/ui/dropdown-menu'
 import EditProduct from '../EditProduct'
 import { useContext } from 'react'
-import ProductContext from '../../context/ProductContext'
+import ProductContext from '../../../context/ProductContext'
 import { useToast } from '@shadcn-components/ui/use-toast'
 import {
   Dialog,

@@ -22,11 +22,9 @@ const stringToNumericCode = (str) => {
 }
 
 const EditProductBarcodeGenerator = ({
-  productName,
-  setProductData,
-  barcodePrice,
-  productData,
-  type
+  setUpdateData,
+  updateData,
+  product,
 }) => {
   const barcodeRef = useRef(null)
   const printRef = useRef(null)
@@ -47,24 +45,30 @@ const EditProductBarcodeGenerator = ({
   }
 
   const handleProductNameChange = () => {
-    if(productData.name === productName) return
-    if (productName) {
+
+    if(product.name === updateData.name){
+      console.log('Product Name is the same as the product name')
+      const code = stringToNumericCode(product.name)
+      generateBarcode(code)
+      return
+    }
+    if (updateData.name) {
       setEmpty(false)
       try {
-        window.electron.ipcRenderer.send('generateCodeBar', productName)
+        window.electron.ipcRenderer.send('generateCodeBar', updateData.name)
         window.electron.ipcRenderer.once('generateCodeBar:response', (event, response) => {
           if (!response.success) {
             setIsExist(true)
             generateBarcode(null)
             toast({
-              description: `The Product Name - ${productName} - already exists`,
+              description: `The Product Name - ${updateData.name} - already exists`,
               variant: 'destructive'
             })
           } else {
             setIsExist(false)
-            const code = stringToNumericCode(productName)
+            const code = stringToNumericCode(updateData.name)
             generateBarcode(code)
-            setProductData((prevState) => ({ ...prevState, barcode: code }))
+            setUpdateData((prevState) => ({ ...prevState, barcode: code }))
           }
         })
       } catch (error) {
@@ -77,17 +81,18 @@ const EditProductBarcodeGenerator = ({
     }
   }
 
-  useEffect(() => {
-    // Load initial barcode from productData
-    if (productData?.barcode) {
-      generateBarcode(productData.barcode)
-    }
-  }, [productData])
-
-  useEffect(() => {
-    // Handle changes to productName
+  
+  useEffect(()=>{
     handleProductNameChange()
-  }, [productName])
+  }, [updateData.name])
+
+  // Generate the barcode on first load
+  useEffect(()=>{
+    const code = stringToNumericCode(product.name)
+    setEmpty(false)
+    generateBarcode(code)
+    console.log('updateData.name: ', updateData.name)
+  }, [])
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current
@@ -108,7 +113,7 @@ const EditProductBarcodeGenerator = ({
       </Button>
       <div ref={printRef} className="print-container w-full">
         <p className="text-center font-bold mb-0 pb-0">
-          {barcodePrice ? `${barcodePrice} DA` : ''}
+          {updateData.price ? `${updateData.price} DA` : `${product.price} DA`}
         </p>
         <div className="w-full">
           <svg className="mx-auto" ref={barcodeRef}></svg>
