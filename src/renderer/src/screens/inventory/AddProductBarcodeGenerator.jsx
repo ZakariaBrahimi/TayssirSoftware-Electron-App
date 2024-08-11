@@ -52,8 +52,8 @@ const AddProductBarcodeGenerator = ({
               JsBarcode(barcodeRef.current, code, {
                 format: 'CODE128',
                 lineColor: '#000',
-                width: 2,
-                height: 100,
+                width: 1,
+                height: 25,
                 displayValue: true
               })
               setProductData((prevState) => ({ ...prevState, barcode: code }))

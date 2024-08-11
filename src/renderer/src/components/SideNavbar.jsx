@@ -3,50 +3,53 @@
 
 import { Link, NavLink } from 'react-router-dom'
 
+/* eslint-disable prettier/prettier */
+import {
+  Activity,
+  ArrowUpRight,
+  CircleUser,
+  CreditCard,
+  DollarSign,
+  Menu,
+  Package2,
+  Search,
+  Users
+} from 'lucide-react'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@shadcn-components/ui/avatar'
+import { Badge } from '@shadcn-components/ui/badge'
+import { Button } from '@shadcn-components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@shadcn-components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@shadcn-components/ui/dropdown-menu'
+import { Input } from '@shadcn-components/ui/input'
+import { Sheet, SheetContent, SheetTrigger } from '@shadcn-components/ui/sheet'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@shadcn-components/ui/table'
+import { useContext, useEffect, useState } from 'react'
+
 const SideNavbar = () => {
   return (
-    <aside className=" hidden border-r bg-muted/40 md:block md:w-[20%]">
-      <div className="flex h-full max-h-screen flex-col gap-2">
-        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <Link  className="flex items-center gap-2 font-semibold" to="home">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-package2 h-6 w-6"
-            >
-              <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
-              <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"></path>
-              <path d="M12 3v6"></path>
-            </svg>
-            <span className="">Tayssir Software</span>
-          </Link>
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground ml-auto h-8 w-8">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-bell h-4 w-4"
-            >
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-            </svg>
-            <span className="sr-only">Toggle notifications</span>
-          </button>
-        </div>
-        <div className="flex-1">
+    <aside className="hidden border-r bg-muted/40 lg:flex lg:flex-col lg:flex-1 lg:w-[20%] bg-green-400 ">
+      {/* <div className="flex flex-1  flex-col gap-2 mt-8"> */}
           <nav className="grid gap-2 items-start px-2 text-sm font-medium lg:px-4">
             <NavLink
               className={({ isActive, isPending }) =>
@@ -150,34 +153,9 @@ const SideNavbar = () => {
               </svg>
               Inventory{' '}
             </NavLink>
-            {/* <NavLink
-              className={({ isActive, isPending }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F4F4F5] text-[#71717A] text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
-              }
-              to="Customers"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-users h-4 w-4"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              Staff Members
-            </NavLink> */}
             <NavLink
               className={({ isActive, isPending }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-[#71717A] text-muted-foreground transition-all hover:text-primary  ${isActive ? "bg-[#F4F4F5]" : "hover:bg-[#F4F4F5]"}`
+                `flex items-center gap-3 rounded-lg px-3 py-2 text-[#71717A] text-muted-foreground transition-all hover:text-primary  ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
               }
               to="/analytics"
             >
@@ -199,7 +177,6 @@ const SideNavbar = () => {
               Analytics
             </NavLink>
           </nav>
-        </div>
         <div className="mt-auto p-4">
           <div className="rounded-xl border bg-card text-card-foreground shadow">
             <div className="flex flex-col space-y-1.5 p-2 pt-0 md:p-4">
@@ -215,7 +192,7 @@ const SideNavbar = () => {
             </div>
           </div>
         </div>
-      </div>
+      {/* </div> */}
     </aside>
   )
 }

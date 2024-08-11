@@ -17,6 +17,7 @@ import EditProduct from "./screens/inventory/EditProduct.jsx"
 import SalesContext from "./context/SalesContext.jsx"
 import Reports from './screens/reports/Reports.jsx'
 import Login from "./screens/auth/Login.jsx"
+import TopNavbar from "./components/TopNavbar.jsx"
 
 function App() {
   const { getProducts } = useContext(ProductContext)
@@ -26,14 +27,13 @@ function App() {
     getSoldProducts()
   }, [])
   return (
-    // <div className="grid grid-flow-col min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-    <div className="flex min-h-screen " >
-      <SideNavbar/>
-      <Outlet/>
+    <div className="flex flex-col min-h-lvh bg-yellow-300 " >
+      <TopNavbar/>
+      <div className="flex  bg-orange-700">
+        <SideNavbar/>
+        <Outlet/>
+
       <Toaster />
-
-
-
       <Routes>
         <Route path="/" element={ <Dashboard/> }/>
         <Route path="inventory/add-new-product" element={ <AddProduct/> }/>
@@ -46,6 +46,10 @@ function App() {
         
         {/* <Route path="/user/:userId" element={<User />} /> */}
       </Routes>
+      </div>
+
+
+
       </div>
   )
 }
