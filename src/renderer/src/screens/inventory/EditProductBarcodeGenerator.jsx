@@ -99,7 +99,7 @@ const EditProductBarcodeGenerator = ({
   })
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full ">
       {isEmpty && <p className="text-red-500 text-center">Please provide a product name.</p>}
       <Button
         type="button"

@@ -49,8 +49,8 @@ import {
 } from '@shadcn-components/ui/table'
 const TopNavbar = () => {
   return (
-    <div className="flex  w-full flex-col h-1/6">
-    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+    // <div className="flex  w-full flex-col h-1/6">
+    <header className="sticky z-50 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         
         <div className=" hidden lg:flex w-[20%] items-center lg:h-[60px]">
           <Link className="flex items-center gap-2 font-semibold" to="home">
@@ -153,7 +153,7 @@ const TopNavbar = () => {
         </div>
       </header>
 
-    </div>
+    // </div>
   )
 }
 

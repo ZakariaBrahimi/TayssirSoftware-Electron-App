@@ -27,9 +27,9 @@ function App() {
     getSoldProducts()
   }, [])
   return (
-    <div className="flex flex-col min-h-lvh bg-yellow-300 " >
+    <div className="flex flex-col min-h-lvh " >
       <TopNavbar/>
-      <div className="flex  bg-orange-700">
+      <div className="flex  ">
         <SideNavbar/>
         <Outlet/>
 

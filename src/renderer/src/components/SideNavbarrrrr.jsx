@@ -48,7 +48,7 @@ import { useContext, useEffect, useState } from 'react'
 
 const SideNavbar = () => {
   return (
-    <aside className="hidden bottom-0 fixed z-50 top-16 border-r bg-muted/40 lg:flex lg:flex-col pt-6 lg:w-[16%] ">
+    <aside className="hidden border-r bg-muted/40 lg:flex lg:flex-col lg:flex-1 lg:w-[20%] bg-green-400 ">
       {/* <div className="flex flex-1  flex-col gap-2 mt-8"> */}
           <nav className="grid gap-2 items-start px-2 text-sm font-medium lg:px-4">
             <NavLink
