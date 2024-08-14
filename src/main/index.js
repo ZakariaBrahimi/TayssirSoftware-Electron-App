@@ -8,7 +8,7 @@ const productControler = require('../../resources/database/controlers/productCon
 const salesControler   = require('../../resources/database/controlers/salesControler')
 const userControler    = require('../../resources/database/controlers/userControler')
 
-
+// const {PosPrinter} = require("electron-pos-printer");
 
 function createWindow() {
   // Create the browser window.

@@ -38,8 +38,15 @@ const EditProductBarcodeGenerator = ({
         format: 'CODE128',
         lineColor: '#000',
         width: 2,
-        height: 100,
-        displayValue: true
+        // height: 100,
+        displayValue: true,
+        height: 40,                     // height of barcode, applicable only to bar and QR codes
+        fontsize: 12,
+        // height: 40,                     // height of barcode, applicable only to bar and QR codes
+        // width: 2,                       // width of barcode, applicable only to bar and QR codes
+        // displayValue: true,             // Display value below barcode
+        // fontsize: 12,
+        
       })
     }
   }
@@ -112,9 +119,9 @@ const EditProductBarcodeGenerator = ({
         <span>Print Barcode</span>
       </Button>
       <div ref={printRef} className="print-container w-full">
-        <p className="text-center font-bold mb-0 pb-0">
+        {/* <p className="text-center font-bold mb-0 pb-0">
           {updateData.price ? `${updateData.price} DA` : `${product.price} DA`}
-        </p>
+        </p> */}
         <div className="w-full">
           <svg className="mx-auto" ref={barcodeRef}></svg>
         </div>

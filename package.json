@@ -42,6 +42,7 @@
     "clsx": "^2.1.0",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "electron-pos-printer": "^1.3.7",
     "electron-updater": "^6.1.7",
     "fs": "^0.0.1-security",
     "jsbarcode": "^3.11.6",

@@ -1,17 +1,10 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable prettier/prettier */
-import { Activity, CircleUser, CreditCard, DollarSign, Users } from 'lucide-react'
+import { Activity, CreditCard, DollarSign, Users } from 'lucide-react'
 
 import { Button } from '@shadcn-components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@shadcn-components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@shadcn-components/ui/dropdown-menu'
+
 
 import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'

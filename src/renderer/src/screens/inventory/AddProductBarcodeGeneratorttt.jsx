@@ -53,15 +53,9 @@ const AddProductBarcodeGenerator = ({
                 format: 'CODE128',
                 lineColor: '#000',
                 width: 1,
-                height: 40,
-                displayValue: true,
-                // text: barcodePrice ? `${barcodePrice} DA` : '',
-                fontSize: 15,
-                // textPosition: "bottom",
-                // textAlign: "center",
-                textMargin: 5, // space between the barcode and the text
-                margin: 0
-            })
+                height: 25,
+                displayValue: true
+              })
               setProductData((prevState) => ({ ...prevState, barcode: code }))
             }
           } else {
