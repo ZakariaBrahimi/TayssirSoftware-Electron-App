@@ -71,7 +71,7 @@ export default function Dashboard() {
     total_revenue()
   }, [])
   return (
-    <div className="flex flex-col w-full ml-[16%]">
+    <div className="flex flex-col w-full lg:ml-[16%]">
       
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">

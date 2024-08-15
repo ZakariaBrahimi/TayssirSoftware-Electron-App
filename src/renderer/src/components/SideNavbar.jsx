@@ -74,33 +74,7 @@ const SideNavbar = () => {
               </svg>
               Dashboard
             </NavLink>
-            <NavLink
-              className={({ isActive, isPending }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F4F4F5] text-[#71717A] text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
-              }
-              to="login"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-shopping-cart h-4 w-4"
-              >
-                <circle cx="8" cy="21" r="1"></circle>
-                <circle cx="19" cy="21" r="1"></circle>
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-              </svg>
-              Login
-              {/* <div className="border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                6
-              </div> */}
-            </NavLink>
+            
             <NavLink
               className={({ isActive, isPending }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F4F4F5] text-[#71717A] text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
@@ -175,6 +149,33 @@ const SideNavbar = () => {
                 <path d="m19 9-5 5-4-4-3 3"></path>
               </svg>
               Analytics
+            </NavLink>
+            <NavLink
+              className={({ isActive, isPending }) =>
+                `flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F4F4F5] text-[#71717A] text-muted-foreground transition-all hover:text-primary ${isActive ? 'bg-[#F4F4F5]' : 'hover:bg-[#F4F4F5]'}`
+              }
+              to="login"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-shopping-cart h-4 w-4"
+              >
+                <circle cx="8" cy="21" r="1"></circle>
+                <circle cx="19" cy="21" r="1"></circle>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+              </svg>
+              Login
+              {/* <div className="border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                6
+              </div> */}
             </NavLink>
           </nav>
         <div className="mt-auto p-4">

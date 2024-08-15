@@ -41,7 +41,7 @@ function App() {
         <Route path="inventory" element={ <Inventory/> }/>
         <Route path="sales" element={ <Sales/> }/>
         <Route path="analytics" element={ <Reports/> }/>
-        <Route path="analytics" element={ <Reports/> }/>
+        {/* <Route path="analytics" element={ <Reports/> }/> */}
         <Route path="login" element={ <Login/> }/>
         
         {/* <Route path="/user/:userId" element={<User />} /> */}

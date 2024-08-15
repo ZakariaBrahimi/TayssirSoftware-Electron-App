@@ -28,7 +28,7 @@ const Sales = () => {
     getSoldProducts()
   }, [])
   return (
-    <div className="flex flex-col w-full ml-[16%]">
+    <div className="flex flex-col w-full lg:ml-[16%]">
       {/* <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6"> */}
         {/* <button
           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 w-9 shrink-0 md:hidden"
