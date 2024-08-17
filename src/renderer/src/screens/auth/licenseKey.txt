@@ -1,0 +1,19 @@
+# This is the license key for my PC: 73afef01b28754168cc71049f370ed3a62b96feaa3bb028d831a47ac80261b79
+
+Subject: Your License Key for [Your App Name]
+
+Dear [User's Name],
+
+Thank you for purchasing a license for [Your App Name]. 
+
+Please find your license key below:
+License Key: [Generated License Key]
+
+To activate your license:
+1. Open [Your App Name].
+2. Enter the license key when prompted.
+
+If you have any issues or questions, please contact our support team.
+
+Best regards,
+[Your Company Name]

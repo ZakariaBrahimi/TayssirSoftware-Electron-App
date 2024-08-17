@@ -1,57 +1,41 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { useContext, useEffect } from "react"
-import Inventory from "./screens/inventory/Inventory.jsx"
-import SideNavbar from "./components/SideNavbar.jsx"
-import { Toaster } from "@shadcn-components/ui/toaster"
-import ProductContext from "./context/ProductContext"
-import  Dashboard  from "./screens/dashboard/Dashboard.jsx"
-import AddProduct from "./screens/inventory/AddProduct.jsx"
-import {
-  Routes ,
-  Route,
-  Outlet,
-} from "react-router-dom";
-import Sales from "./screens/sales/Sales.jsx"
-import EditProduct from "./screens/inventory/EditProduct.jsx"
-import SalesContext from "./context/SalesContext.jsx"
-import Reports from './screens/reports/Reports.jsx'
-import Login from "./screens/auth/Login.jsx"
-import TopNavbar from "./components/TopNavbar.jsx"
+import { useContext, useEffect, useState } from 'react'
 
+import { Routes, Route } from 'react-router-dom'
+
+import Login from './screens/auth/Login.jsx'
+
+import LicenseKeyInputPage from './screens/auth/LicenseKeyInputPage.jsx'
+import Signup from './screens/auth/Signup.jsx'
+const fs = window.api.fs
+const path = window.api.path
+const os = window.api.os
 function App() {
-  const { getProducts } = useContext(ProductContext)
-  const { getSoldProducts } = useContext(SalesContext)
-  useEffect(()=>{
-    getProducts()
-    getSoldProducts()
+  const [hasLicenseKey, setHasLicenseKey] = useState(false)
+  const [authState, setAuthState] = useState({
+    isLoggedIn: false,
+    username: ''
+  });
+
+  // Check if license key exists
+  useEffect(() => {
+    // Path where the license key will be stored (e.g., in the user's home directory)
+    const licensePath = path.join(os.homedir(), 'app_license.key')
+
+    // Check if the license key file exists
+    fs.access(licensePath, fs.constants.F_OK, (err) => {
+      if (err) {
+        // License key does not exist
+        setHasLicenseKey(false)
+      } else {
+        // License key exists
+        setHasLicenseKey(true)
+      }
+    })
   }, [])
-  return (
-    <div className="flex flex-col min-h-lvh " >
-      <TopNavbar/>
-      <div className="flex  ">
-        <SideNavbar/>
-        <Outlet/>
 
-      <Toaster />
-      <Routes>
-        <Route path="/" element={ <Dashboard/> }/>
-        <Route path="inventory/add-new-product" element={ <AddProduct/> }/>
-        <Route path="inventory/edit-product" element={ <EditProduct/> }/>
-        <Route path="inventory" element={ <Inventory/> }/>
-        <Route path="sales" element={ <Sales/> }/>
-        <Route path="analytics" element={ <Reports/> }/>
-        {/* <Route path="analytics" element={ <Reports/> }/> */}
-        <Route path="login" element={ <Login/> }/>
-        
-        {/* <Route path="/user/:userId" element={<User />} /> */}
-      </Routes>
-      </div>
-
-
-
-      </div>
-  )
+  return <div>{hasLicenseKey ? authState.isLoggedIn ? <Login authState={authState} setAuthState={setAuthState} /> : <Signup authState={authState} setAuthState={setAuthState} /> : <LicenseKeyInputPage />}</div>
 }
 
 export default App

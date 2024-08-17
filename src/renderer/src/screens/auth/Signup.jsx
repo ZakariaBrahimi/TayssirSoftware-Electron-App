@@ -1,32 +1,31 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@shadcn-components/ui/button'
 import { Input } from '@shadcn-components/ui/input'
 import { Label } from '@shadcn-components/ui/label'
-
-const Login = ({ authState, setAuthState }) => {
+const Signup = ({ authState, setAuthState }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
-  const handleLogin = () => {
-    window.electron.ipcRenderer.send('login', { username, password })
-    window.electron.ipcRenderer.once('login:response', (event, response) => {
+  const handleSignup = () => {
+    window.electron.ipcRenderer.send('signup', { username, password })
+    window.electron.ipcRenderer.once('signup:response', (event, response) => {
       if (response.success) {
-        setAuthState((prevState) => ({
-          // Set the user info here
-          ...prevState,
-          isLoggedIn: true
-        }))
-        // Delay navigation to ensure state has updated
-        setTimeout(() => {
-            navigate('home'); // Ensure '/home' is the correct path for your main content
-          }, 0);
-        console.log('User logged in successfully', response.user)
+        // change the status isLoggedIn to true
+        // setAuthState((prevState) => ({
+        //   ...prevState,
+        //   isLoggedIn: true
+        // }))
+        console.log('User signup in successfully', response.user)
+        // window.location.reload()
+        navigate('login')
       } else {
-        console.error('Login error', response.message)
+        console.error('signup error', response.message)
       }
     })
   }
@@ -36,18 +35,18 @@ const Login = ({ authState, setAuthState }) => {
       <div className="flex items-center justify-center pb-12 ">
         <div className="mx-auto grid w-[650px] gap-6 ">
           <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold">Login</h1>
+            <h1 className="text-3xl font-bold">Signup</h1>
             <p className="text-balance text-muted-foreground">
-              Enter your username below to login to your account
+              Enter your username and password below to create a new account.
             </p>
           </div>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="username">Email</Label>
+              <Label htmlFor="username">username</Label>
               <Input
                 id="username"
                 type="username"
-                placeholder="barakaStore05"
+                placeholder="barakaStore"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -56,9 +55,12 @@ const Login = ({ authState, setAuthState }) => {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
+                {/* <Link
+                  href="/forgot-password"
+                  className="ml-auto inline-block text-sm underline"
+                >
                   Forgot your password?
-                </Link>
+                </Link> */}
               </div>
               <Input
                 value={password}
@@ -68,19 +70,19 @@ const Login = ({ authState, setAuthState }) => {
                 required
               />
             </div>
-            <Button onClick={handleLogin} type="submit" className="w-full">
-              Login
+            <Button onClick={handleSignup} type="submit" className="w-full">
+              Register
             </Button>
             {/* <Button variant="outline" className="w-full">
               Login with Google
             </Button> */}
           </div>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
+          {/* <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{" "}
             <Link href="#" className="underline">
               Sign up
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
       {/* <div className="hidden bg-muted lg:block">
@@ -93,23 +95,7 @@ const Login = ({ authState, setAuthState }) => {
         />
       </div> */}
     </div>
-    // <div>
-    //   <h2>Login</h2>
-    //   <input
-    //     type="text"
-    //     placeholder="Username"
-    //     value={username}
-    //     onChange={(e) => setUsername(e.target.value)}
-    //   />
-    //   <input
-    //     type="password"
-    //     placeholder="Password"
-    //     value={password}
-    //     onChange={(e) => setPassword(e.target.value)}
-    //   />
-    //   <button onClick={handleLogin}>Login</button>
-    // </div>
   )
 }
 
-export default Login
+export default Signup

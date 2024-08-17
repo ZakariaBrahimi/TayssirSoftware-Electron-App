@@ -6,7 +6,7 @@ import icon from '../../resources/icon.png?asset'
 const db = require("../../resources/database/models");
 const productControler = require('../../resources/database/controlers/productControler')
 const salesControler   = require('../../resources/database/controlers/salesControler')
-const userControler    = require('../../resources/database/controlers/userControler')
+const authControler    = require('../../resources/database/controlers/authControler')
 
 // const {PosPrinter} = require("electron-pos-printer");
 
@@ -62,7 +62,9 @@ function createWindow() {
   salesControler.newSoldProducts()
   salesControler.getSoldProducts()
   salesControler.getSoldProductsAtDateTime()
-  userControler.login()
+  // User & Authentication
+  authControler.login()
+  authControler.signup()
   
 }
 

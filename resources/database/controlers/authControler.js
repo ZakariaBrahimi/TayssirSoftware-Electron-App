@@ -18,7 +18,30 @@ const login = ()=>{
         }
       });
 }
+const signup = () => {
+  ipcMain.on('signup', async (event, { username, password }) => {
+    try {
+      // Check if the user already exists
+      const existingUser = await db.User.findOne({ where: { username } });
+      if (existingUser) {
+        event.reply('signup:response', { success: false, error: 'Username already exists' });
+        return;
+      }
 
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create the new user
+      const newUser = await db.User.create({ username, password: hashedPassword });
+
+      event.reply('signup:response', { success: true, user: newUser });
+    } catch (error) {
+      event.reply('signup:response', { success: false, error: error.message });
+    }
+  });
+};
 module.exports = {
+    
+    signup,
     login
 }
