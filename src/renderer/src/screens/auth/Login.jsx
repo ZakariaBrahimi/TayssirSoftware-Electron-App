@@ -1,52 +1,63 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Button } from '@shadcn-components/ui/button'
-import { Input } from '@shadcn-components/ui/input'
-import { Label } from '@shadcn-components/ui/label'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@shadcn-components/ui/button';
+import { Input } from '@shadcn-components/ui/input';
+import { Label } from '@shadcn-components/ui/label';
 
 const Login = ({ authState, setAuthState }) => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const navigate = useNavigate()
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
   const handleLogin = () => {
-    window.electron.ipcRenderer.send('login', { username, password })
+    setIsLoading(true);
+    setError(null);
+
+    window.electron.ipcRenderer.send('login', { username, password });
+
     window.electron.ipcRenderer.once('login:response', (event, response) => {
+      setIsLoading(false);
+      
       if (response.success) {
         setAuthState((prevState) => ({
-          // Set the user info here
           ...prevState,
-          isLoggedIn: true
-        }))
-        // Delay navigation to ensure state has updated
+          isLoggedIn: true,
+          user: response.user.dataValues,
+        }));
+        
         setTimeout(() => {
-            navigate('home'); // Ensure '/home' is the correct path for your main content
-          }, 0);
-        console.log('User logged in successfully', response.user)
+          navigate('/dashboard'); // Ensure this path is correct for your main content
+        }, 0);
+
+        console.log('User logged in successfully', response.user);
       } else {
-        console.error('Login error', response.message)
+        setError(response.message);
+        console.error('Login error', response.message);
       }
-    })
-  }
+    });
+  };
 
   return (
-    <div className="w-full mx-auto  lg:grid lg:min-h-[600px] lg:grid-cols-1 xl:min-h-[800px]">
-      <div className="flex items-center justify-center pb-12 ">
-        <div className="mx-auto grid w-[650px] gap-6 ">
+    <div className="w-full mx-auto lg:grid lg:min-h-[600px] lg:grid-cols-1 xl:min-h-[800px]">
+      <div className="flex items-center justify-center pb-12">
+        <div className="mx-auto grid w-[650px] gap-6">
           <div className="grid gap-2 text-center">
             <h1 className="text-3xl font-bold">Login</h1>
             <p className="text-balance text-muted-foreground">
-              Enter your username below to login to your account
+              Enter your username and password below to login to your account
             </p>
           </div>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="username">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                type="username"
+                type="text"
                 placeholder="barakaStore05"
                 required
                 value={username}
@@ -56,60 +67,34 @@ const Login = ({ authState, setAuthState }) => {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
+                <Link to="/forgot-password" className="ml-auto inline-block text-sm underline">
                   Forgot your password?
                 </Link>
               </div>
               <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button onClick={handleLogin} type="submit" className="w-full">
-              Login
+            {error && <p className="text-red-500">{error}</p>}
+            <Button onClick={handleLogin} type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
             </Button>
-            {/* <Button variant="outline" className="w-full">
-              Login with Google
-            </Button> */}
           </div>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
-            <Link href="#" className="underline">
+            <Link to="/signup" className="underline">
               Sign up
             </Link>
           </div>
         </div>
       </div>
-      {/* <div className="hidden bg-muted lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
-      </div> */}
     </div>
-    // <div>
-    //   <h2>Login</h2>
-    //   <input
-    //     type="text"
-    //     placeholder="Username"
-    //     value={username}
-    //     onChange={(e) => setUsername(e.target.value)}
-    //   />
-    //   <input
-    //     type="password"
-    //     placeholder="Password"
-    //     value={password}
-    //     onChange={(e) => setPassword(e.target.value)}
-    //   />
-    //   <button onClick={handleLogin}>Login</button>
-    // </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

@@ -3,37 +3,45 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
 
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Button } from '@shadcn-components/ui/button'
-import { Input } from '@shadcn-components/ui/input'
-import { Label } from '@shadcn-components/ui/label'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@shadcn-components/ui/button';
+import { Input } from '@shadcn-components/ui/input';
+import { Label } from '@shadcn-components/ui/label';
+
 const Signup = ({ authState, setAuthState }) => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const navigate = useNavigate()
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
   const handleSignup = () => {
-    window.electron.ipcRenderer.send('signup', { username, password })
+    setIsLoading(true);
+    setError(null);
+
+    window.electron.ipcRenderer.send('signup', { username, password });
+
     window.electron.ipcRenderer.once('signup:response', (event, response) => {
+      setIsLoading(false);
+      
       if (response.success) {
-        // change the status isLoggedIn to true
-        // setAuthState((prevState) => ({
-        //   ...prevState,
-        //   isLoggedIn: true
-        // }))
-        console.log('User signup in successfully', response.user)
-        // window.location.reload()
-        navigate('login')
+        console.log('User signed up successfully', response.user);
+
+        
+        // Navigate to login or dashboard
+        navigate('/login');
       } else {
-        console.error('signup error', response.message)
+        console.error('Signup error', response.message);
+        setError(response.message);
       }
-    })
-  }
+    });
+  };
 
   return (
-    <div className="w-full mx-auto  lg:grid lg:min-h-[600px] lg:grid-cols-1 xl:min-h-[800px]">
-      <div className="flex items-center justify-center pb-12 ">
-        <div className="mx-auto grid w-[650px] gap-6 ">
+    <div className="w-full mx-auto lg:grid lg:min-h-[600px] lg:grid-cols-1 xl:min-h-[800px]">
+      <div className="flex items-center justify-center pb-12">
+        <div className="mx-auto grid w-[650px] gap-6">
           <div className="grid gap-2 text-center">
             <h1 className="text-3xl font-bold">Signup</h1>
             <p className="text-balance text-muted-foreground">
@@ -42,10 +50,10 @@ const Signup = ({ authState, setAuthState }) => {
           </div>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="username">username</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                type="username"
+                type="text"
                 placeholder="barakaStore"
                 required
                 value={username}
@@ -55,47 +63,25 @@ const Signup = ({ authState, setAuthState }) => {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                {/* <Link
-                  href="/forgot-password"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link> */}
               </div>
               <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button onClick={handleSignup} type="submit" className="w-full">
-              Register
+            {error && <p className="text-red-500">{error}</p>}
+            <Button onClick={handleSignup} type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Registering...' : 'Register'}
             </Button>
-            {/* <Button variant="outline" className="w-full">
-              Login with Google
-            </Button> */}
           </div>
-          {/* <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="#" className="underline">
-              Sign up
-            </Link>
-          </div> */}
         </div>
       </div>
-      {/* <div className="hidden bg-muted lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
-      </div> */}
     </div>
-  )
-}
+  );
+};
 
-export default Signup
+export default Signup;

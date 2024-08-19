@@ -105,7 +105,7 @@ const TopNavbar = () => {
                 <Package2 className="h-6 w-6" />
                 <span className="sr-only">Acme Inc</span>
               </Link>
-              <Link to="/" className="hover:text-foreground">
+              <Link to="dashboard" className="hover:text-foreground">
                 Dashboard
               </Link>
               <Link to="sales" className="text-muted-foreground hover:text-foreground">
