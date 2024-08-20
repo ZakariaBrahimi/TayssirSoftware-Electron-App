@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const fs = window.api.fs;
 const path = window.api.path;
 const os = window.api.os;
-const crypto = window.api.createHmac
+const crypto = window.api.crypto
 
 const LicenseKeyInputPage = ({ setAuthState }) => {
   const [licenseKey, setLicenseKey] = useState('');
@@ -23,7 +23,9 @@ const LicenseKeyInputPage = ({ setAuthState }) => {
     for (const interfaceName in networkInterfaces) {
       for (const net of networkInterfaces[interfaceName]) {
         if (net.mac && net.mac !== '00:00:00:00:00:00') {
-          return net.mac;
+          const formattedMac = net.mac.toUpperCase().replace(/[^0-9A-F]/g, '');
+          console.log(`MAC Address: ${formattedMac}`)
+          return net.mac.toUpperCase().replace(/[^0-9A-F]/g, '');
         }
       }
     }
@@ -32,7 +34,8 @@ const LicenseKeyInputPage = ({ setAuthState }) => {
 
   // Function to generate a unique identifier from a MAC address
   const generateLicenseKey = (macAddress) => {
-    return crypto.createHash('sha256').update(macAddress).digest('hex');
+    // return crypto.createHash('sha256').update(macAddress).digest('hex');
+    return window.api.generateSHA256Hash(macAddress)
   };
 
   // Function to check if license key is valid
@@ -40,6 +43,9 @@ const LicenseKeyInputPage = ({ setAuthState }) => {
     const uniqueId = getMacAddress();
     if (uniqueId) {
       const expectedKey = generateLicenseKey(uniqueId);
+      console.log('Validating license key', enteredKey === expectedKey)
+      console.log('enteredKey', enteredKey)
+      console.log('expectedKey', expectedKey)
       return enteredKey === expectedKey;
     } else {
       setError('No MAC address found.');
@@ -57,8 +63,10 @@ const LicenseKeyInputPage = ({ setAuthState }) => {
         fs.writeFileSync(licensePath, licenseKey);
         setAuthState((prevState) => ({ ...prevState, hasLicenseKey: true }));
         navigate('/signup'); // Redirect to the signup page
+        console.log('License key is valid. Please Create a new account.');
       } else {
         setError('License key is not valid. Please try another one.');
+        console.log('License key is not valid. Please try another one.');
       }
     } catch (err) {
       console.error("Failed to store the license key:", err);
@@ -67,7 +75,10 @@ const LicenseKeyInputPage = ({ setAuthState }) => {
       setIsLoading(false);
     }
   };
+  // console.log(window.api.crypto.createHash); 
 
+  // const hash = window.api.generateSHA256Hash('00:1A:2B:3C:4D:5E');
+  // console.log(hash)
   return (
     <div className="w-full mx-auto lg:grid lg:min-h-[600px] lg:grid-cols-1 xl:min-h-[800px]">
       <div className="flex items-center justify-center pb-12">

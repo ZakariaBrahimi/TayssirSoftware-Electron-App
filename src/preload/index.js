@@ -4,14 +4,19 @@ import { electronAPI } from '@electron-toolkit/preload';
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-// const crypto = require('crypto');
-const { createHmac } = require('node:crypto')
+const crypto  = require('crypto')
+
 // Custom APIs for renderer
 const api = {
   fs,
   path,
   os,
-  createHmac,
+  crypto,
+  generateSHA256Hash: (input) => {
+    const hash = crypto.createHash('sha256');
+    hash.update(input);
+    return hash.digest('hex');
+  }
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
