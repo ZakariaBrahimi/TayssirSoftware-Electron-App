@@ -1,84 +1,79 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
-import { Button } from "@shadcn-components/ui/button";
-import { Input } from "@shadcn-components/ui/input";
-import { Label } from "@shadcn-components/ui/label";
-import { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { Button } from '@shadcn-components/ui/button'
+import { Input } from '@shadcn-components/ui/input'
+import { Label } from '@shadcn-components/ui/label'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const fs = window.api.fs;
-const path = window.api.path;
-const os = window.api.os;
-const crypto = window.api.crypto
+const fs = window.api.fs
+const path = window.api.path
+const os = window.api.os
+const getHardwareInfo = window.api.getHardwareInfo
+const generateLicenseKey = window.api.generateSHA256Hash
 
 const LicenseKeyInputPage = ({ setAuthState }) => {
-  const [licenseKey, setLicenseKey] = useState('');
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [licenseKey, setLicenseKey] = useState('')
+  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
 
-  // Function to get Local Machine MAC Address
-  const getMacAddress = () => {
-    const networkInterfaces = os.networkInterfaces();
-    for (const interfaceName in networkInterfaces) {
-      for (const net of networkInterfaces[interfaceName]) {
-        if (net.mac && net.mac !== '00:00:00:00:00:00') {
-          const formattedMac = net.mac.toUpperCase().replace(/[^0-9A-F]/g, '');
-          console.log(`MAC Address: ${formattedMac}`)
-          return net.mac.toUpperCase().replace(/[^0-9A-F]/g, '');
-        }
-      }
-    }
-    return null; // No MAC address found
-  };
+
 
   // Function to generate a unique identifier from a MAC address
-  const generateLicenseKey = (macAddress) => {
-    // return crypto.createHash('sha256').update(macAddress).digest('hex');
-    return window.api.generateSHA256Hash(macAddress)
-  };
+  // const generateLicenseKey = (data) => {
+  //   return window.api.generateSHA256Hash(data)
+  // }
 
   // Function to check if license key is valid
   const validateLicenseKey = (enteredKey) => {
-    const uniqueId = getMacAddress();
+    const uniqueId = `${systemInfo.motherboardSerial}-${systemInfo.biosSerial}`
     if (uniqueId) {
-      const expectedKey = generateLicenseKey(uniqueId);
+      const expectedKey = generateLicenseKey(uniqueId)
       console.log('Validating license key', enteredKey === expectedKey)
       console.log('enteredKey', enteredKey)
       console.log('expectedKey', expectedKey)
-      return enteredKey === expectedKey;
+      return enteredKey === expectedKey
     } else {
-      setError('No MAC address found.');
-      return false;
+      setError('No MAC address found.')
+      return false
     }
-  };
+  }
 
   const handleSubmit = () => {
-    setIsLoading(true);
-    const licensePath = path.join(os.homedir(), 'app_license.key');
+    setIsLoading(true)
+    const licensePath = path.join(os.homedir(), 'app_license.key')
 
     try {
-      const isValid = validateLicenseKey(licenseKey);
+      const isValid = validateLicenseKey(licenseKey)
       if (isValid) {
-        fs.writeFileSync(licensePath, licenseKey);
-        setAuthState((prevState) => ({ ...prevState, hasLicenseKey: true }));
-        navigate('/signup'); // Redirect to the signup page
-        console.log('License key is valid. Please Create a new account.');
+        fs.writeFileSync(licensePath, licenseKey)
+        setAuthState((prevState) => ({ ...prevState, hasLicenseKey: true }))
+        navigate('/signup') // Redirect to the signup page
+        console.log('License key is valid. Please Create a new account.')
       } else {
-        setError('License key is not valid. Please try another one.');
-        console.log('License key is not valid. Please try another one.');
+        setError('License key is not valid. Please try another one.')
+        console.log('License key is not valid. Please try another one.')
       }
     } catch (err) {
-      console.error("Failed to store the license key:", err);
-      setError("Failed to store the license key. Please try again.");
+      console.error('Failed to store the license key:', err)
+      setError('Failed to store the license key. Please try again.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-  // console.log(window.api.crypto.createHash); 
+  }
+  // console.log(window.api.crypto.createHash);
 
   // const hash = window.api.generateSHA256Hash('00:1A:2B:3C:4D:5E');
   // console.log(hash)
+  const [systemInfo, setSystemInfo] = useState()
+  useEffect(() => {
+    getHardwareInfo().then(info => {
+      setSystemInfo(info)
+      console.log(info);
+      // Generate license key based on the hardware info
+  });
+  }, [])
   return (
     <div className="w-full mx-auto lg:grid lg:min-h-[600px] lg:grid-cols-1 xl:min-h-[800px]">
       <div className="flex items-center justify-center pb-12">
@@ -101,17 +96,17 @@ const LicenseKeyInputPage = ({ setAuthState }) => {
                 onChange={(e) => setLicenseKey(e.target.value)}
               />
             </div>
-            
+
             {error && <p className="text-red-500">{error}</p>}
 
             <Button onClick={handleSubmit} type="button" className="w-full" disabled={isLoading}>
-              {isLoading ? "Validating..." : "Validate"}
+              {isLoading ? 'Validating...' : 'Validate'}
             </Button>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LicenseKeyInputPage;
+export default LicenseKeyInputPage

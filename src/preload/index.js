@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto  = require('crypto')
+const systeminformation = require('systeminformation');
 
 // Custom APIs for renderer
 const api = {
@@ -16,7 +17,17 @@ const api = {
     const hash = crypto.createHash('sha256');
     hash.update(input);
     return hash.digest('hex');
-  }
+  },
+  getHardwareInfo: async function getHardwareInfo() {
+    const motherboard = await systeminformation.baseboard();
+    const bios = await systeminformation.bios();
+    // const cpu = await systeminformation.cpu();
+
+    return {
+        motherboardSerial: motherboard.serial,
+        biosSerial: bios.serial,
+        // cpuId: cpu.id,
+    };}
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

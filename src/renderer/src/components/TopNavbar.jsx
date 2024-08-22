@@ -103,7 +103,7 @@ const TopNavbar = () => {
             <nav className="grid gap-6 text-lg font-medium">
               <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
                 <Package2 className="h-6 w-6" />
-                <span className="sr-only">Acme Inc</span>
+                <span className="sr-onl">Tayssir Software</span>
               </Link>
               <Link to="dashboard" className="hover:text-foreground">
                 Dashboard

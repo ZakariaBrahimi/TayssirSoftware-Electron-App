@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Product.belongsTo(models.User, {
+        foreignKey: 'userId',
+        as: 'user'
+      })
+    
       Product.belongsTo(models.Category, {
         foreignKey: 'categoryId',
         as: 'category'
@@ -45,7 +50,15 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Brands', // refers to table name
         key: 'id', // refers to column name in referenced table
       }},
-
+      userId: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id'
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
+      }
   }, {
     sequelize,
     modelName: 'Product',

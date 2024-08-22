@@ -58,6 +58,7 @@
     "sequelize": "^6.37.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
+    "systeminformation": "^5.23.5",
     "tailwind-merge": "^2.2.2",
     "zod": "^3.23.8"
   },
