@@ -103,6 +103,7 @@ const EditProduct = () => {
   useEffect(() => {
     getCategories()
     getProductBrands()
+    setUpdateData((prevState) => ({ ...prevState, userId: JSON.parse(localStorage.getItem('userSession')).user.id}))
   }, [])
   const location = useLocation()
   const { product } = location.state

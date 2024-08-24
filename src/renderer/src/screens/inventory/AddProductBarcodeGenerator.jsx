@@ -16,7 +16,6 @@ const stringToNumericCode = (str) => {
     hash = hash & hash // Convert to 32bit integer
   }
   let code = Math.abs(hash).toString()
-  // Ensure the code is 12 digits long for UPC-A or 13 for EAN-13
   if (code.length < 12) {
     code = code.padStart(12, '0')
   } else if (code.length > 12) {
@@ -29,8 +28,8 @@ const AddProductBarcodeGenerator = ({
   productName,
   setProductData,
   barcodePrice,
-  productData,
-  type
+  labelSize = { width: 58, height: 30 } // Width: 56mm, Height: 30mm
+ // Default label size in mm
 }) => {
   const barcodeRef = useRef(null)
   const printRef = useRef(null)
@@ -38,7 +37,6 @@ const AddProductBarcodeGenerator = ({
   const [isEmpty, setEmpty] = useState(false)
   const { toast } = useToast()
 
-  // Function to generate barcode based on the product name
   const generateCodeBar = () => {
     if (productName) {
       setEmpty(false)
@@ -49,19 +47,27 @@ const AddProductBarcodeGenerator = ({
             setIsExist(false)
             const code = stringToNumericCode(productName)
             if (barcodeRef.current) {
+              // JsBarcode(barcodeRef.current, code, {
+              //   format: 'CODE128',
+              //   lineColor: '#000',
+              //   width: 1,  // Adjust width based on label size
+              //   height: 40, // Adjust height based on label size
+              //   displayValue: true,
+              //   fontSize: 15, // Font size adjusts with label size
+              //   textMargin: 5,
+              //   margin: 0
+              // })
               JsBarcode(barcodeRef.current, code, {
                 format: 'CODE128',
                 lineColor: '#000',
-                width: 1,
-                height: 40,
+                width: labelSize.width / 58, // Adjust width accordingly
+                height: labelSize.height / 2, // Adjust height accordingly
                 displayValue: true,
-                // text: barcodePrice ? `${barcodePrice} DA` : '',
-                fontSize: 15,
-                // textPosition: "bottom",
-                // textAlign: "center",
-                textMargin: 5, // space between the barcode and the text
+                fontSize: labelSize.height / 2.5, // Adjust font size based on height
+                textMargin: 5,
                 margin: 0
-            })
+              });
+              
               setProductData((prevState) => ({ ...prevState, barcode: code }))
             }
           } else {
@@ -104,12 +110,12 @@ const AddProductBarcodeGenerator = ({
         <Printer className="w-5" />
         <span>Print Barcode</span>
       </Button>
-      <div ref={printRef} className="print-container w-full">
-        <p className="text-center font-bold mb-0 pb-0">
+      <div ref={printRef} className="flex flex-col bg-red-3 h-[15mm] w-[25mm] w-fi">
+        <p className="text-center font-bold m-0 p-0">
           {barcodePrice ? `${barcodePrice} DA` : ''}
         </p>
-        <div className="w-full">
-          <svg className="mx-auto" ref={barcodeRef}></svg>
+        <div className="">
+          <svg className="" ref={barcodeRef}></svg>
         </div>
       </div>
     </div>
@@ -117,3 +123,4 @@ const AddProductBarcodeGenerator = ({
 }
 
 export default AddProductBarcodeGenerator
+

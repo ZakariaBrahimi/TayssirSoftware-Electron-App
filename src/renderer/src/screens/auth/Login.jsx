@@ -24,6 +24,7 @@ const Login = ({ authState, setAuthState }) => {
       setIsLoading(false);
       
       if (response.success) {
+        console.log(response.user)
         setAuthState((prevState) => ({
           ...prevState,
           isLoggedIn: true,

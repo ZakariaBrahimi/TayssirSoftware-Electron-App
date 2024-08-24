@@ -19,6 +19,7 @@ import Login from './screens/auth/Login.jsx'
 import TopNavbar from './components/TopNavbar.jsx'
 import Signup from './screens/auth/Signup.jsx'
 import MainAppContent from './MainAppContent.jsx'
+import Settings from './screens/settings/Settings.jsx'
 
 const fs = window.api.fs
 const path = window.api.path
@@ -72,13 +73,14 @@ function App() {
         ) : (
           <>
             {/* PROTECTED ROUTES */}
-            <Route path="/" element={<MainAppContent />}>
+            <Route path="/" element={<MainAppContent setAuthState={setAuthState} />}>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="inventory/add-new-product" element={<AddProduct />} />
               <Route path="inventory/edit-product" element={<EditProduct />} />
               <Route path="inventory" element={<Inventory />} />
               <Route path="sales" element={<Sales />} />
               <Route path="analytics" element={<Reports />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </>

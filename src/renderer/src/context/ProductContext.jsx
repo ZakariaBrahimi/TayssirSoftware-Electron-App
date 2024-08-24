@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
 /* eslint-disable react/prop-types */
 import { createContext, useState } from 'react'
@@ -17,6 +18,7 @@ export const ProductProvider = ({ children }) => {
   const [categoryData, setCategoryData] = useState([])
   const [brandData, setBrandData] = useState([])
   const [newProductData, setNewProductData] = useState({
+    userId: null,
     name: '',
     barcode: null,
     quantity: 0,

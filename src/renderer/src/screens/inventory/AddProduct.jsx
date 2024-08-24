@@ -120,6 +120,8 @@ const Add = () => {
   useEffect(() => {
     getCategories()
     getProductBrands()
+    console.log(JSON.parse(localStorage.getItem('userSession')))
+    setNewProductData((prevState) => ({ ...prevState, userId: JSON.parse(localStorage.getItem('userSession')).user.id}))
   }, [])
   
   

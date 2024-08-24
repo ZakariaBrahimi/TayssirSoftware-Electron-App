@@ -47,7 +47,14 @@ import {
   TableHeader,
   TableRow
 } from '@shadcn-components/ui/table'
-const TopNavbar = () => {
+// eslint-disable-next-line react/prop-types
+const TopNavbar = ({setAuthState}) => {
+  const logoutHandler = ()=>{
+    setAuthState((prevState) => ({
+      ...prevState,
+      isLoggedIn: false,
+    }));
+  }
   return (
     // <div className="flex  w-full flex-col h-1/6">
     <header className="sticky z-50 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -147,7 +154,7 @@ const TopNavbar = () => {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={logoutHandler}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

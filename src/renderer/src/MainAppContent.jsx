@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
 import { useContext, useEffect } from "react"
 // import Inventory from "./screens/inventory/Inventory.jsx"
@@ -20,7 +21,7 @@ import TopNavbar from "./components/TopNavbar.jsx"
 // import Signup from "./screens/auth/Signup.jsx"
 
 
-const MainAppContent = () => {
+const MainAppContent = ({setAuthState}) => {
     // Fetch products and sold products
   const { getProducts } = useContext(ProductContext)
   const { getSoldProducts } = useContext(SalesContext)
@@ -30,7 +31,7 @@ const MainAppContent = () => {
   }, [])
   return (
     <div className="flex flex-col min-h-lvh " >
-      <TopNavbar/>
+      <TopNavbar setAuthState={setAuthState}/>
       <div className="flex  ">
         <SideNavbar/>
         <Outlet/>
