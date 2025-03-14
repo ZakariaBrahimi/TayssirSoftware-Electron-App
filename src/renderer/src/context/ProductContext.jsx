@@ -103,28 +103,23 @@ export const ProductProvider = ({ children }) => {
       }
     })
   }
-  const createNewProduct = (event) => {
-    event.preventDefault()
+  const createNewProduct = (data) => {
+    console.log('Creating new Product:', data)
+    console.log(typeof(data?.price))
+    console.log(typeof(data?.cost))
+    console.log(typeof(data?.quantity))
+    console.log(typeof(data?.barcode))
     
-    window.electron.ipcRenderer.send('createNewProduct', newProductData)
+    window.electron.ipcRenderer.send('createNewProduct', data)
     // Listen for the response from the main process using 'once' to ensure it's handled only once
     window.electron.ipcRenderer.once('createNewProduct:response', (event, response) => {
       if (response.success) {
-        setProducts(response.products)
+        setProducts("response.products: ", response.products)
         navigate('/inventory')
-        setNewProductData({
-          name: '',
-          quantity: 0,
-          cost: 0,
-          price: 0,
-          brand: '',
-          category: '',
-        })
         toast({
           description: 'Product Created successfully',
           variant: 'success'
         })
-        // console.log('Product created successfully:', response.products)
       } else {
         console.log(response.error)
         console.error('Error creating product:', response.error)

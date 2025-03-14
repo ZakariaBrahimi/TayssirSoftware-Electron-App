@@ -24,9 +24,12 @@ const stringToNumericCode = (str) => {
 };
 
 const AddProductBarcodeGenerator = ({
-  newProductData1, handleBarcodeGenerated,
+  productName,
   setProductData,
+  barcodePrice,
   isBarcodeDuplicate, setIsBarcodeDuplicate,
+  isProductNameMissing, setIsProductNameMissing,
+  labelSize = { width: 58, height: 30 }, // Default label size in mm
 }) => {
   const barcodeRef = useRef(null);
   const printRef = useRef(null);
@@ -38,24 +41,19 @@ const AddProductBarcodeGenerator = ({
    * Uses Electron IPC to check if the barcode already exists.
    */
   const generateCodeBar = () => {
-    if (!newProductData1.name) {
-      JsBarcode(barcodeRef.current, 'Bar Code', {
-        width: 1.2, // Adjust width based on label size --- good enough
-        height: 28, // Adjust height based on label size
-        displayValue: true,
-        fontSize: 14, // Adjust font size dynamically   --- good enough
-        textMargin: 1,
-        margin: 0,
-      });
+    if (!productName) {
+      setIsProductNameMissing(true);
+      JsBarcode(barcodeRef.current, null);
       return;
     }
 
+    setIsProductNameMissing(false);
     try {
-      window.electron.ipcRenderer.send("generateCodeBar", newProductData1.name);
+      window.electron.ipcRenderer.send("generateCodeBar", productName);
       window.electron.ipcRenderer.once("generateCodeBar:response", (_, response) => {
         if (response.success) {
           setIsBarcodeDuplicate(false);
-          const code = stringToNumericCode(newProductData1?.name);
+          const code = stringToNumericCode(productName);
           if (barcodeRef.current) {
             JsBarcode(barcodeRef.current, code, {
               format: "CODE128",
@@ -67,66 +65,48 @@ const AddProductBarcodeGenerator = ({
               textMargin: 1,
               margin: 0,
             });
-            console.log(code)
-            console.log(typeof(code))
-            handleBarcodeGenerated(code)
-            // setProductData((prevState) => ({ ...prevState, barcode: code }));
+            setProductData((prevState) => ({ ...prevState, barcode: code }));
           }
         } else {
           setIsBarcodeDuplicate(true);
-          JsBarcode(barcodeRef.current, 'Bar Code', {
-            width: 1.2, // Adjust width based on label size --- good enough
-            height: 28, // Adjust height based on label size
-            displayValue: true,
-            fontSize: 14, // Adjust font size dynamically   --- good enough
-            textMargin: 1,
-            margin: 0,
-          });
+          JsBarcode(barcodeRef.current, null);
           toast({
-            description: `The product name "${newProductData1.name}" already exists.`,
+            description: `The product name "${productName}" already exists.`,
             variant: "destructive",
           });
         }
       });
     } catch (error) {
       console.error("Error generating barcode:", error.message);
-      JsBarcode(barcodeRef.current, 'Bar Code', {
-        width: 1.2, // Adjust width based on label size --- good enough
-        height: 28, // Adjust height based on label size
-        displayValue: true,
-        fontSize: 14, // Adjust font size dynamically   --- good enough
-        textMargin: 1,
-        margin: 0,
-      });
+      JsBarcode(barcodeRef.current, null);
     }
   };
-  
+
   useEffect(() => {
     generateCodeBar();
-  }, [newProductData1.name]);
+  }, [productName]);
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
   });
+
   return (
     <div className="flex flex-col gap-4 w-full">
+      {isProductNameMissing && <p className="text-red-500 text-center">Please provide a product name.</p>}
 
       <Button
         type="button"
         className="flex gap-2"
         variant="outline"
         onClick={handlePrint}
-        disabled={
-                   isBarcodeDuplicate 
-                || !newProductData1?.name?.trim() // Ensures the name field is not just empty spaces. 
-                || !newProductData1?.price}
+        disabled={isBarcodeDuplicate || isProductNameMissing || !barcodePrice}
       >
         <Printer className="w-5" />
         <span>Print Barcode</span>
       </Button>
 
       <div ref={printRef} className="flex flex-col items-center">
-        {newProductData1.price && <p className="text-center font-bold m-0 text-sm">{newProductData1.price} DA</p>}
+        {barcodePrice && <p className="text-center font-bold m-0 text-sm">{barcodePrice} DA</p>}
         <svg ref={barcodeRef} className="barcode" />
       </div>
     </div>

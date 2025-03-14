@@ -8,7 +8,7 @@ import { Button } from '@shadcn-components/ui/button'
 import { Label } from '@shadcn-components/ui/label'
 import { Input } from '@shadcn-components/ui/input'
 import { useToast } from '@shadcn-components/ui/use-toast'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 /* eslint-disable prettier/prettier */
 import { useContext, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
@@ -100,9 +100,6 @@ const EditProduct = () => {
   const [open, setOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
   const [productName, setProductName] = useState('')
-  const [isBarcodeDuplicate, setIsBarcodeDuplicate] = useState(false);
-  const [isProductNameMissing, setIsProductNameMissing] = useState(false);
-  const productNameRef = useRef(null)
   useEffect(() => {
     getCategories()
     getProductBrands()
@@ -287,7 +284,6 @@ const EditProduct = () => {
                             name: event.target.value
                           }))
                         }}
-                        ref={productNameRef}
                         className="w-full"
                       />
                     </div>
@@ -297,11 +293,6 @@ const EditProduct = () => {
                         setUpdateData={setUpdateData}
                         updateData={updateData}
                         product={product}
-                        productNameRef={productNameRef}
-                        setIsProductNameMissing={setIsProductNameMissing}
-                        isProductNameMissing={isProductNameMissing}
-                        setIsBarcodeDuplicate={setIsBarcodeDuplicate}
-                        isBarcodeDuplicate={isBarcodeDuplicate}
                       />
                     </div>
 

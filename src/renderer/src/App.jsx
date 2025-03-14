@@ -66,8 +66,8 @@ function App() {
           </>
         ) : !authState?.isLoggedIn ? (
           <>
-            <Route path="/login" element={<Login setAuthState={setAuthState} />} />
             <Route path="/signup" element={<Signup setAuthState={setAuthState} />} />
+            <Route path="/login" element={<Login setAuthState={setAuthState} />} />
             <Route path="*" element={<Navigate to="/login" />} />
           </>
         ) : (

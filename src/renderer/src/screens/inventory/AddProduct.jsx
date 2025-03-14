@@ -1,6 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   ChevronLeft,
   Home,
@@ -94,6 +97,41 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import AddProductBarcodeGenerator from './AddProductBarcodeGenerator'
 
+
+
+const productSchema = z.object({
+  // .default(() => {...}) --> Automatically fills userId from localStorage.
+  
+  userId: z.number()
+  .default(() => {
+    const userSession = localStorage.getItem("userSession");
+    return userSession ? JSON.parse(userSession).user.id : "";
+  }),
+  name: z
+    .string()
+    .min(1, "Product name is required") // Required field
+    .regex(/^[A-Za-z].*$/, "Name must start with a letter"), // First letter must be an alphabet
+  // codeBar: z.string().min(1, "Product barcode is required"), // Required field
+  description: z.string().optional(), // Description is optional
+  cost: z.preprocess(
+    (val) => Number(val) || 0, // Convert input to number because React Hook Form treats input values as strings
+    z.number().min(1, "Product cost is required")
+  ),
+  price: z.preprocess(
+    (val) => Number(val) || 0, // Convert input to number
+    z.number().min(1, "Product price is required")
+  ),
+  quantity: z.preprocess(
+    (val) => Number(val) || 0, // Convert input to number
+    z.number().min(1, "Product quantity is required")
+  ),
+  barCode: z
+  .preprocess((value) => Number(value))
+  .positive("Barcode must be a positive number"),
+  category: z.string().optional(),
+  brand: z.string().optional(), 
+});
+
 const Add = () => {
   const {
     createNewProduct,
@@ -114,19 +152,36 @@ const Add = () => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
-  const [value, setValue] = useState('')
+  const [value, setValue1] = useState('')
   const [brandValue, setBrandValue] = useState('')
+  const [isBarcodeDuplicate, setIsBarcodeDuplicate] = useState(false);
+  const [isProductNameMissing, setIsProductNameMissing] = useState(false);
 
+  const [productName, setProductName] = useState('')
+  const [barcodePrice, setBarcodePrice] = useState(null);
+
+  const {
+    setValue,
+    watch,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(productSchema), // Connect Zod validation
+  });
+  const newProductData1  = watch(); // Get real-time form data
+  const handleBarcodeGenerated = (barcode) => {
+    setValue("barCode", barcode, { shouldValidate: true });
+  };
+  
+  useEffect(()=>{console.log(errors);}, [ errors ])
   useEffect(() => {
     getCategories()
     getProductBrands()
-    console.log(JSON.parse(localStorage.getItem('userSession')))
-    setNewProductData((prevState) => ({ ...prevState, userId: JSON.parse(localStorage.getItem('userSession')).user.id}))
   }, [])
   
   
-  const [productName, setProductName] = useState('')
-  const [barcodePrice, setBarcodePrice] = useState(null);
+  
   
   return (
     <div className="flex w-full flex-col sm:gap-4 sm:py-4 lg:ml-[16%]">
@@ -197,7 +252,7 @@ const Add = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Edit Product</BreadcrumbPage>
+              <BreadcrumbPage className=' font-semibold '>New Product</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -232,8 +287,10 @@ const Add = () => {
         </DropdownMenu>
       </header>
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+      {errors.userId && <p style={{ color: "red" }}>{errors.userId.message}</p>}
+      {errors.barcode && <p style={{ color: "red" }}>{errors.barCode.message}</p>}
         <form
-          onSubmit={createNewProduct}
+          onSubmit={handleSubmit(createNewProduct)}
           className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4"
         >
           <div className="flex items-center gap-4">
@@ -267,7 +324,7 @@ const Add = () => {
                 <CardHeader>
                   <CardTitle>Product Details</CardTitle>
                   <CardDescription>
-                    Lipsum dolor sit amet, consectetur adipiscing elit
+                  Not all fields are required, but we recommend filling all of them.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -275,85 +332,79 @@ const Add = () => {
                     <div className="grid gap-3">
                       <Label htmlFor="name">Name</Label>
                       <Input
-                        required
-                        value={newProductData?.name}
-                        id="name"
+                        {...register("name")}
                         type="text"
-                        onChange={(e) =>{
-                          setNewProductData((prevState) => ({ ...prevState, name: e.target.value }))
-                          setProductName(e.target.value)
-                        }}
+                        placeholder="Enter Product Name..."
+                        id="name"
                         className="w-full"
                       />
+                      {errors.name && <p style={{ color: "red" }}>{errors.name.message}</p>}
                     </div>
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
-                      
-                      <AddProductBarcodeGenerator type={'addProduct'} setProductName={setProductName} productName={productName} barcodePrice={barcodePrice} setProductData={setNewProductData} productData={newProductData}  />
-                    </div>
+                      <AddProductBarcodeGenerator newProductData1={newProductData1} handleBarcodeGenerated={handleBarcodeGenerated}
 
+                                                  isBarcodeDuplicate={isBarcodeDuplicate} 
+                                                  setIsBarcodeDuplicate={setIsBarcodeDuplicate} 
+                                                  isProductNameMissing={isProductNameMissing} 
+                                                  setIsProductNameMissing={setIsProductNameMissing}  
+                                                  setProductName={setProductName} 
+                                                  productName={productName} 
+                                                  barcodePrice={barcodePrice} 
+                                                  setProductData={setNewProductData} 
+                                                  productData={newProductData}/>
+                    </div>
+                    {/* Product Description */}
                     <div className="grid gap-3">
                       <Label htmlFor="description">Description</Label>
                       <Textarea
-                        required
+                        {...register("description")}
                         id="description"
-                        defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl nec ultricies ultricies, nunc nisl ultricies nunc, nec ultricies nunc nisl nec nunc."
+                        placeholder="Provide details about the product, including features and specifications (optional) -- e.g., A high-quality wireless mouse with ergonomic design"
+                        rows={4}
                         className="min-h-32"
                       />
                     </div>
+                    {/* Product Cost */}
                     <div className="flex gap-4">
                       <div className="grid gap-3 flex-1">
                         <Label htmlFor="cost">Product Cost</Label>
                         <Input
-                          required
-                          value={newProductData?.cost}
-                          onChange={(e) =>
-                            setNewProductData((prevState) => ({
-                              ...prevState,
-                              cost: e.target.value
-                            }))
-                          }
+                          {...register("cost")} 
+                          placeholder="Enter Product Cost"
                           type="number"
                           id="cost"
                           className="w-full"
                         />
+                        {errors.cost && <p style={{ color: "red" }}>{errors.cost.message}</p>}
                       </div>
+                      {/* Product Price */}
                       <div className="grid gap-3 flex-1">
                         <Label htmlFor="price">Price</Label>
                         <Input
-                          required
-                          value={newProductData?.price}
-                          onChange={(e) => {
-                            setNewProductData((prevState) => ({
-                              ...prevState,
-                              price: e.target.value
-                            }));
-                            setBarcodePrice(e.target.value);
-                          }}
-                          
+                          {...register("price")} 
+                          placeholder="Enter Product Price" 
                           type="number"
                           id="price"
                           className="w-full"
                         />
+                        {errors.price && <p style={{ color: "red" }}>{errors.price.message}</p>}
                       </div>
                     </div>
+                    {/* Product Quantity */}
                     <div className="grid gap-3">
                       <Label htmlFor="quantity">Quantity</Label>
                       <Input
-                        required
-                        value={newProductData?.quantity}
-                        onChange={(e) =>
-                          setNewProductData((prevState) => ({
-                            ...prevState,
-                            quantity: e.target.value
-                          }))
-                        }
+                        {...register("quantity")} 
+                        placeholder="Enter Product Quantity" 
                         id="quantity"
                         type="number"
                         className="w-full"
                       />
+                      {errors.quantity && <p style={{ color: "red" }}>{errors.quantity.message}</p>}
                     </div>
                     <div className="grid gap-6 sm:grid-cols-4">
+                      {/* Product Category */}
                       <div className="grid gap-3 sm:col-span-2">
                         <Label className="" htmlFor="category">
                           Category
@@ -426,7 +477,7 @@ const Add = () => {
                                       <CommandItem
                                         key={category.dataValues.id}
                                         onSelect={(currentValue) => {
-                                          setValue(currentValue === value ? '' : currentValue)
+                                          setValue1(currentValue === value ? '' : currentValue)
                                           setOpen(false)
                                           setNewProductData((prevState) => ({
                                             ...prevState,
@@ -452,6 +503,7 @@ const Add = () => {
                         </Popover>
                         
                       </div>
+                      {/* Product Brand */}
                       <div className="grid gap-3 sm:col-span-2">
                         <Label htmlFor="brands">Brand Name (optional)</Label>
                         <Popover
@@ -752,6 +804,7 @@ const Add = () => {
                     </div>
                   </CardContent>
                 </Card> */}
+                {/* Product Images */}
               <Card className="overflow-hidden" x-chunk="dashboard-07-chunk-4">
                 <CardHeader>
                   <CardTitle>Product Images</CardTitle>

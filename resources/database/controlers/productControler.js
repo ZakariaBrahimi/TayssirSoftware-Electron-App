@@ -282,8 +282,11 @@ const generateCodeBar = () => {
       // Is product Name exists in the database regardless of case (i.e., in both uppercase and lowercase)
       const product = await db.Product.findOne({
         where: db.Sequelize.where(
-          db.Sequelize.fn('LOWER', db.Sequelize.col('name')),
-          db.Sequelize.fn('LOWER', productName)
+          // Removes spaces from the name column.
+          db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', db.Sequelize.col('name'), ' ', '')),
+          // Removes spaces from the input productName.
+          db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', productName, ' ', ''))
+          // db.Sequelize.fn('LOWER', …): Converts both values to lowercase to make the comparison case-insensitive.
         )
       })
       if (product) {

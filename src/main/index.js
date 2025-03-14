@@ -1,5 +1,7 @@
 /* eslint-disable prettier/prettier */
-import { app, shell, BrowserWindow} from 'electron'
+// import { app, shell, BrowserWindow} from 'electron'
+const { app, shell, BrowserWindow } = require('electron');
+
 import { join  } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'

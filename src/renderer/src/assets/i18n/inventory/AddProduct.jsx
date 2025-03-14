@@ -1,17 +1,6 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable prettier/prettier */
-/* eslint-disable react/prop-types */
-/* eslint-disable prettier/prettier */
-/* eslint-disable react/jsx-no-undef */
-
-import { Button } from '@shadcn-components/ui/button'
-import { Label } from '@shadcn-components/ui/label'
-import { Input } from '@shadcn-components/ui/input'
-import { useToast } from '@shadcn-components/ui/use-toast'
-import { useRef, useState } from 'react'
-/* eslint-disable prettier/prettier */
-import { useContext, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useContext, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ChevronLeft,
   Home,
@@ -19,12 +8,14 @@ import {
   Package,
   Package2,
   PanelLeft,
+  // PlusCircle,
   Search,
+  // Settings,
   ShoppingCart,
   Upload,
   Users2,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
 } from 'lucide-react'
 
 import { Badge } from '@shadcn-components/ui/badge'
@@ -36,10 +27,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@shadcn-components/ui/breadcrumb'
+import { Button } from '@shadcn-components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
+  // CardFooter,
   CardHeader,
   CardTitle
 } from '@shadcn-components/ui/card'
@@ -51,7 +44,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@shadcn-components/ui/dropdown-menu'
-
+import { Input } from '@shadcn-components/ui/input'
+import { Label } from '@shadcn-components/ui/label'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue
+// } from '@shadcn-components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -62,8 +63,16 @@ import {
   SheetHeader,
   SheetTitle
 } from '@shadcn-components/ui/sheet'
-
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow
+// } from '@shadcn-components/ui/table'
 import { Textarea } from '@shadcn-components/ui/textarea'
+// import { ToggleGroup, ToggleGroupItem } from '@shadcn-components/ui/toggle-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@shadcn-components/ui/popover'
 import {
   Command,
@@ -74,52 +83,53 @@ import {
   CommandList
 } from '@shadcn-components/ui/command'
 
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipTrigger,
+// } from "@shadcn-components/ui/tooltip"
+import ProductContext from '../../context/ProductContext'
+// import product_placeholder from '../assets/product-placeholder'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import ProductContext from '../../context/ProductContext'
-import EditProductBarcodeGenerator from './EditProductBarcodeGenerator'
+import AddProductBarcodeGenerator from './AddProductBarcodeGenerator'
 
-const EditProduct = () => {
+const Add = () => {
   const {
-    updateProductById,
-    setUpdateData,
-    updateData,
-    categories,
-    brands,
+    createNewProduct,
+    newProductData,
+    setNewProductData,
     getCategories,
-    getProductBrands,
-    createNewProductBrand,
-    setNewBrand,
-    newBrand,
+    categories,
     createNewCategory,
     newCategory,
-    setNewCategory
+    setNewCategory,
+
+    brands,
+    getProductBrands,
+    createNewProductBrand,
+    newBrand,
+    setNewBrand
   } = useContext(ProductContext)
-  const { toast } = useToast()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
-  const [productName, setProductName] = useState('')
-  const [isBarcodeDuplicate, setIsBarcodeDuplicate] = useState(false);
-  const [isProductNameMissing, setIsProductNameMissing] = useState(false);
-  const productNameRef = useRef(null)
+  const [value, setValue] = useState('')
+  const [brandValue, setBrandValue] = useState('')
+
   useEffect(() => {
     getCategories()
     getProductBrands()
-    setUpdateData((prevState) => ({ ...prevState, userId: JSON.parse(localStorage.getItem('userSession')).user.id}))
+    console.log(JSON.parse(localStorage.getItem('userSession')))
+    setNewProductData((prevState) => ({ ...prevState, userId: JSON.parse(localStorage.getItem('userSession')).user.id}))
   }, [])
-  const location = useLocation()
-  const { product } = location.state
-  const [value, setValue] = useState(product?.category?.name)
-  const [brandValue, setBrandValue] = useState(product?.brand?.name)
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    updateProductById(product?.id, updateData)
-    navigate('/inventory')
-    toast({ description: 'Product updated successfully.', variant: 'success' })
-  }
+  
+  
+  const [productName, setProductName] = useState('')
+  const [barcodePrice, setBarcodePrice] = useState(null);
+  
   return (
-    <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl lg:ml-[16%]">
+    <div className="flex w-full flex-col sm:gap-4 sm:py-4 lg:ml-[16%]">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
         <Sheet>
           <SheetTrigger asChild>
@@ -222,16 +232,13 @@ const EditProduct = () => {
         </DropdownMenu>
       </header>
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-        <div className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4">
+        <form
+          onSubmit={createNewProduct}
+          className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4"
+        >
           <div className="flex items-center gap-4">
             <Button
-              onClick={() => {
-                setUpdateData((prevData) => {
-                  console.log('updated Data: ', [])
-                  return []
-                })
-                navigate('/inventory')
-              }}
+              onClick={() => navigate('/inventory')}
               variant="outline"
               size="icon"
               className="h-7 w-7"
@@ -246,22 +253,11 @@ const EditProduct = () => {
               In stock
             </Badge>
             <div className="hidden items-center gap-2 md:ml-auto md:flex">
-              <Button
-                onClick={() => {
-                  setUpdateData((prevData) => {
-                    console.log('updated Data: ', [])
-                    return []
-                  })
-                  navigate('/inventory')
-                }}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={() => navigate('/inventory')} variant="outline" size="sm">
                 Discard
               </Button>
-
-              <Button onClick={handleSubmit} type="button" size="sm">
-                Save Changes
+              <Button type="submit" size="sm">
+                Save Product
               </Button>
             </div>
           </div>
@@ -270,7 +266,9 @@ const EditProduct = () => {
               <Card x-chunk="dashboard-07-chunk-0">
                 <CardHeader>
                   <CardTitle>Product Details</CardTitle>
-                  <CardDescription>ok dolor sit ok, consectetur ok ok</CardDescription>
+                  <CardDescription>
+                    Lipsum dolor sit amet, consectetur adipiscing elit
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-6">
@@ -278,31 +276,20 @@ const EditProduct = () => {
                       <Label htmlFor="name">Name</Label>
                       <Input
                         required
-                        defaultValue={product?.name}
+                        value={newProductData?.name}
                         id="name"
                         type="text"
-                        onChange={(event) => {
-                          setUpdateData((prevData) => ({
-                            ...prevData,
-                            name: event.target.value
-                          }))
+                        onChange={(e) =>{
+                          setNewProductData((prevState) => ({ ...prevState, name: e.target.value }))
+                          setProductName(e.target.value)
                         }}
-                        ref={productNameRef}
                         className="w-full"
                       />
                     </div>
                     <div className="grid gap-3">
                       <Label htmlFor="codeBar">Code Bar</Label>
-                      <EditProductBarcodeGenerator
-                        setUpdateData={setUpdateData}
-                        updateData={updateData}
-                        product={product}
-                        productNameRef={productNameRef}
-                        setIsProductNameMissing={setIsProductNameMissing}
-                        isProductNameMissing={isProductNameMissing}
-                        setIsBarcodeDuplicate={setIsBarcodeDuplicate}
-                        isBarcodeDuplicate={isBarcodeDuplicate}
-                      />
+                      
+                      <AddProductBarcodeGenerator setProductName={setProductName} productName={productName} barcodePrice={barcodePrice} setProductData={setNewProductData} productData={newProductData}  />
                     </div>
 
                     <div className="grid gap-3">
@@ -310,7 +297,7 @@ const EditProduct = () => {
                       <Textarea
                         required
                         id="description"
-                        defaultValue="Lorem ipsum dolor sit a, consectetur a a. a a, a nec a b, a n b n, nec n n n nec n."
+                        defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl nec ultricies ultricies, nunc nisl ultricies nunc, nec ultricies nunc nisl nec nunc."
                         className="min-h-32"
                       />
                     </div>
@@ -319,9 +306,9 @@ const EditProduct = () => {
                         <Label htmlFor="cost">Product Cost</Label>
                         <Input
                           required
-                          defaultValue={product?.cost}
+                          value={newProductData?.cost}
                           onChange={(e) =>
-                            setUpdateData((prevState) => ({
+                            setNewProductData((prevState) => ({
                               ...prevState,
                               cost: e.target.value
                             }))
@@ -335,13 +322,15 @@ const EditProduct = () => {
                         <Label htmlFor="price">Price</Label>
                         <Input
                           required
-                          defaultValue={product?.price}
-                          onChange={(e) =>
-                            setUpdateData((prevState) => ({
+                          value={newProductData?.price}
+                          onChange={(e) => {
+                            setNewProductData((prevState) => ({
                               ...prevState,
                               price: e.target.value
-                            }))
-                          }
+                            }));
+                            setBarcodePrice(e.target.value);
+                          }}
+                          
                           type="number"
                           id="price"
                           className="w-full"
@@ -352,9 +341,9 @@ const EditProduct = () => {
                       <Label htmlFor="quantity">Quantity</Label>
                       <Input
                         required
-                        defaultValue={product?.quantity}
+                        value={newProductData?.quantity}
                         onChange={(e) =>
-                          setUpdateData((prevState) => ({
+                          setNewProductData((prevState) => ({
                             ...prevState,
                             quantity: e.target.value
                           }))
@@ -439,7 +428,7 @@ const EditProduct = () => {
                                         onSelect={(currentValue) => {
                                           setValue(currentValue === value ? '' : currentValue)
                                           setOpen(false)
-                                          setUpdateData((prevState) => ({
+                                          setNewProductData((prevState) => ({
                                             ...prevState,
                                             categoryId: category?.dataValues?.id
                                           }))
@@ -461,6 +450,7 @@ const EditProduct = () => {
                             </Command>
                           </PopoverContent>
                         </Popover>
+                        
                       </div>
                       <div className="grid gap-3 sm:col-span-2">
                         <Label htmlFor="brands">Brand Name (optional)</Label>
@@ -540,7 +530,7 @@ const EditProduct = () => {
                                             currentValue === brandValue ? '' : currentValue
                                           )
                                           setBrandsOpen(false)
-                                          setUpdateData((prevState) => ({
+                                          setNewProductData((prevState) => ({
                                             ...prevState,
                                             brandId: brand?.dataValues?.id
                                           }))
@@ -567,12 +557,207 @@ const EditProduct = () => {
                   </div>
                 </CardContent>
               </Card>
+              {/* <Card x-chunk="dashboard-07-chunk-2">
+                <CardHeader>
+                  <CardTitle>Product Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-6 sm:grid-cols-3">
+                    <div className="grid gap-3">
+                      <Label htmlFor="category">Category</Label>
+                      <Select>
+                        <SelectTrigger id="category" aria-label="Select category">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="clothing">Clothing</SelectItem>
+                          <SelectItem value="electronics">Electronics</SelectItem>
+                          <SelectItem value="accessories">Accessories</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-3">
+                      <Label htmlFor="subcategory">Subcategory (optional)</Label>
+                      <Select>
+                        <SelectTrigger id="subcategory" aria-label="Select subcategory">
+                          <SelectValue placeholder="Select subcategory" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="t-shirts">T-Shirts</SelectItem>
+                          <SelectItem value="hoodies">Hoodies</SelectItem>
+                          <SelectItem value="sweatshirts">Sweatshirts</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card> */}
+              {/* <Card x-chunk="dashboard-07-chunk-1">
+                  <CardHeader>
+                    <CardTitle>Stock</CardTitle>
+                    <CardDescription>
+                      Lipsum dolor sit amet, consectetur adipiscing elit
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">SKU</TableHead>
+                          <TableHead>Stock</TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead className="w-[100px]">Size</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            GGPC-001
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="stock-1" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="stock-1"
+                              type="number"
+                              defaultValue="100"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="price-1" className="sr-only">
+                              Price
+                            </Label>
+                            <Input
+                              id="price-1"
+                              type="number"
+                              defaultValue="99.99"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ToggleGroup
+                              type="single"
+                              defaultValue="s"
+                              variant="outline"
+                            >
+                              <ToggleGroupItem value="s">S</ToggleGroupItem>
+                              <ToggleGroupItem value="m">M</ToggleGroupItem>
+                              <ToggleGroupItem value="l">L</ToggleGroupItem>
+                            </ToggleGroup>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            GGPC-002
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="stock-2" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="stock-2"
+                              type="number"
+                              defaultValue="143"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="price-2" className="sr-only">
+                              Price
+                            </Label>
+                            <Input
+                              id="price-2"
+                              type="number"
+                              defaultValue="99.99"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ToggleGroup
+                              type="single"
+                              defaultValue="m"
+                              variant="outline"
+                            >
+                              <ToggleGroupItem value="s">S</ToggleGroupItem>
+                              <ToggleGroupItem value="m">M</ToggleGroupItem>
+                              <ToggleGroupItem value="l">L</ToggleGroupItem>
+                            </ToggleGroup>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            GGPC-003
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="stock-3" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="stock-3"
+                              type="number"
+                              defaultValue="32"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Label htmlFor="price-3" className="sr-only">
+                              Stock
+                            </Label>
+                            <Input
+                              id="price-3"
+                              type="number"
+                              defaultValue="99.99"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ToggleGroup
+                              type="single"
+                              defaultValue="s"
+                              variant="outline"
+                            >
+                              <ToggleGroupItem value="s">S</ToggleGroupItem>
+                              <ToggleGroupItem value="m">M</ToggleGroupItem>
+                              <ToggleGroupItem value="l">L</ToggleGroupItem>
+                            </ToggleGroup>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                  <CardFooter className="justify-center border-t p-4">
+                    <Button size="sm" variant="ghost" className="gap-1">
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      Add Variant
+                    </Button>
+                  </CardFooter>
+                </Card> */}
             </div>
             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+              {/* <Card x-chunk="dashboard-07-chunk-3">
+                  <CardHeader>
+                    <CardTitle>Product Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-6">
+                      <div className="grid gap-3">
+                        <Label htmlFor="status">Status</Label>
+                        <Select>
+                          <SelectTrigger id="status" aria-label="Select status">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="published">Active</SelectItem>
+                            <SelectItem value="archived">Archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card> */}
               <Card className="overflow-hidden" x-chunk="dashboard-07-chunk-4">
                 <CardHeader>
                   <CardTitle>Product Images</CardTitle>
-                  <CardDescription>a dolor sit a, consectetur e t</CardDescription>
+                  <CardDescription>
+                    Lipsum dolor sit amet, consectetur adipiscing elit
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
@@ -913,30 +1098,34 @@ const EditProduct = () => {
                   </div>
                 </CardContent>
               </Card>
+              {/* <Card x-chunk="dashboard-07-chunk-5">
+                  <CardHeader>
+                    <CardTitle>Archive Product</CardTitle>
+                    <CardDescription>
+                      Lipsum dolor sit amet, consectetur adipiscing elit.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div></div>
+                    <Button size="sm" variant="secondary">
+                      Archive Product
+                    </Button>
+                  </CardContent>
+                </Card> */}
             </div>
           </div>
           <div className="flex items-center justify-center gap-2 md:hidden">
-          <Button
-                onClick={() => {
-                  setUpdateData((prevData) => {
-                    console.log('updated Data: ', [])
-                    return []
-                  })
-                  navigate('/inventory')
-                }}
-                variant="outline"
-                size="sm"
-              >
-                Discard
-              </Button>
-            <Button onClick={handleSubmit} type="button" size="sm">
-              Save Changes
+            <Button onClick={() => navigate('/inventory')} variant="outline" size="sm">
+              Discard
+            </Button>
+            <Button type="submit" size="sm">
+              Save Product
             </Button>
           </div>
-        </div>
+        </form>
       </main>
     </div>
   )
 }
 
-export default EditProduct
+export default Add

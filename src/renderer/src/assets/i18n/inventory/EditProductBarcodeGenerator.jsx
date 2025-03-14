@@ -25,12 +25,11 @@ const EditProductBarcodeGenerator = ({
   setUpdateData,
   updateData,
   product,
-  productNameRef,
-  isBarcodeDuplicate, setIsBarcodeDuplicate,
-  isProductNameMissing, setIsProductNameMissing
 }) => {
   const barcodeRef = useRef(null)
   const printRef = useRef(null)
+  const [isExist, setIsExist] = useState(false)
+  const [isEmpty, setEmpty] = useState(false)
   const { toast } = useToast()
 
   const generateBarcode = (code) => {
@@ -61,20 +60,19 @@ const EditProductBarcodeGenerator = ({
       return
     }
     if (updateData.name) {
-      setIsProductNameMissing(false)
+      setEmpty(false)
       try {
         window.electron.ipcRenderer.send('generateCodeBar', updateData.name)
         window.electron.ipcRenderer.once('generateCodeBar:response', (event, response) => {
           if (!response.success) {
-            setIsBarcodeDuplicate(true)
-            productNameRef.current.displayValue = ''
+            setIsExist(true)
             generateBarcode(null)
             toast({
               description: `The Product Name - ${updateData.name} - already exists`,
               variant: 'destructive'
             })
           } else {
-            setIsBarcodeDuplicate(false)
+            setIsExist(false)
             const code = stringToNumericCode(updateData.name)
             generateBarcode(code)
             setUpdateData((prevState) => ({ ...prevState, barcode: code }))
@@ -85,7 +83,7 @@ const EditProductBarcodeGenerator = ({
         generateBarcode(null)
       }
     } else {
-      setIsProductNameMissing(true)
+      setEmpty(true)
       generateBarcode(null)
     }
   }
@@ -98,7 +96,7 @@ const EditProductBarcodeGenerator = ({
   // Generate the barcode on first load
   useEffect(()=>{
     const code = stringToNumericCode(product.name)
-    setIsProductNameMissing(false)
+    setEmpty(false)
     generateBarcode(code)
     console.log('updateData.name: ', updateData.name)
   }, [])
@@ -109,13 +107,13 @@ const EditProductBarcodeGenerator = ({
 
   return (
     <div className="flex flex-col gap-4 w-full ">
-      {isProductNameMissing && <p className="text-red-500 text-center">Please provide a product name.</p>}
+      {isEmpty && <p className="text-red-500 text-center">Please provide a product name.</p>}
       <Button
         type="button"
         className="flex gap-2"
         variant="outline"
         onClick={handlePrint}
-        disabled={isBarcodeDuplicate || isProductNameMissing}
+        disabled={isExist || isEmpty}
       >
         <Printer className="w-5" />
         <span>Print Barcode</span>
