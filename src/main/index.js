@@ -59,7 +59,7 @@ function createWindow() {
   productControler.createNewCategory()
   productControler.getProductBrands()
   productControler.createNewProductBrand()
-  productControler.generateCodeBar()
+  productControler.isBarCodeExist()
   productControler.SearchByBarcode()
   // Sales
   salesControler.newSoldProducts()

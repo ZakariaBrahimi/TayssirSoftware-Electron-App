@@ -73,10 +73,10 @@ const DataTableColumns = () => {
       )
     },
     {
-      accessorKey: 'barcode',
+      accessorKey: 'barCode',
       footer: (props) => props.column.id,
       header: 'Barcode',
-      cell: ({ row }) => <div className="capitalize">{row.original?.barcode}</div>
+      cell: ({ row }) => <div className="capitalize">{row.original?.barCode}</div>
     },
     {
       accessorKey: 'quantity',

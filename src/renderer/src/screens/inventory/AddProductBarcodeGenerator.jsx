@@ -67,10 +67,8 @@ const AddProductBarcodeGenerator = ({
               textMargin: 1,
               margin: 0,
             });
-            console.log(code)
-            console.log(typeof(code))
+            
             handleBarcodeGenerated(code)
-            // setProductData((prevState) => ({ ...prevState, barcode: code }));
           }
         } else {
           setIsBarcodeDuplicate(true);

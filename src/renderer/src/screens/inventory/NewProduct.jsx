@@ -1,14 +1,7 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable react/prop-types */
-/* eslint-disable prettier/prettier */
-/* eslint-disable react/jsx-no-undef */
-
-import { Button } from '@shadcn-components/ui/button'
-import { Input } from '@shadcn-components/ui/input'
-
-/* eslint-disable prettier/prettier */
 import { useContext, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+
 import {
   Home,
   LineChart,
@@ -17,8 +10,7 @@ import {
   PanelLeft,
   Search,
   ShoppingCart,
-  Users2,
-  
+  Users2
 } from 'lucide-react'
 
 import {
@@ -29,6 +21,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@shadcn-components/ui/breadcrumb'
+import { Button } from '@shadcn-components/ui/button'
 
 import {
   DropdownMenu,
@@ -38,41 +31,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@shadcn-components/ui/dropdown-menu'
+import { Input } from '@shadcn-components/ui/input'
 
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  
-} from '@shadcn-components/ui/sheet'
-
-
+import { Sheet, SheetContent, SheetTrigger } from '@shadcn-components/ui/sheet'
 
 import ProductContext from '../../context/ProductContext'
+
 import ProductForm from './ProductForm'
 
-const EditProduct = () => {
-  const {
-    updateProductById,
-    setUpdateData,
-    getCategories,
-    getProductBrands,
-    updateData,
-  } = useContext(ProductContext)
-  const location = useLocation()
-  const { product } = location.state
+const NewProduct = () => {
+  const { getCategories, getProductBrands, createNewProduct } = useContext(ProductContext)
+
   
+
   useEffect(() => {
     getCategories()
     getProductBrands()
-    setUpdateData(product);
   }, [])
-const handleSubmit = (data) => {
-    updateProductById(product.id, data);
-  };
-  
+
   return (
-    <div className="flex w-full flex-col sm:gap-4 sm:py-4 sm:pl lg:ml-[16%]">
+    <div className="flex w-full flex-col sm:gap-4 sm:py-4 lg:ml-[16%]">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
         <Sheet>
           <SheetTrigger asChild>
@@ -140,7 +118,7 @@ const handleSubmit = (data) => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Edit Product</BreadcrumbPage>
+              <BreadcrumbPage className=" font-semibold ">New Product</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -175,29 +153,11 @@ const handleSubmit = (data) => {
         </DropdownMenu>
       </header>
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-      <ProductForm onSubmit={handleSubmit} defaultValues={product} />
+        
+        <ProductForm onSubmit={createNewProduct} defaultValues={{categoryId: undefined, brandId: undefined}} />
       </main>
     </div>
   )
 }
 
-export default EditProduct
-
-
-
-
-
-/*
-
-
-1- First Approach: "Generate BarCode" Button 
-  - When user click on it, confirmation dialogue showed that the current barcode will be changed 
-  - After confirm the dialogue a new barcode generated randomly, with confirming that is not duplicated on database
-  - In case creating a new product -->  - print barcode btn disabled until the user click on generate a new barcode btn
-  - In case updating a product     -->  - print barcode btn enabled 
-
-
-2- Second Approach: Generate barcode based on the product name
-  - Creating a new product --> - each update on product name field barcode generated automatically and checking is not duplicated
-  - Updating a product     --> - barcode barcode shoudn't be updated until user click on generate new barcode 
-*/
+export default NewProduct

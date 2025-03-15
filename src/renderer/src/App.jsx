@@ -10,7 +10,7 @@ import SideNavbar from './components/SideNavbar.jsx'
 import { Toaster } from '@shadcn-components/ui/toaster'
 import ProductContext from './context/ProductContext'
 import Dashboard from './screens/dashboard/Dashboard.jsx'
-import AddProduct from './screens/inventory/AddProduct.jsx'
+import NewProduct from './screens/inventory/NewProduct.jsx'
 import Sales from './screens/sales/Sales.jsx'
 import EditProduct from './screens/inventory/EditProduct.jsx'
 import SalesContext from './context/SalesContext.jsx'
@@ -75,7 +75,7 @@ function App() {
             {/* PROTECTED ROUTES */}
             <Route path="/" element={<MainAppContent setAuthState={setAuthState} />}>
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="inventory/add-new-product" element={<AddProduct />} />
+              <Route path="inventory/add-new-product" element={<NewProduct />} />
               <Route path="inventory/edit-product" element={<EditProduct />} />
               <Route path="inventory" element={<Inventory />} />
               <Route path="sales" element={<Sales />} />

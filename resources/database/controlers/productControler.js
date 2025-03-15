@@ -6,11 +6,13 @@ const db = require('../models') // Require the models
 const createNewProduct = () => {
   ipcMain.on('createNewProduct', async (event, newProductData) => {
     console.log('Received new product data:', newProductData)
+    console.log('barCode Value:', newProductData.barCode)
+    console.log('barCode Value:', typeof(newProductData.barCode))
 
     try {
       // Create a new product in the database
       const newProduct = await db.Product.create(newProductData)
-      console.log('New product created:', newProduct)
+      // console.log('New product created:', newProduct)
 
       // Fetch all products to send back to the renderer process
       const products = await db.Product.findAll({
@@ -275,30 +277,53 @@ const updateProductById = () => {
     }
   })
 }
-const generateCodeBar = () => {
-  ipcMain.on('generateCodeBar', async (event, productName) => {
+const isBarCodeExist = () => {
+  /*
+    Creating a New Product:
+        When typing a name, check if a product with the same name exists.
+        If yes, raise an error.
+        If no, generate a new barcode.
+
+    Editing an Existing Product:
+        If the new name is exactly the same as the existing product name, do nothing (no new barcode).
+        If the new name is different:
+            Check if another product already has this name.
+            If yes, raise an error.
+            If no, update the name without changing the barcode.
+  
+  
+  */ 
+  ipcMain.on('isBarCodeExist', async (event, productName) => {
     console.log('hello world')
     try {
-      // Is product Name exists in the database regardless of case (i.e., in both uppercase and lowercase)
+      // const product = await db.Product.findOne({
+      //   where: db.Sequelize.where(
+      //     // Removes spaces from the name column.
+      //     db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', db.Sequelize.col('name'), ' ', '')),
+      //     // Removes spaces from the input productName.
+      //     db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', productName, ' ', ''))
+      //   )
+      // })
+
+      // Normalize product name: remove spaces & make lowercase
+      const formattedName = productName.replace(/\s+/g, '').toLowerCase()
+
+      // Check if the product exists with the same normalized name
       const product = await db.Product.findOne({
         where: db.Sequelize.where(
-          // Removes spaces from the name column.
           db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', db.Sequelize.col('name'), ' ', '')),
-          // Removes spaces from the input productName.
-          db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', productName, ' ', ''))
-          // db.Sequelize.fn('LOWER', …): Converts both values to lowercase to make the comparison case-insensitive.
+          formattedName
         )
       })
+      // Is product Name exists in the database regardless of case (i.e., in both uppercase and lowercase and without spaces)
       if (product) {
-        event.reply('generateCodeBar:response', { success: false, message: 'Product name found, change the name' })
+        event.reply('isBarCodeExist:response', { isProductNameExist: true, message: 'Product name already exists, change the name' })
       } else {
-        event.reply('generateCodeBar:response', {
-          success: true,
-          message: 'Product Name not found'
+        event.reply('isBarCodeExist:response', { isProductNameExist: false, message: 'Product Name not found on the database'
         })
       }
     } catch (error) {
-      event.reply('generateCodeBar:response', { success: false, error: error.message })
+      event.reply('isBarCodeExist:response', { isProductNameExist: false, error: error.message })
     }
   })
 }
@@ -313,6 +338,6 @@ module.exports = {
   createNewCategory,
   createNewProductBrand,
   getProductBrands,
-  generateCodeBar,
+  isBarCodeExist,
   SearchByBarcode
 }

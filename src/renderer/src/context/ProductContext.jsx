@@ -104,12 +104,6 @@ export const ProductProvider = ({ children }) => {
     })
   }
   const createNewProduct = (data) => {
-    console.log('Creating new Product:', data)
-    console.log(typeof(data?.price))
-    console.log(typeof(data?.cost))
-    console.log(typeof(data?.quantity))
-    console.log(typeof(data?.barcode))
-    
     window.electron.ipcRenderer.send('createNewProduct', data)
     // Listen for the response from the main process using 'once' to ensure it's handled only once
     window.electron.ipcRenderer.once('createNewProduct:response', (event, response) => {
@@ -121,7 +115,6 @@ export const ProductProvider = ({ children }) => {
           variant: 'success'
         })
       } else {
-        console.log(response.error)
         console.error('Error creating product:', response.error)
       }
     })
@@ -184,13 +177,17 @@ export const ProductProvider = ({ children }) => {
   const [updateData, setUpdateData] = useState([])
   // Function to Update a product data by ID
   const updateProductById = (productId, updateData) => {
+    console.log(productId)
+    console.log(typeof productId)
     window.electron.ipcRenderer.send('updateProductById', { productId, updateData })
 
     window.electron.ipcRenderer.once('updateProductById:response', (event, response) => {
       if (response.success) {
+        setProducts(response.products) // FIXME: should not updates all products (it could be 10,000 products, it will be problem to update)
+        navigate('/inventory')
+        toast({ description: 'Product updated successfully.', variant: 'success' })
         // console.log('Product updated successfully:', response.products)
         // Handle success (e.g., update UI, show notification)
-        setProducts(response.products) // FIXME: should not updates all products (it could be 10,000 products, it will be problem to update)
       } else {
         console.error('Error:', response.error)
       }
