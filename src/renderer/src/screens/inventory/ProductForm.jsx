@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
@@ -69,7 +69,7 @@ import { cn } from '@/lib/utils'
 import { productSchema } from './productSchema'
 import BarcodeGenerator from './BarcodeGenerator'
 
-const ProductForm = ({ onSubmit, defaultValues }) => {
+const ProductForm = ({ onSubmit, initialData }) => {
   const {
     categories,
     createNewCategory,
@@ -84,9 +84,7 @@ const ProductForm = ({ onSubmit, defaultValues }) => {
   const [open, setOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
 
-  // useEffect(() => {
-  //   console.log('Product', defaultValues)
-  // }, [])
+
   const {
     setValue,
     watch,
@@ -96,7 +94,7 @@ const ProductForm = ({ onSubmit, defaultValues }) => {
     formState: { errors }
   } = useForm({
     resolver: zodResolver(productSchema), // Connect Zod validation
-    defaultValues, // Default is empty (optional)
+    defaultValues: initialData || {}, // Default is empty (optional)
     mode: 'onChange', // Validates on input change
   })
   const productData = watch() // Get real-time form data
@@ -104,7 +102,7 @@ const ProductForm = ({ onSubmit, defaultValues }) => {
   const selectedCategoryName = selectedCategoryId
     ? categories.find((category) => category.dataValues.id === selectedCategoryId)?.dataValues?.name ||
       'Select Category...'
-    : defaultValues?.category?.name || 'Select Brand...'
+    : initialData?.category?.name || 'Select Brand...'
   const handleCategorySelect = (categoryId) => {
     setValue('categoryId', categoryId) // ✅ Manually updates the form field
     setOpen(false)
@@ -113,17 +111,23 @@ const ProductForm = ({ onSubmit, defaultValues }) => {
   const selectedBrandName = selectedBrandId
     ? brands.find((brand) => brand.dataValues.id === selectedBrandId)?.dataValues?.name ||
       'Select Brand...'
-    : defaultValues?.brand?.name || 'Select Brand...'
+    : initialData?.brand?.name || 'Select Brand...'
   const handleBrandSelect = (brandId) => {
     setValue('brandId', brandId) // ✅ Manually updates the form field
     setBrandsOpen(false)
   }
+
+ // ✅ Check if it's a new product or editing an existing one
+ const isEditMode = Object.keys(initialData || {}).length > 0;
+//  console.log(isEditMode && 'Editing')
+console.log(productData)
+
   // const handleBarcodeGenerated = (barCode) => {
   //   console.log(barCode)
   //   setValue('barCode', barCode, { shouldValidate: true })
   // }
   
-
+  console.log(errors);
 
   
   return (
@@ -131,6 +135,7 @@ const ProductForm = ({ onSubmit, defaultValues }) => {
       onSubmit={handleSubmit(onSubmit)}
       className="mx-auto grid max-w-[59rem] md:max-w-full flex-1 auto-rows-max gap-4"
     >
+      
       {errors.userId && <p style={{ color: 'red' }}>{errors.userId.message}</p>}
       
       <div className="flex items-center gap-4">
@@ -179,16 +184,19 @@ const ProductForm = ({ onSubmit, defaultValues }) => {
                     className="w-full"
                   />
                   {errors.name && <p style={{ color: 'red' }}>{errors.name.message}</p>}
-                  {/* {errors.barCode && <p style={{ color: 'red' }}>{errors.barCode.message}</p>} */}
+                  {errors.barCode && <p style={{ color: 'red' }}>{errors.barCode.message}</p>}
                 </div>
                 {/* Product BarCode */}
                 <div className="grid gap-3">
                   <Label htmlFor="codeBar">Code Bar</Label>
                   <BarcodeGenerator
-                    productData={productData}
+                    productData={isEditMode ? productData : initialData}
                     setBarCode={(barCode)=> setValue('barCode', barCode, { shouldValidate: true })}
                     setError={setError}
+                    setValue={setValue}
+                    isEditMode={isEditMode}
                   />
+                  
                 </div>
                 {/* Product Description */}
                 <div className="grid gap-3">

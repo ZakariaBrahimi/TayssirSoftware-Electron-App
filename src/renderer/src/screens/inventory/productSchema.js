@@ -27,20 +27,14 @@ export const productSchema = z
     ),
     // barCode: z.preprocess(
     //   (value) => {
-    //     if (value === '' || value === null || value === undefined) return undefined; // Reject empty values
     //     const num = Number(value);
-    //     return isNaN(num) ? undefined : num; // Ensure valid number
+    //     return num; // Convert value to number
     //   },
-    //   z.number({ invalid_type_error: 'Barcode must be a number' }).min(1, 'Barcode is required')
+    //   z.number({ invalid_type_error: "Barcode must be a number" })
+    //   .min(1, "Barcode is required") // Ensures it's greater than 0 and required
+    //   // .int("Barcode must be an integer") // Ensures it's a whole number
     // ),
-    barCode: z.preprocess(
-      (value) => {
-        const num = Number(value);
-        return isNaN(num) ? undefined : num; // Convert value to number or return undefined
-      },
-      z.number({ invalid_type_error: "Barcode must be a number" })
-        .positive("Barcode must be a positive number") // Ensure the number is positive
-    ),
+    barCode: z.string().nonempty("Barcode is required").default(""), // .default("") to Ensure It's Always a String
 
     categoryId: z.number().optional(),
     brandId: z.number().optional()

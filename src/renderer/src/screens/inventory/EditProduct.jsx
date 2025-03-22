@@ -54,10 +54,10 @@ import ProductForm from './ProductForm'
 const EditProduct = () => {
   const {
     updateProductById,
-    setUpdateData,
+    // setUpdateData,
     getCategories,
     getProductBrands,
-    updateData,
+    // updateData,
   } = useContext(ProductContext)
   const location = useLocation()
   const { product } = location.state
@@ -65,10 +65,14 @@ const EditProduct = () => {
   useEffect(() => {
     getCategories()
     getProductBrands()
-    setUpdateData(product);
+    console.log('Default/Existing Product Data', product)
+    // setUpdateData(product);
+    // console.log('jjjjjjjjjjjjjjjjjjj', updateData)
   }, [])
 const handleSubmit = (data) => {
-    updateProductById(product.id, data);
+  // data: the new updated data passed automatically by reactFormHook
+    console.log('Updated Product Data', data)
+    updateProductById(product.id, data); // The first argument is fixed id, will not change, the second one is data, which will change based on user preferences
   };
   
   return (
@@ -175,7 +179,7 @@ const handleSubmit = (data) => {
         </DropdownMenu>
       </header>
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-      <ProductForm onSubmit={handleSubmit} defaultValues={product} />
+      <ProductForm onSubmit={handleSubmit} initialData={product} />
       </main>
     </div>
   )
@@ -186,18 +190,3 @@ export default EditProduct
 
 
 
-
-/*
-
-
-1- First Approach: "Generate BarCode" Button 
-  - When user click on it, confirmation dialogue showed that the current barcode will be changed 
-  - After confirm the dialogue a new barcode generated randomly, with confirming that is not duplicated on database
-  - In case creating a new product -->  - print barcode btn disabled until the user click on generate a new barcode btn
-  - In case updating a product     -->  - print barcode btn enabled 
-
-
-2- Second Approach: Generate barcode based on the product name
-  - Creating a new product --> - each update on product name field barcode generated automatically and checking is not duplicated
-  - Updating a product     --> - barcode barcode shoudn't be updated until user click on generate new barcode 
-*/

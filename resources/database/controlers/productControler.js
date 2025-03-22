@@ -1,13 +1,15 @@
 /* eslint-disable prettier/prettier */
 const { ipcMain } = require('electron') // Destructure ipcMain from electron
 const db = require('../models') // Require the models
+const crypto = require('crypto') // Require the models
+
 
 // Function to create a new product
 const createNewProduct = () => {
   ipcMain.on('createNewProduct', async (event, newProductData) => {
     console.log('Received new product data:', newProductData)
     console.log('barCode Value:', newProductData.barCode)
-    console.log('barCode Value:', typeof(newProductData.barCode))
+    console.log('barCode Value:', typeof newProductData.barCode)
 
     try {
       // Create a new product in the database
@@ -180,23 +182,23 @@ const deleteProductById = () => {
       if (result) {
         console.log('Product deleted successfully')
         // Fetch all products to send back to the renderer process
-      const products = await db.Product.findAll({
-        include: [
-          {
-            model: db.Category,
-            as: 'category' // Use the alias defined in the association
-            // attributes: ['id', 'name'] // Include only the necessary attributes
-          },
-          {
-            model: db.Brand,
-            as: 'brand' // Use the alias defined in the association
-            // attributes: ['id', 'name'] // Include only the necessary attributes
-          }
-        ],
-        attributes: { exclude: ['categoryId', 'brandId'] }
-      })
-      // Convert Sequelize instances to plain objects
-      const plainProducts = products.map((product) => product.get({ plain: true }))
+        const products = await db.Product.findAll({
+          include: [
+            {
+              model: db.Category,
+              as: 'category' // Use the alias defined in the association
+              // attributes: ['id', 'name'] // Include only the necessary attributes
+            },
+            {
+              model: db.Brand,
+              as: 'brand' // Use the alias defined in the association
+              // attributes: ['id', 'name'] // Include only the necessary attributes
+            }
+          ],
+          attributes: { exclude: ['categoryId', 'brandId'] }
+        })
+        // Convert Sequelize instances to plain objects
+        const plainProducts = products.map((product) => product.get({ plain: true }))
 
         event.reply('deleteProductById:response', { success: true, products: plainProducts })
       } else {
@@ -213,7 +215,7 @@ const SearchByBarcode = () => {
   ipcMain.on('SearchByBarcode', async (event, barcode) => {
     console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')
     try {
-      // 
+      //
       const product = await db.Product.findOne({
         where: { barcode: barcode }
       })
@@ -245,23 +247,23 @@ const updateProductById = () => {
         // event.reply('updateProductById:response', { success: true, product: updatedProduct });
         // Fetch the updated products to send back to the renderer process
         // Fetch all products to send back to the renderer process
-      const products = await db.Product.findAll({
-        include: [
-          {
-            model: db.Category,
-            as: 'category' // Use the alias defined in the association
-            // attributes: ['id', 'name'] // Include only the necessary attributes
-          },
-          {
-            model: db.Brand,
-            as: 'brand' // Use the alias defined in the association
-            // attributes: ['id', 'name'] // Include only the necessary attributes
-          }
-        ],
-        attributes: { exclude: ['categoryId', 'brandId'] }
-      })
-      // Convert Sequelize instances to plain objects
-      const plainProducts = products.map((product) => product.get({ plain: true }))
+        const products = await db.Product.findAll({
+          include: [
+            {
+              model: db.Category,
+              as: 'category' // Use the alias defined in the association
+              // attributes: ['id', 'name'] // Include only the necessary attributes
+            },
+            {
+              model: db.Brand,
+              as: 'brand' // Use the alias defined in the association
+              // attributes: ['id', 'name'] // Include only the necessary attributes
+            }
+          ],
+          attributes: { exclude: ['categoryId', 'brandId'] }
+        })
+        // Convert Sequelize instances to plain objects
+        const plainProducts = products.map((product) => product.get({ plain: true }))
 
         event.reply('updateProductById:response', { success: true, products: plainProducts })
       } else {
@@ -277,34 +279,28 @@ const updateProductById = () => {
     }
   })
 }
+
+
+
+// Function to generate a numeric barcode from UUID
+const generateBarcodeFromUUID = () => {
+  // Generate a UUID
+  const uuid = crypto.randomUUID(); 
+
+  // Hash UUID to a numeric value
+  const hash = crypto.createHash('sha256').update(uuid).digest('hex');
+
+  // Extract numeric characters
+  let numericCode = hash.replace(/\D/g, ''); // Remove non-numeric chars
+
+  // Ensure barcode length is 12 or 13 digits
+  numericCode = numericCode.slice(0, 13); // Keep only the first 13 digits
+
+  return numericCode;
+};
 const isBarCodeExist = () => {
-  /*
-    Creating a New Product:
-        When typing a name, check if a product with the same name exists.
-        If yes, raise an error.
-        If no, generate a new barcode.
-
-    Editing an Existing Product:
-        If the new name is exactly the same as the existing product name, do nothing (no new barcode).
-        If the new name is different:
-            Check if another product already has this name.
-            If yes, raise an error.
-            If no, update the name without changing the barcode.
-  
-  
-  */ 
   ipcMain.on('isBarCodeExist', async (event, productName) => {
-    console.log('hello world')
     try {
-      // const product = await db.Product.findOne({
-      //   where: db.Sequelize.where(
-      //     // Removes spaces from the name column.
-      //     db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', db.Sequelize.col('name'), ' ', '')),
-      //     // Removes spaces from the input productName.
-      //     db.Sequelize.fn('LOWER', db.Sequelize.fn('REPLACE', productName, ' ', ''))
-      //   )
-      // })
-
       // Normalize product name: remove spaces & make lowercase
       const formattedName = productName.replace(/\s+/g, '').toLowerCase()
 
@@ -317,9 +313,16 @@ const isBarCodeExist = () => {
       })
       // Is product Name exists in the database regardless of case (i.e., in both uppercase and lowercase and without spaces)
       if (product) {
-        event.reply('isBarCodeExist:response', { isProductNameExist: true, message: 'Product name already exists, change the name' })
+        event.reply('isBarCodeExist:response', {
+          isProductNameExist: true,
+          message: 'Product name already exists, change the name'
+        })
       } else {
-        event.reply('isBarCodeExist:response', { isProductNameExist: false, message: 'Product Name not found on the database'
+        const code = generateBarcodeFromUUID()
+        event.reply('isBarCodeExist:response', {
+          isProductNameExist: false,
+          code: code,
+          message: 'Product Name not found on the database, barcode generated'
         })
       }
     } catch (error) {

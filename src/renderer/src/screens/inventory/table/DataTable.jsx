@@ -43,6 +43,7 @@ export default function DataTable() {
   const columns = DataTableColumns()
   useEffect(() => {
     getProducts()
+    console.log('products', products)
   }, [])
   
   const table = useReactTable({

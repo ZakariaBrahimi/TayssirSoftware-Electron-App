@@ -105,16 +105,19 @@ export const ProductProvider = ({ children }) => {
   }
   const createNewProduct = (data) => {
     window.electron.ipcRenderer.send('createNewProduct', data)
+    console.log('product data', data)
     // Listen for the response from the main process using 'once' to ensure it's handled only once
     window.electron.ipcRenderer.once('createNewProduct:response', (event, response) => {
       if (response.success) {
         setProducts("response.products: ", response.products)
+        console.log("Successfully created new product, products:", response.products)
         navigate('/inventory')
         toast({
           description: 'Product Created successfully',
           variant: 'success'
         })
       } else {
+        console.log('Creating new Product', data)
         console.error('Error creating product:', response.error)
       }
     })
