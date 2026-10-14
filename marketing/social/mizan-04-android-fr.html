@@ -1,0 +1,79 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&amp;family=Geist:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0E7C6B; --teal-d: #0A5C50; --ink: #0B2B27; --ink2: #123A35;
+    --gold: #D6A23A; --cream: #F6F2E9; --paper: #FFFDF8; --muted: #5E716D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; font-family: Geist, "Readex Pro", sans-serif; color: var(--ink); }
+  .post { position: relative; overflow: hidden; margin: 0 0 40px; }
+  .sq { width: 1080px; height: 1080px; }
+  .story { width: 1080px; height: 1920px; }
+  .cover { width: 1640px; height: 624px; }
+  .ar { font-family: "Readex Pro", sans-serif; direction: rtl; }
+
+  .logo { display: flex; align-items: center; gap: 18px; font-weight: 700; font-size: 40px; letter-spacing: -0.5px; }
+  .logo svg { width: 64px; height: 64px; }
+  .eyebrow { font-weight: 600; font-size: 26px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+  .ar .eyebrow { letter-spacing: 0; }
+  h1 { font-family: "Readex Pro", sans-serif; font-weight: 700; letter-spacing: -2px; line-height: 1.02; }
+  .ar h1 { letter-spacing: 0; line-height: 1.25; }
+  .pill { display: inline-flex; align-items: center; gap: 12px; border-radius: 999px; padding: 18px 34px; font-weight: 700; font-size: 30px; }
+  .url { font-weight: 500; font-size: 26px; opacity: .75; }
+
+  /* receipt-like POS mock */
+  .till { background: var(--paper); border-radius: 28px; box-shadow: 0 40px 80px rgba(0,0,0,.35); padding: 34px; color: var(--ink); }
+  .till .row { display: flex; justify-content: space-between; font-size: 26px; padding: 12px 0; border-bottom: 2px dashed #e4ddcc; }
+  .till .row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .till .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px; font-size: 30px; font-weight: 600; }
+  .till .total b { font-size: 54px; color: var(--teal); font-variant-numeric: tabular-nums; }
+  .till .charge { margin-top: 22px; background: var(--teal); color: #fff; text-align: center; border-radius: 18px; padding: 22px; font-size: 32px; font-weight: 700; }
+  .badge { display: inline-flex; align-items: center; gap: 10px; background: #FFF4DC; color: #8A5A00; border-radius: 999px; padding: 10px 20px; font-size: 22px; font-weight: 600; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--gold); }
+
+  .grid-bg { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.07) 2px, transparent 2px); background-size: 36px 36px; }
+  .on-teal .logo svg rect { fill: #0B2B27; }
+  .chip { display:flex; align-items:center; gap:14px; background: rgba(255,255,255,.1); border-radius: 22px; padding: 22px 26px; font-size: 28px; font-weight: 500; }
+  .coin { position: absolute; border-radius: 50%; border: 40px solid rgba(255,255,255,.06); }
+</style>
+</head>
+<body style="margin:0">
+<section id="04-android-fr" class="post sq" style="background: linear-gradient(160deg, #0F8A77 0%, #0A4F45 100%); color:#fff" data-document-role="page" data-label="04-android-fr">
+  <div class="grid-bg"></div>
+  <div style="position:absolute;left:72px;top:72px;bottom:72px;width:520px;display:flex;flex-direction:column">
+    <div class="logo"><svg style="width:64px;height:64px" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0E7C6B"></rect><circle cx="37" cy="24" r="9.5" fill="none" stroke="#fff" stroke-width="6.5"></circle><circle cx="37" cy="24" r="3.6" fill="#D6A23A"></circle><path d="M28.5 28.5C23 34 21 41 22.5 50" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"></path></svg>Mizan</div>
+    <p class="eyebrow" style="margin-top:70px">Nouveau · Android</p>
+    <h1 style="font-size:84px;margin-top:20px">Votre téléphone devient une caisse.</h1>
+    <ul style="list-style:none;margin-top:44px;display:grid;gap:22px;font-size:30px;font-weight:500">
+      <li>📷&nbsp; Scannez avec la caméra</li>
+      <li>🖨️&nbsp; Ticket Bluetooth &amp; Sunmi</li>
+      <li>🔔&nbsp; Alertes de stock bas</li>
+    </ul>
+    <span class="pill" style="margin-top:auto;align-self:flex-start;background:var(--gold);color:var(--ink)">Télécharger l'APK</span>
+  </div>
+  <!-- phone -->
+  <div style="position:absolute;right:90px;top:120px;width:380px;height:820px;background:#0B1F1C;border-radius:56px;padding:16px;box-shadow:0 50px 90px rgba(0,0,0,.45);transform:rotate(-4deg)">
+    <div style="background:var(--paper);height:100%;border-radius:42px;overflow:hidden;color:var(--ink);display:flex;flex-direction:column">
+      <div style="background:var(--ink);color:#fff;padding:40px 26px 22px">
+        <div style="font-size:20px;opacity:.7">Aujourd'hui</div>
+        <div style="font-size:52px;font-weight:800;margin-top:6px">48 250 DA</div>
+        <div style="font-size:20px;opacity:.7;margin-top:4px">48 ventes · bénéfice 9 640 DA</div>
+      </div>
+      <div style="margin:22px;border:3px solid var(--teal);border-radius:22px;height:200px;position:relative;background:#E9F4F1;display:flex;align-items:center;justify-content:center">
+        <div style="display:flex;gap:5px;align-items:stretch;height:100px">
+          <i style="width:6px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:9px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:6px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:9px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:6px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:9px;background:#222"></i><i style="width:3px;background:#222"></i><i style="width:6px;background:#222"></i>
+        </div>
+        <div style="position:absolute;left:14px;right:14px;top:50%;height:4px;background:#E5484D;box-shadow:0 0 14px #E5484D"></div>
+      </div>
+      <div style="padding:0 22px;display:grid;gap:12px;font-size:21px">
+        <div style="display:flex;justify-content:space-between;background:#fff;border-radius:14px;padding:14px 16px"><span>Coca 1 L</span><b>150</b></div>
+        <div style="display:flex;justify-content:space-between;background:#fff;border-radius:14px;padding:14px 16px"><span>Chips 45 g</span><b>2 × 50</b></div>
+      </div>
+      <div style="margin:auto 22px 26px;background:var(--teal);color:#fff;border-radius:16px;padding:18px;text-align:center;font-size:24px;font-weight:700">Encaisser · 250 DA</div>
+    </div>
+  </div>
+</section>
+</body></html>
