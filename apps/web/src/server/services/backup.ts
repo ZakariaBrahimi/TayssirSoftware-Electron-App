@@ -9,8 +9,9 @@ import { AppError } from "../errors";
 import { getMeta, setMeta } from "./meta";
 
 /*
- * Backups of local SQLite databases (desktop app and self-hosted servers).
- * Cloud databases (Turso) rely on the provider's point-in-time recovery.
+ * Backups of SQLite file databases (desktop app, shop servers and Docker
+ * cloud servers), kept next to the database in a "backups" folder. Turso
+ * databases rely on the provider's point-in-time recovery.
  */
 
 const KEEP = 30;

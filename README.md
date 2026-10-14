@@ -247,6 +247,8 @@ Unsigned builds work, but Windows SmartScreen warns on first install, and macOS 
 
 ### 2. Shop server or cloud (Docker)
 
+**For the cloud server, follow [deploy/README.md](deploy/README.md)**: one script sets up Docker, HTTPS (Caddy), the signing keys, your console account and nightly backups on an Ubuntu VPS. The commands below are the bare image, e.g. for a shop server on a local network.
+
 ```sh
 docker build -t mizan-pos .
 docker run -d --name mizan --restart unless-stopped -p 3000:3000 -v mizan-data:/data \

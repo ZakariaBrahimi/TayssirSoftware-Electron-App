@@ -22,9 +22,15 @@ export async function register() {
     await runMigrations(db);
   }
 
-  if (getMode() === "local") {
+  // Daily snapshots of a SQLite file database (desktop, shop server or a
+  // Docker cloud server); Turso databases have their own recovery.
+  {
     const { db } = await import("./server/db");
     backup.startAutoBackup(db);
+  }
+
+  if (getMode() === "local") {
+    const { db } = await import("./server/db");
     const { startSyncWorker } = await import("./server/sync/client");
     startSyncWorker(db, Number(process.env.SYNC_INTERVAL_MS) || 60_000);
     const { startLicenseWorker } = await import("./server/licensing/client");

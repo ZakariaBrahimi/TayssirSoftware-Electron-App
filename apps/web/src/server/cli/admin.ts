@@ -10,6 +10,8 @@
  *   npm run admin -- store:subscription <storeId> --status active --plan pro --until 2027-01-31
  *   npm run admin -- platform:admin <username> [--name "Your Name"] [--password ...]
  *   npm run admin -- platform:2fa-reset <username>      (lost authenticator)
+ *   npm run admin -- db:backup                          (snapshot now, kept with the daily ones)
+ *   npm run admin -- db:restore <backup name|file>      (applied at the next restart)
  *
  * License and store changes are written to the console's audit log as "CLI".
  */
@@ -33,6 +35,7 @@ import { generateSigningKeys } from "../licensing/token";
 import { CLI_ACTOR, PLATFORM_ROLE, platformAdminUsernames } from "../platform/access";
 import { createLicense, removeActivations, setLicenseRevoked } from "../platform/licenses";
 import { setSubscription } from "../platform/stores";
+import { backupFilePath, createBackup, listBackups, stageRestore } from "../services/backup";
 
 const [command, ...rest] = process.argv.slice(2);
 const flags = new Map<string, string>();
@@ -193,9 +196,29 @@ async function main() {
       );
       return;
     }
+    case "db:backup": {
+      const backup = await createBackup(db, "manual");
+      console.log(`Backup written: ${backup.name} (${Math.round(backup.size / 1024)} KB)`);
+      return;
+    }
+    case "db:restore": {
+      const ref = positional[0];
+      if (!ref) {
+        console.log("Usage: db:restore <backup name|file>. Backups:");
+        for (const b of listBackups()) console.log(`  ${b.name}  ${Math.round(b.size / 1024)} KB`);
+        return;
+      }
+      // A name from the backups folder, or the path of a database file.
+      const file = /^[\w-]+\.db$/.test(ref) ? backupFilePath(ref) : ref;
+      await stageRestore(file);
+      console.log(
+        "Restore staged: restart the server to apply it (the current database is kept in backups as pre-restore).",
+      );
+      return;
+    }
     default:
       console.log(
-        "Commands: keys:generate, license:create, license:list, license:revoke, license:reset, store:list, store:subscription, platform:admin, platform:2fa-reset",
+        "Commands: keys:generate, license:create, license:list, license:revoke, license:reset, store:list, store:subscription, platform:admin, platform:2fa-reset, db:backup, db:restore",
       );
   }
 }
