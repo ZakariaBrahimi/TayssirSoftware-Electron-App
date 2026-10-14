@@ -2,6 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { getMode } from "./server/context";
 
 const intl = createIntlMiddleware(routing);
 
@@ -18,6 +19,13 @@ export function proxy(request: NextRequest) {
 
   if (locale) {
     const page = "/" + segments.slice(2).join("/");
+    if (page === "/") {
+      // Signed in: straight to the app. Signed out: the landing page in the
+      // cloud, the sign-in screen on a shop's own install.
+      const target = getSessionCookie(request) ? "/start" : getMode() === "cloud" ? null : "/login";
+      if (target) return NextResponse.redirect(new URL(`/${locale}${target}`, request.url));
+      return intl(request);
+    }
     const isPublic = PUBLIC_PAGES.some((p) => page === p || page.startsWith(`${p}/`));
     if (!isPublic && !getSessionCookie(request)) {
       const url = new URL(`/${locale}/login`, request.url);

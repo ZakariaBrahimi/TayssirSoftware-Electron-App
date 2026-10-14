@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useRouter } from "@/i18n/navigation";
 
-/** `/` → dashboard for administrators, point of sale for cashiers. */
+/** `/start`: dashboard for administrators, point of sale for cashiers (signed-in visitors of `/` land here). */
 export default function HomePage() {
   const { user, isAdmin } = useCurrentUser();
   const router = useRouter();

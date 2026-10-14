@@ -954,5 +954,187 @@
       "changePassword": "Changer le mot de passe",
       "passwordChanged": "Mot de passe modifié"
     }
+  },
+  "landing": {
+    "meta": {
+      "title": "Mizan · Logiciel de caisse pour les commerces de proximité",
+      "description": "Caisse, stock, crédit clients et clôture de journée dans une seule application qui fonctionne même sans internet. Arabe, français, anglais. Essai gratuit de 14 jours."
+    },
+    "nav": {
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "faq": "Questions",
+      "signIn": "Se connecter",
+      "start": "Essai gratuit"
+    },
+    "hero": {
+      "eyebrow": "Logiciel de caisse pour les commerces de proximité",
+      "title": "Votre caisse tombe juste.",
+      "subtitle": "Mizan gère votre caisse, votre stock et le crédit de vos clients sur le PC du magasin, même sans internet. Votre téléphone affiche les ventes du jour où que vous soyez.",
+      "primary": "Essayer gratuitement 14 jours",
+      "secondary": "Télécharger pour Windows",
+      "note": "Sans carte bancaire · Arabe, français et anglais"
+    },
+    "mock": {
+      "store": "Superette El Baraka",
+      "till": "Caisse 1",
+      "item1": "Lait Candia 1 L",
+      "item2": "Café Facto 250 g",
+      "item3": "Baguette",
+      "customer": "Karim B. · sur compte",
+      "promo": "−5 % fidélité",
+      "total": "Total",
+      "charge": "Encaisser",
+      "offline": "Hors ligne · 3 ventes en attente",
+      "phoneTitle": "Aujourd'hui, sur votre téléphone",
+      "phoneSales": "48 ventes · 2 caisses"
+    },
+    "offline": {
+      "eyebrow": "Pensé pour les vraies connexions",
+      "title": "Continue de vendre quand internet coupe",
+      "body": "Une coupure de courant ou une 4G faible ne doit pas bloquer une vente. Mizan vend depuis le PC lui-même et rattrape tout seul.",
+      "steps": {
+        "sell": {
+          "title": "Vendez sur le PC",
+          "body": "La caisse fonctionne avec la base de données du PC. Aucune connexion nécessaire pour scanner, encaisser ou imprimer."
+        },
+        "sync": {
+          "title": "Synchronisation en ligne",
+          "body": "Chaque minute, les ventes montent vers votre magasin en ligne et les changements de prix redescendent."
+        },
+        "check": {
+          "title": "Consultez de partout",
+          "body": "Ventes, stock et bénéfice depuis votre téléphone, ou depuis une deuxième caisse du magasin."
+        }
+      }
+    },
+    "features": {
+      "eyebrow": "Fonctionnalités",
+      "title": "Tout ce qu'il faut à un petit commerce, rien de superflu",
+      "items": {
+        "checkout": {
+          "title": "Encaissement rapide",
+          "body": "Scannez avec n'importe quel lecteur de codes-barres USB ou Bluetooth, encaissez en espèces ou par carte, imprimez un ticket de 80 mm."
+        },
+        "stock": {
+          "title": "Un stock qui tombe juste",
+          "body": "Chaque livraison, vente et retour est enregistré. Alertes de stock bas et étiquettes code-barres."
+        },
+        "credit": {
+          "title": "Crédit clients",
+          "body": "Vendez à crédit avec un plafond, encaissez des acomptes, imprimez un relevé client."
+        },
+        "suppliers": {
+          "title": "Fournisseurs et livraisons",
+          "body": "Réceptionnez la marchandise, gardez des prix de revient à jour et suivez ce que vous devez."
+        },
+        "cash": {
+          "title": "Clôture de journée",
+          "body": "Ouvrez le tiroir avec un fond de caisse, clôturez avec un comptage et voyez tout écart immédiatement."
+        },
+        "reports": {
+          "title": "Le bénéfice, pas seulement les ventes",
+          "body": "Chiffre d'affaires, bénéfice, marge et meilleures ventes, par jour, catégorie et moyen de paiement."
+        },
+        "returns": {
+          "title": "Retours et remboursements",
+          "body": "Remboursez en espèces ou sur le compte client, les articles reviennent en stock."
+        },
+        "team": {
+          "title": "Comptes employés",
+          "body": "Les caissiers vendent ; vous seul voyez les prix d'achat, les rapports et les réglages."
+        },
+        "data": {
+          "title": "Vos données en sécurité",
+          "body": "Sauvegardes quotidiennes, restauration en un clic, import et export Excel."
+        }
+      }
+    },
+    "shops": {
+      "eyebrow": "Pour qui",
+      "title": "Fait pour les commerces qui vendent au comptoir",
+      "items": {
+        "grocery": "Alimentation générale & supérette",
+        "bakery": "Boulangerie & pâtisserie",
+        "books": "Librairie & papeterie",
+        "hardware": "Quincaillerie & bricolage",
+        "cosmetics": "Cosmétiques & parfumerie",
+        "clothing": "Vêtements & chaussures",
+        "phones": "Téléphonie & accessoires",
+        "butcher": "Boucherie & épicerie fine"
+      },
+      "languages": "Chacun choisit sa langue : arabe (de droite à gauche), français ou anglais."
+    },
+    "pricing": {
+      "eyebrow": "Tarifs",
+      "title": "Deux façons de payer",
+      "body": "Les deux commencent par 14 jours gratuits. Si un paiement s'arrête, vos données restent consultables : rien n'est jamais supprimé.",
+      "onRequest": "Prix sur demande",
+      "payment": "Paiement en espèces, par CCP / BaridiMob ou par virement bancaire.",
+      "cloud": {
+        "name": "Abonnement en ligne",
+        "desc": "L'application web et tous les PC et téléphones liés à votre magasin.",
+        "per": "/ mois",
+        "p1": "Toutes les fonctionnalités",
+        "p2": "Plusieurs caisses et votre téléphone synchronisés",
+        "p3": "Accessible depuis n'importe quel navigateur",
+        "p4": "Mises à jour incluses",
+        "cta": "Essai gratuit"
+      },
+      "license": {
+        "name": "Licence PC",
+        "desc": "Un seul paiement pour un PC qui fonctionne entièrement hors ligne.",
+        "per": "paiement unique",
+        "p1": "Toutes les fonctionnalités",
+        "p2": "Fonctionne sans internet",
+        "p3": "Mises à jour automatiques",
+        "p4": "Peut être reliée à la version en ligne plus tard",
+        "cta": "Télécharger pour Windows"
+      }
+    },
+    "faq": {
+      "eyebrow": "Questions",
+      "title": "Avant de commencer",
+      "items": {
+        "offline": {
+          "q": "Est-ce que ça marche sans internet ?",
+          "a": "Oui. L'application PC vend, imprime les tickets et gère le stock sans connexion. Elle se synchronise toute seule quand internet revient."
+        },
+        "hardware": {
+          "q": "De quel matériel ai-je besoin ?",
+          "a": "Un PC Windows. Un lecteur de codes-barres et une imprimante de tickets 80 mm sont recommandés ; tout lecteur USB ou Bluetooth qui fonctionne comme un clavier convient."
+        },
+        "data": {
+          "q": "Que deviennent mes données si j'arrête de payer ?",
+          "a": "Rien n'est supprimé. Mizan passe en lecture seule : vous voyez toujours tout, pouvez l'exporter vers Excel et faire des sauvegardes."
+        },
+        "import": {
+          "q": "Puis-je reprendre mes produits depuis Excel ?",
+          "a": "Oui. Enregistrez votre feuille en CSV et importez produits, clients et fournisseurs. Les prix avec virgule sont bien compris."
+        },
+        "tills": {
+          "q": "Puis-je avoir plusieurs caisses, ou consulter depuis chez moi ?",
+          "a": "Oui. Reliez chaque PC à votre magasin en ligne : toutes les caisses et votre téléphone affichent les mêmes ventes et le même stock."
+        },
+        "languages": {
+          "q": "Quelles langues sont disponibles ?",
+          "a": "Arabe (de droite à gauche), français et anglais. Chaque utilisateur choisit la sienne."
+        },
+        "payment": {
+          "q": "Comment payer ?",
+          "a": "En espèces, par CCP / BaridiMob ou par virement. Votre abonnement ou votre licence est activé dès que le paiement est enregistré."
+        }
+      }
+    },
+    "cta": {
+      "title": "Essayez Mizan gratuitement pendant 14 jours",
+      "body": "Créez votre magasin en quelques minutes. Sans carte bancaire.",
+      "button": "Commencer l'essai gratuit"
+    },
+    "footer": {
+      "tagline": "Caisse, stock et crédit clients pour les commerces de proximité.",
+      "contact": "Contact",
+      "language": "Langue"
+    }
   }
 }

@@ -954,5 +954,187 @@
       "changePassword": "Change password",
       "passwordChanged": "Password changed"
     }
+  },
+  "landing": {
+    "meta": {
+      "title": "Mizan · Point of sale for neighbourhood shops",
+      "description": "Till, stock, customer credit and end-of-day closing in one app that keeps working without internet. Arabic, French, English. 14-day free trial."
+    },
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "faq": "Questions",
+      "signIn": "Sign in",
+      "start": "Start free trial"
+    },
+    "hero": {
+      "eyebrow": "Point of sale for neighbourhood shops",
+      "title": "Your till always comes out right.",
+      "subtitle": "Mizan runs your till, your stock and your customers' credit on your shop's PC, even without internet. Your phone shows the day's sales wherever you are.",
+      "primary": "Start your 14-day free trial",
+      "secondary": "Download for Windows",
+      "note": "No card needed · Arabic, French and English"
+    },
+    "mock": {
+      "store": "Superette El Baraka",
+      "till": "Till 1",
+      "item1": "Candia milk 1 L",
+      "item2": "Facto coffee 250 g",
+      "item3": "Baguette",
+      "customer": "Karim B. · on account",
+      "promo": "−5% loyalty",
+      "total": "Total",
+      "charge": "Charge",
+      "offline": "Offline · 3 sales waiting to sync",
+      "phoneTitle": "Today, on your phone",
+      "phoneSales": "48 sales · 2 tills"
+    },
+    "offline": {
+      "eyebrow": "Built for real connections",
+      "title": "Keeps selling when the internet drops",
+      "body": "Power cuts and weak 4G shouldn't stop a sale. Mizan sells from the PC itself and catches up on its own.",
+      "steps": {
+        "sell": {
+          "title": "Sell on the PC",
+          "body": "The till works from the PC's own database. No connection needed to scan, charge or print."
+        },
+        "sync": {
+          "title": "Sync when online",
+          "body": "Every minute, sales go up to your online store and price changes come back down."
+        },
+        "check": {
+          "title": "Check from anywhere",
+          "body": "See sales, stock and profit from your phone, or from a second till in the same shop."
+        }
+      }
+    },
+    "features": {
+      "eyebrow": "Features",
+      "title": "Everything a small shop needs, nothing it doesn't",
+      "items": {
+        "checkout": {
+          "title": "Fast checkout",
+          "body": "Scan with any USB or Bluetooth barcode scanner, take cash or card, print an 80 mm receipt."
+        },
+        "stock": {
+          "title": "Stock that adds up",
+          "body": "Every delivery, sale and return is recorded. Low-stock alerts and printable barcode labels."
+        },
+        "credit": {
+          "title": "Customer credit",
+          "body": "Sell on account with a credit limit, take partial payments, print a customer statement."
+        },
+        "suppliers": {
+          "title": "Suppliers and deliveries",
+          "body": "Receive goods, keep cost prices up to date, and track what you still owe each supplier."
+        },
+        "cash": {
+          "title": "End-of-day closing",
+          "body": "Open the drawer with a float, close with a count, and see any difference at once."
+        },
+        "reports": {
+          "title": "Profit, not just sales",
+          "body": "Revenue, profit, margin and best sellers, by day, category and payment method."
+        },
+        "returns": {
+          "title": "Returns and refunds",
+          "body": "Refund in cash or to the customer's account, with items going back into stock."
+        },
+        "team": {
+          "title": "Staff accounts",
+          "body": "Cashiers sell; only you see cost prices, reports and settings."
+        },
+        "data": {
+          "title": "Your data, safe",
+          "body": "Daily backups, one-click restore, and Excel import and export."
+        }
+      }
+    },
+    "shops": {
+      "eyebrow": "Who it's for",
+      "title": "Made for shops that sell over a counter",
+      "items": {
+        "grocery": "Grocery & superette",
+        "bakery": "Bakery & pastry",
+        "books": "Bookshop & stationery",
+        "hardware": "Hardware & DIY",
+        "cosmetics": "Cosmetics & perfume",
+        "clothing": "Clothing & shoes",
+        "phones": "Phones & accessories",
+        "butcher": "Butcher & deli"
+      },
+      "languages": "Each person picks their language: Arabic (right to left), French or English."
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "title": "Two ways to pay",
+      "body": "Both start with 14 free days. If a payment stops, your data stays readable: nothing is ever deleted.",
+      "onRequest": "Price on request",
+      "payment": "Pay by cash, CCP / BaridiMob or bank transfer.",
+      "cloud": {
+        "name": "Online subscription",
+        "desc": "The web app plus every PC and phone linked to your shop.",
+        "per": "/ month",
+        "p1": "All features included",
+        "p2": "Several tills and your phone in sync",
+        "p3": "Use it from any browser",
+        "p4": "Updates included",
+        "cta": "Start free trial"
+      },
+      "license": {
+        "name": "PC license",
+        "desc": "One payment for a PC that works fully offline.",
+        "per": "one-time",
+        "p1": "All features included",
+        "p2": "Works without internet",
+        "p3": "Automatic updates",
+        "p4": "Can be linked to the online version later",
+        "cta": "Download for Windows"
+      }
+    },
+    "faq": {
+      "eyebrow": "Questions",
+      "title": "Before you start",
+      "items": {
+        "offline": {
+          "q": "Does it work without internet?",
+          "a": "Yes. The PC app sells, prints receipts and keeps stock without a connection. It syncs by itself when the internet comes back."
+        },
+        "hardware": {
+          "q": "What equipment do I need?",
+          "a": "A Windows PC. A barcode scanner and an 80 mm receipt printer are recommended; any USB or Bluetooth scanner that types like a keyboard works."
+        },
+        "data": {
+          "q": "What happens to my data if I stop paying?",
+          "a": "Nothing is deleted. Mizan becomes read-only: you can still see everything, export it to Excel and make backups."
+        },
+        "import": {
+          "q": "Can I bring my products from Excel?",
+          "a": "Yes. Save your sheet as CSV and import products, customers and suppliers. Prices with a decimal comma are understood."
+        },
+        "tills": {
+          "q": "Can I use several tills, or check from home?",
+          "a": "Yes. Link each PC to your online shop: every till and your phone show the same sales and stock."
+        },
+        "languages": {
+          "q": "Which languages are available?",
+          "a": "Arabic (right to left), French and English. Each user chooses their own."
+        },
+        "payment": {
+          "q": "How do I pay?",
+          "a": "By cash, CCP / BaridiMob or bank transfer. Your subscription or license is activated as soon as the payment is recorded."
+        }
+      }
+    },
+    "cta": {
+      "title": "Try Mizan free for 14 days",
+      "body": "Create your shop in a few minutes. No card needed.",
+      "button": "Start free trial"
+    },
+    "footer": {
+      "tagline": "Point of sale, stock and customer credit for neighbourhood shops.",
+      "contact": "Contact",
+      "language": "Language"
+    }
   }
 }

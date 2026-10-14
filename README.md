@@ -145,6 +145,12 @@ Desktops check their license in with the server every 12 hours when online: rene
 
 Without `LICENSE_PUBLIC_KEY`, a local install is unlicensed and unrestricted, which is handy for development or for your own shop.
 
+## Landing page
+
+In cloud mode, signed-out visitors of `/` see a public landing page (English, French, Arabic) with the features, pricing, questions and links to sign-up and the Windows download. Signed-in users go straight to the app, and local installs keep opening the sign-in screen.
+
+Set your prices, contact details and download link in `apps/web/src/features/landing/config.ts`; a price left at `null` shows "Price on request", an empty contact is hidden. The copy lives in the `landing` section of `apps/web/src/messages/*.json`.
+
 ## Platform console
 
 On the cloud deployment, the owner of the SaaS manages everything at `/platform`:
