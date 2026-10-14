@@ -21,8 +21,10 @@ export function proxy(request: NextRequest) {
     const page = "/" + segments.slice(2).join("/");
     if (page === "/") {
       // Signed in: straight to the app. Signed out: the landing page in the
-      // cloud, the sign-in screen on a shop's own install.
-      const target = getSessionCookie(request) ? "/start" : getMode() === "cloud" ? null : "/login";
+      // cloud, the sign-in screen on a shop's own install. `?preview` lets a
+      // signed-in platform owner look at the landing page.
+      const goToApp = getSessionCookie(request) && !request.nextUrl.searchParams.has("preview");
+      const target = goToApp ? "/start" : getMode() === "cloud" ? null : "/login";
       if (target) return NextResponse.redirect(new URL(`/${locale}${target}`, request.url));
       return intl(request);
     }

@@ -104,7 +104,7 @@
     "createAccount": "Create store",
     "setupDone": "Your store is ready. Sign in to continue.",
     "signupTitle": "Create your store",
-    "signupDescription": "Start your free 14-day trial. No credit card required.",
+    "signupDescription": "Start your free {days}-day trial. No credit card required.",
     "signupAction": "Start free trial",
     "noAccount": "New to Mizan?",
     "signupLink": "Create a store",
@@ -647,7 +647,8 @@
       "devices": "Devices",
       "payments": "Payments",
       "audit": "Audit log",
-      "security": "Security"
+      "security": "Security",
+      "site": "Website"
     },
     "status": {
       "trialing": "Trial",
@@ -922,7 +923,8 @@
       "a_license_device_remove": "License PC removed",
       "a_device_revoke": "Device revoked",
       "a_payment_create": "Payment recorded",
-      "a_payment_void": "Payment voided"
+      "a_payment_void": "Payment voided",
+      "a_platform_settings": "Website settings changed"
     },
     "security": {
       "title": "Security",
@@ -953,12 +955,45 @@
       "passwordRule": "At least 10 characters.",
       "changePassword": "Change password",
       "passwordChanged": "Password changed"
+    },
+    "site": {
+      "title": "Website",
+      "subtitle": "Prices, free trial, download link and contacts shown on the landing page.",
+      "view": "View the landing page",
+      "pricing": "Prices",
+      "pricingHint": "In whole dinars. Shown on the pricing cards of the landing page.",
+      "f_cloudMonthly": "Online subscription, per month (DA)",
+      "f_licenseOneTime": "PC license, one payment (DA)",
+      "emptyOnRequest": "Leave empty to show \"Price on request\".",
+      "onRequest": "Price on request",
+      "trial": "Free trial",
+      "trialHint": "Shown on the landing and sign-up pages, and given to every new online store. Stores already signed up keep their trial. Desktop installs keep their own 14-day trial.",
+      "f_trialDays": "Free days for new online stores",
+      "download": "Windows download",
+      "downloadHint": "Where the \"Download for Windows\" buttons lead. By default, the latest GitHub release.",
+      "f_downloadUrl": "Download link",
+      "contact": "Contact",
+      "contactHint": "Shown in the footer of the landing page. Leave a field empty to hide it.",
+      "f_contactPhone": "Phone",
+      "f_contactWhatsapp": "WhatsApp",
+      "f_contactEmail": "Email",
+      "whatsappHint": "International format, digits only: 213 then the number without the first 0.",
+      "invalid_cloudMonthly": "Enter a whole number of dinars, or leave empty.",
+      "invalid_licenseOneTime": "Enter a whole number of dinars, or leave empty.",
+      "invalid_trialDays": "Enter a number of days between 1 and 90.",
+      "invalid_downloadUrl": "Enter a full link starting with https://",
+      "invalid_contactPhone": "Use 40 characters at most.",
+      "invalid_contactWhatsapp": "Digits only, 8 to 15 of them (e.g. 213555123456).",
+      "invalid_contactEmail": "Enter a valid email address, or leave empty.",
+      "checkFields": "Some values are not valid. Check the highlighted fields.",
+      "saved": "Saved. The landing page shows the new values now.",
+      "liveHint": "Changes appear on the landing page right away, no redeploy needed."
     }
   },
   "landing": {
     "meta": {
       "title": "Mizan · Point of sale for neighbourhood shops",
-      "description": "Till, stock, customer credit and end-of-day closing in one app that keeps working without internet. Arabic, French, English. 14-day free trial."
+      "description": "Till, stock, customer credit and end-of-day closing in one app that keeps working without internet. Arabic, French, English. Free trial included."
     },
     "nav": {
       "features": "Features",
@@ -971,7 +1006,7 @@
       "eyebrow": "Point of sale for neighbourhood shops",
       "title": "Your till always comes out right.",
       "subtitle": "Mizan runs your till, your stock and your customers' credit on your shop's PC, even without internet. Your phone shows the day's sales wherever you are.",
-      "primary": "Start your 14-day free trial",
+      "primary": "Start your {days}-day free trial",
       "secondary": "Download for Windows",
       "note": "No card needed · Arabic, French and English"
     },
@@ -1068,7 +1103,7 @@
     "pricing": {
       "eyebrow": "Pricing",
       "title": "Two ways to pay",
-      "body": "Both start with 14 free days. If a payment stops, your data stays readable: nothing is ever deleted.",
+      "body": "Both start with {days, plural, one {# free day} other {# free days}}. If a payment stops, your data stays readable: nothing is ever deleted.",
       "onRequest": "Price on request",
       "payment": "Pay by cash, CCP / BaridiMob or bank transfer.",
       "cloud": {
@@ -1127,7 +1162,7 @@
       }
     },
     "cta": {
-      "title": "Try Mizan free for 14 days",
+      "title": "Try Mizan free for {days, plural, one {# day} other {# days}}",
       "body": "Create your shop in a few minutes. No card needed.",
       "button": "Start free trial"
     },

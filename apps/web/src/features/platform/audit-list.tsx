@@ -28,6 +28,7 @@ function useDescribe() {
   const t = useTranslations("platform.audit");
   const ts = useTranslations("platform.status");
   const tm = useTranslations("platform.methods");
+  const tsite = useTranslations("platform.site");
   const money = usePlatformMoney();
   const date = (v: unknown) =>
     typeof v === "number" ? new Date(v).toISOString().slice(0, 10) : t("noEndDate");
@@ -75,6 +76,10 @@ function useDescribe() {
           method: tm(str(d.method) as "cash"),
           months: Number(d.months),
         });
+      case "platform.settings": {
+        const changes = Object.keys((d.changes as Record<string, unknown>) ?? {});
+        return changes.map((k) => tsite(`f_${k}` as "f_trialDays")).join(", ");
+      }
       case "payment.void":
         return `${money.format(Number(d.amount))}${d.reason ? ` · ${str(d.reason)}` : ""}`;
       default:

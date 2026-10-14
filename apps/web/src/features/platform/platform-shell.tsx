@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
   CreditCard,
+  Globe,
   KeyRound,
   LayoutDashboard,
   LogOut,
@@ -25,7 +26,8 @@ import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { usePlatformMe } from "./api";
 
-type NavKey = "overview" | "stores" | "licenses" | "devices" | "payments" | "audit" | "security";
+type NavKey =
+  "overview" | "stores" | "licenses" | "devices" | "payments" | "site" | "audit" | "security";
 
 const items: { href: string; key: NavKey; icon: LucideIcon }[] = [
   { href: "/platform", key: "overview", icon: LayoutDashboard },
@@ -33,6 +35,7 @@ const items: { href: string; key: NavKey; icon: LucideIcon }[] = [
   { href: "/platform/licenses", key: "licenses", icon: KeyRound },
   { href: "/platform/devices", key: "devices", icon: MonitorSmartphone },
   { href: "/platform/payments", key: "payments", icon: CreditCard },
+  { href: "/platform/site", key: "site", icon: Globe },
   { href: "/platform/audit", key: "audit", icon: ScrollText },
   { href: "/platform/security", key: "security", icon: ShieldCheck },
 ];

@@ -138,8 +138,29 @@ export const AUDIT_ACTIONS = [
   "device.revoke",
   "payment.create",
   "payment.void",
+  "platform.settings",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
+
+/** Public website settings (landing page, sign-up trial), edited in the console. */
+const price = z.number().int().min(0).max(100_000_000).nullable();
+export const platformSettingsInput = z.object({
+  /** Online subscription per month, in whole dinars; null = "price on request". */
+  cloudMonthly: price,
+  /** PC license, one payment, in whole dinars; null = "price on request". */
+  licenseOneTime: price,
+  /** Free days for new online sign-ups. */
+  trialDays: z.number().int().min(1).max(90),
+  downloadUrl: z.url().refine((u) => u.startsWith("https://"), "https_only"),
+  contactPhone: z.string().trim().max(40),
+  /** International format, digits only (e.g. 213555123456); empty = hidden. */
+  contactWhatsapp: z
+    .string()
+    .trim()
+    .regex(/^(\d{8,15})?$/, "whatsapp_digits"),
+  contactEmail: z.union([z.literal(""), z.email().max(120)]),
+});
+export type PlatformSettingsInput = z.input<typeof platformSettingsInput>;
 
 export const auditListQuery = z.object({
   action: z.enum(AUDIT_ACTIONS).optional(),

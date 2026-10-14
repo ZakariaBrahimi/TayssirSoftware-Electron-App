@@ -3,7 +3,8 @@ import { setupInput } from "@/lib/validators";
 import { getMode } from "../../context";
 import { db } from "../../db";
 import { AppError } from "../../errors";
-import { createStore, needsSetup } from "../../services/stores";
+import { getPlatformSettings } from "../../platform/settings";
+import { createStore, needsSetup, TRIAL_DAYS } from "../../services/stores";
 import { createStoreUser } from "../../services/users";
 import { onlyMode, rateLimit, validate } from "../context";
 
@@ -14,6 +15,7 @@ export const appInfoRoutes = new Hono().get("/", async (c) => {
     mode,
     needsSetup: mode === "local" ? await needsSetup(db) : false,
     signupEnabled: mode === "cloud",
+    trialDays: mode === "cloud" ? (await getPlatformSettings(db)).trialDays : TRIAL_DAYS,
   });
 });
 
@@ -39,7 +41,12 @@ export const signupRoutes = new Hono()
   .use(onlyMode("cloud"), rateLimit("signup", 5, 60 * 60_000))
   .post("/", validate("json", setupInput), async (c) => {
     const input = c.req.valid("json");
-    const store = await createStore(db, { name: input.storeName, currency: input.currency });
+    const { trialDays } = await getPlatformSettings(db);
+    const store = await createStore(
+      db,
+      { name: input.storeName, currency: input.currency },
+      trialDays,
+    );
     await createStoreUser(db, store.id, {
       name: input.name,
       username: input.username,

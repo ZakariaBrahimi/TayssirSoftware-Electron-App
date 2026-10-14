@@ -11,6 +11,7 @@ import {
   platformLicenseUpdateInput,
   platformPaymentInput,
   platformPaymentListQuery,
+  platformSettingsInput,
   platformStoreListQuery,
   reasonInput,
   subscriptionInput,
@@ -29,6 +30,7 @@ import {
   updateLicense,
 } from "../../platform/licenses";
 import { getOverview } from "../../platform/overview";
+import { getPlatformSettings, updatePlatformSettings } from "../../platform/settings";
 import { listPayments, recordPayment, voidPayment } from "../../platform/payments";
 import {
   extendTrial,
@@ -159,6 +161,10 @@ export const platformRoutes = new Hono<PlatformEnv>()
   .get("/overview", async (c) => c.json(await getOverview(db)))
   .get("/audit", validate("query", auditListQuery), async (c) =>
     c.json(await listAudit(db, c.req.valid("query"))),
+  )
+  .get("/settings", async (c) => c.json(await getPlatformSettings(db)))
+  .put("/settings", validate("json", platformSettingsInput), async (c) =>
+    c.json(await updatePlatformSettings(db, c.get("actor"), c.req.valid("json"))),
   )
   .route("/stores", storesRoutes)
   .route("/licenses", licensesRoutes)

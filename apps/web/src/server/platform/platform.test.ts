@@ -32,6 +32,10 @@ import {
   suspendStore,
 } from "./stores";
 import { syncDevices } from "../db/schema";
+import { platformSettingsInput } from "@/lib/validators/platform";
+import { setMeta } from "../services/meta";
+import { createStore } from "../services/stores";
+import { DEFAULT_SETTINGS, getPlatformSettings, updatePlatformSettings } from "./settings";
 import { servePull } from "../sync/cloud";
 import { makeProduct } from "@/test/helpers";
 
@@ -370,6 +374,48 @@ describe("platform console services", () => {
     } finally {
       process.env.LICENSE_PRIVATE_KEY = prevKey;
     }
+  });
+
+  it("edits the website settings, with an audit entry", async () => {
+    expect(await getPlatformSettings(db)).toEqual(DEFAULT_SETTINGS);
+    const saved = await updatePlatformSettings(db, actor, {
+      ...DEFAULT_SETTINGS,
+      cloudMonthly: 2500,
+      trialDays: 30,
+      contactWhatsapp: "213555123456",
+    });
+    expect(saved).toMatchObject({ cloudMonthly: 2500, licenseOneTime: null, trialDays: 30 });
+    const audit = await listAudit(db, { action: "platform.settings", page: 1, pageSize: 5 });
+    expect(audit.rows[0].details).toEqual({
+      changes: {
+        cloudMonthly: { from: null, to: 2500 },
+        trialDays: { from: 14, to: 30 },
+        contactWhatsapp: { from: "", to: "213555123456" },
+      },
+    });
+    // A damaged value falls back to its default, the rest is kept.
+    await setMeta(db, "platform.settings", JSON.stringify({ cloudMonthly: "abc", trialDays: 21 }));
+    expect(await getPlatformSettings(db)).toMatchObject({ cloudMonthly: null, trialDays: 21 });
+  });
+
+  it("validates the website settings", () => {
+    const ok = { ...DEFAULT_SETTINGS };
+    expect(platformSettingsInput.safeParse(ok).success).toBe(true);
+    for (const bad of [
+      { downloadUrl: "http://insecure.example" },
+      { contactWhatsapp: "+213 555" },
+      { contactEmail: "nope" },
+      { trialDays: 0 },
+      { cloudMonthly: -5 },
+    ]) {
+      expect(platformSettingsInput.safeParse({ ...ok, ...bad }).success).toBe(false);
+    }
+  });
+
+  it("gives new stores the configured trial length", async () => {
+    const store = await createStore(db, { name: "Long trial", currency: "DZD" }, 30);
+    const days = (store.trialEndsAt!.getTime() - store.createdAt.getTime()) / DAY;
+    expect(Math.round(days)).toBe(30);
   });
 
   it("computes the overview", async () => {

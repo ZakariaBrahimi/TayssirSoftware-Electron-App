@@ -108,7 +108,9 @@ export function SetupForm({ mode = "setup" }: { mode?: "setup" | "signup" }) {
           {mode === "signup" ? t("signupTitle") : t("setupTitle")}
         </CardTitle>
         <CardDescription>
-          {mode === "signup" ? t("signupDescription") : t("setupDescription")}
+          {mode === "signup"
+            ? t("signupDescription", { days: info.data?.trialDays ?? 14 })
+            : t("setupDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>

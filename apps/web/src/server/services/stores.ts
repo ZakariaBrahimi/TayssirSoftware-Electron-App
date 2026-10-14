@@ -17,12 +17,13 @@ export async function getStore(db: Executor, storeId: string): Promise<Store> {
 export async function createStore(
   db: Executor,
   input: { name: string; currency: string; id?: string },
+  trialDays = TRIAL_DAYS,
 ) {
   const [row] = await db
     .insert(stores)
     .values({
       ...input,
-      trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 86_400_000),
+      trialEndsAt: new Date(Date.now() + trialDays * 86_400_000),
     })
     .returning();
   return row;

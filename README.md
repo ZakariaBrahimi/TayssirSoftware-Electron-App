@@ -149,7 +149,7 @@ Without `LICENSE_PUBLIC_KEY`, a local install is unlicensed and unrestricted, wh
 
 In cloud mode, signed-out visitors of `/` see a public landing page (English, French, Arabic) with the features, pricing, questions and links to sign-up and the Windows download. Signed-in users go straight to the app, and local installs keep opening the sign-in screen.
 
-Set your prices, contact details and download link in `apps/web/src/features/landing/config.ts`; a price left at `null` shows "Price on request", an empty contact is hidden. The copy lives in the `landing` section of `apps/web/src/messages/*.json`.
+Prices, the free-trial length, the Windows download link and the contacts (phone, WhatsApp, email) are edited in the platform console under **Website** and show on the page right away. An empty price shows "Price on request", an empty contact is hidden, and the trial length also applies to every new online sign-up (desktop installs keep a 14-day trial). "View the landing page" opens it even while you are signed in (`/?preview`). The wording itself lives in the `landing` section of `apps/web/src/messages/*.json`.
 
 ## Platform console
 
@@ -160,6 +160,7 @@ On the cloud deployment, the owner of the SaaS manages everything at `/platform`
 - **Licenses**: create (the key is shown once), edit plan/devices/end date, revoke or restore, free one or all PCs, record a payment (extends a dated license).
 - **Devices**: every linked desktop with its store, app version and last sync; "not syncing" after 3 days; revoke.
 - **Payments**: all payments with filters and totals; void a mistaken one (kept in the history, excluded from revenue).
+- **Website**: prices, free-trial length, download link and contacts shown on the landing page.
 - **Audit log**: every change made in the console or with the CLI, with who, when and from which IP.
 
 The console only shows store totals, never a store's sales, customers or products.

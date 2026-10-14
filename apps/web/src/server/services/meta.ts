@@ -16,7 +16,8 @@ export type MetaKey =
   | "sync.pullCursor"
   | "sync.lastSyncAt"
   | "sync.lastError"
-  | "sync.entitlementToken";
+  | "sync.entitlementToken"
+  | "platform.settings";
 
 export async function getMeta(db: Executor, key: MetaKey): Promise<string | null> {
   const [row] = await db.select().from(appMeta).where(eq(appMeta.key, key));

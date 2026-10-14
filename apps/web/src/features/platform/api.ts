@@ -15,6 +15,7 @@ import type {
   PlatformLicenseUpdateInput,
   PlatformPaymentInput,
   PlatformPaymentListQuery,
+  PlatformSettingsInput,
   PlatformStoreListQuery,
   SubscriptionInput,
 } from "@/lib/validators/platform";
@@ -30,6 +31,7 @@ export type LicenseDetail = InferResponseType<(typeof p.licenses)[":id"]["$get"]
 export type DevicePage = InferResponseType<typeof p.devices.$get, 200>;
 export type PaymentPage = InferResponseType<typeof p.payments.$get, 200>;
 export type AuditPage = InferResponseType<typeof p.audit.$get, 200>;
+export type PlatformSettings = InferResponseType<typeof p.settings.$get, 200>;
 
 export function usePlatformMe() {
   return useQuery({
@@ -235,4 +237,19 @@ export function usePaymentMutations() {
       onSuccess,
     }),
   };
+}
+
+export function usePlatformSettings() {
+  return useQuery({
+    queryKey: ["platform", "settings"],
+    queryFn: () => unwrap(p.settings.$get()),
+  });
+}
+
+export function useSaveSettings() {
+  const onSuccess = useInvalidate();
+  return useMutation({
+    mutationFn: (json: PlatformSettingsInput) => unwrap(p.settings.$put({ json })),
+    onSuccess,
+  });
 }

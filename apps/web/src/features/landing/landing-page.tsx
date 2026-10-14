@@ -26,7 +26,7 @@ import { Link } from "@/i18n/navigation";
 import { localeNames, routing, type Locale } from "@/i18n/routing";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import { landingConfig } from "./config";
+import type { PlatformSettings } from "@/server/platform/settings";
 
 const FEATURES: { key: string; icon: LucideIcon }[] = [
   { key: "checkout", icon: ScanBarcode },
@@ -139,9 +139,22 @@ function SectionHead({ eyebrow, title, body }: { eyebrow: string; title: string;
   );
 }
 
-export async function LandingPage({ locale }: { locale: Locale }) {
+export async function LandingPage({
+  locale,
+  settings,
+}: {
+  locale: Locale;
+  /** Prices, trial, download link and contacts, edited in the platform console. */
+  settings: PlatformSettings;
+}) {
   const t = await getTranslations({ locale, namespace: "landing" });
-  const { pricing, contact, downloadUrl } = landingConfig;
+  const { downloadUrl, trialDays: days } = settings;
+  const pricing = { cloudMonthly: settings.cloudMonthly, licenseOneTime: settings.licenseOneTime };
+  const contact = {
+    phone: settings.contactPhone,
+    whatsapp: settings.contactWhatsapp,
+    email: settings.contactEmail,
+  };
   const price = (amount: number | null) =>
     amount === null ? null : formatMoney(amount * 100, "DZD", locale).replace(/[.,]00(?=\D*$)/, "");
 
@@ -189,7 +202,7 @@ export async function LandingPage({ locale }: { locale: Locale }) {
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/signup">
-                  {t("hero.primary")}
+                  {t("hero.primary", { days })}
                   <ArrowRight className="rtl:rotate-180" />
                 </Link>
               </Button>
@@ -274,7 +287,7 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           <SectionHead
             eyebrow={t("pricing.eyebrow")}
             title={t("pricing.title")}
-            body={t("pricing.body")}
+            body={t("pricing.body", { days })}
           />
           <div className="grid gap-6 md:grid-cols-2">
             {(
@@ -371,7 +384,7 @@ export async function LandingPage({ locale }: { locale: Locale }) {
         <section className={cn(container, "py-20")}>
           <div className="bg-primary text-primary-foreground grid justify-items-start gap-5 rounded-3xl px-8 py-12 sm:px-12">
             <h2 className="font-display max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              {t("cta.title")}
+              {t("cta.title", { days })}
             </h2>
             <p className="max-w-xl text-lg opacity-90">{t("cta.body")}</p>
             <Button asChild size="lg" variant="secondary">

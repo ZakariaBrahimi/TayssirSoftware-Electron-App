@@ -104,7 +104,7 @@
     "createAccount": "Créer le magasin",
     "setupDone": "Votre magasin est prêt.",
     "signupTitle": "Créez votre magasin",
-    "signupDescription": "Essai gratuit de 14 jours, sans carte bancaire.",
+    "signupDescription": "Essai gratuit de {days, plural, one {# jour} other {# jours}}, sans carte bancaire.",
     "signupAction": "Démarrer l'essai gratuit",
     "noAccount": "Nouveau sur Mizan ?",
     "signupLink": "Créer un magasin",
@@ -647,7 +647,8 @@
       "devices": "Appareils",
       "payments": "Paiements",
       "audit": "Journal d'audit",
-      "security": "Sécurité"
+      "security": "Sécurité",
+      "site": "Site web"
     },
     "status": {
       "trialing": "Essai",
@@ -922,7 +923,8 @@
       "a_license_device_remove": "PC retiré de la licence",
       "a_device_revoke": "Appareil révoqué",
       "a_payment_create": "Paiement enregistré",
-      "a_payment_void": "Paiement annulé"
+      "a_payment_void": "Paiement annulé",
+      "a_platform_settings": "Réglages du site modifiés"
     },
     "security": {
       "title": "Sécurité",
@@ -953,12 +955,45 @@
       "passwordRule": "Au moins 10 caractères.",
       "changePassword": "Changer le mot de passe",
       "passwordChanged": "Mot de passe modifié"
+    },
+    "site": {
+      "title": "Site web",
+      "subtitle": "Prix, essai gratuit, lien de téléchargement et contacts affichés sur la page d'accueil.",
+      "view": "Voir la page d'accueil",
+      "pricing": "Prix",
+      "pricingHint": "En dinars entiers. Affichés sur les cartes de tarifs de la page d'accueil.",
+      "f_cloudMonthly": "Abonnement en ligne, par mois (DA)",
+      "f_licenseOneTime": "Licence PC, paiement unique (DA)",
+      "emptyOnRequest": "Laissez vide pour afficher « Prix sur demande ».",
+      "onRequest": "Prix sur demande",
+      "trial": "Essai gratuit",
+      "trialHint": "Affiché sur la page d'accueil et l'inscription, et accordé à chaque nouveau magasin en ligne. Les magasins déjà inscrits gardent leur essai. Les installations PC gardent leur essai de 14 jours.",
+      "f_trialDays": "Jours gratuits pour les nouveaux magasins en ligne",
+      "download": "Téléchargement Windows",
+      "downloadHint": "Destination des boutons « Télécharger pour Windows ». Par défaut, la dernière version publiée sur GitHub.",
+      "f_downloadUrl": "Lien de téléchargement",
+      "contact": "Contact",
+      "contactHint": "Affiché en bas de la page d'accueil. Laissez un champ vide pour le masquer.",
+      "f_contactPhone": "Téléphone",
+      "f_contactWhatsapp": "WhatsApp",
+      "f_contactEmail": "E-mail",
+      "whatsappHint": "Format international, chiffres uniquement : 213 puis le numéro sans le premier 0.",
+      "invalid_cloudMonthly": "Saisissez un nombre entier de dinars, ou laissez vide.",
+      "invalid_licenseOneTime": "Saisissez un nombre entier de dinars, ou laissez vide.",
+      "invalid_trialDays": "Saisissez un nombre de jours entre 1 et 90.",
+      "invalid_downloadUrl": "Saisissez un lien complet commençant par https://",
+      "invalid_contactPhone": "40 caractères au maximum.",
+      "invalid_contactWhatsapp": "Chiffres uniquement, de 8 à 15 (ex. 213555123456).",
+      "invalid_contactEmail": "Saisissez une adresse e-mail valide, ou laissez vide.",
+      "checkFields": "Certaines valeurs ne sont pas valides. Vérifiez les champs signalés.",
+      "saved": "Enregistré. La page d'accueil affiche déjà les nouvelles valeurs.",
+      "liveHint": "Les changements apparaissent tout de suite sur la page d'accueil, sans redéploiement."
     }
   },
   "landing": {
     "meta": {
       "title": "Mizan · Logiciel de caisse pour les commerces de proximité",
-      "description": "Caisse, stock, crédit clients et clôture de journée dans une seule application qui fonctionne même sans internet. Arabe, français, anglais. Essai gratuit de 14 jours."
+      "description": "Caisse, stock, crédit clients et clôture de journée dans une seule application qui fonctionne même sans internet. Arabe, français, anglais. Essai gratuit inclus."
     },
     "nav": {
       "features": "Fonctionnalités",
@@ -971,7 +1006,7 @@
       "eyebrow": "Logiciel de caisse pour les commerces de proximité",
       "title": "Votre caisse tombe juste.",
       "subtitle": "Mizan gère votre caisse, votre stock et le crédit de vos clients sur le PC du magasin, même sans internet. Votre téléphone affiche les ventes du jour où que vous soyez.",
-      "primary": "Essayer gratuitement 14 jours",
+      "primary": "Essayer gratuitement {days, plural, one {# jour} other {# jours}}",
       "secondary": "Télécharger pour Windows",
       "note": "Sans carte bancaire · Arabe, français et anglais"
     },
@@ -1068,7 +1103,7 @@
     "pricing": {
       "eyebrow": "Tarifs",
       "title": "Deux façons de payer",
-      "body": "Les deux commencent par 14 jours gratuits. Si un paiement s'arrête, vos données restent consultables : rien n'est jamais supprimé.",
+      "body": "Les deux commencent par {days, plural, one {# jour gratuit} other {# jours gratuits}}. Si un paiement s'arrête, vos données restent consultables : rien n'est jamais supprimé.",
       "onRequest": "Prix sur demande",
       "payment": "Paiement en espèces, par CCP / BaridiMob ou par virement bancaire.",
       "cloud": {
@@ -1127,7 +1162,7 @@
       }
     },
     "cta": {
-      "title": "Essayez Mizan gratuitement pendant 14 jours",
+      "title": "Essayez Mizan gratuitement pendant {days, plural, one {# jour} other {# jours}}",
       "body": "Créez votre magasin en quelques minutes. Sans carte bancaire.",
       "button": "Commencer l'essai gratuit"
     },
