@@ -341,7 +341,8 @@
     "soldOnCredit": "مبيعات بالدَّين",
     "paymentsReceived": "مدفوعات الزبائن المستلمة",
     "vatCollected": "الرسم المحصّل (TVA)",
-    "vatCollectedHint": "مشمول في رقم الأعمال، مستثنى من الربح"
+    "vatCollectedHint": "مشمول في رقم الأعمال، مستثنى من الربح",
+    "groupVariants": "تجميع المقاسات/الألوان"
   },
   "settings": {
     "title": "الإعدادات",
@@ -426,7 +427,7 @@
     "exportCustomers": "الزبائن",
     "exportSales": "المبيعات (آخر 12 شهرًا)",
     "importTitle": "استيراد المنتجات",
-    "importDescription": "أعمدة CSV: name، barcode، category، brand، cost_price، sale_price، stock، low_stock_threshold. يتم التعرف على المنتجات بالباركود؛ الأسعار بـ {currency}.",
+    "importDescription": "أعمدة CSV: name، barcode، category، brand، cost_price، sale_price، stock، low_stock_threshold، unit (piece، kg، g، l، m)، vat_rate. للمقاسات والألوان، أعطِ أسطر المنتج نفسه نفس family واملأ option_1/value_1 (حتى 3 خيارات). يتم التعرف على المنتجات بالباركود؛ الأسعار بـ {currency}.",
     "chooseFile": "اختر ملف CSV",
     "preview": "{created} جديد، {updated} محدَّث",
     "importNow": "استيراد",
@@ -693,7 +694,11 @@
     "invalid_low_stock_threshold": "حد مخزون غير صالح",
     "empty_file": "الملف فارغ",
     "missing_column": "عمود إلزامي مفقود",
-    "invalid_unit": "وحدة غير معروفة (قطعة، kg، g، l أو m)."
+    "invalid_unit": "وحدة غير معروفة (قطعة، kg، g، l أو m).",
+    "invalid_vat_rate": "يجب أن تكون نسبة TVA بين 0 و100",
+    "invalid_variant": "متغير: املأ أعمدة العائلة والخيار والقيمة (30 حرفًا كحد أقصى)",
+    "inconsistent_options": "الخيارات تختلف عن باقي أسطر هذه العائلة",
+    "duplicate_variant": "هذا المتغير مكرر في العائلة"
   },
   "platform": {
     "title": "لوحة المنصة",

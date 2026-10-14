@@ -355,6 +355,8 @@ export const reportQuery = z.object({
     .min(-14 * 60)
     .max(14 * 60)
     .default(0),
+  /** Top products: one line per product family (default) or per variant. */
+  groupVariants: booleanQuery,
 });
 export type ReportQuery = z.input<typeof reportQuery>;
 

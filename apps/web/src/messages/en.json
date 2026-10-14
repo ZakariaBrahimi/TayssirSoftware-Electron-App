@@ -341,7 +341,8 @@
     "soldOnCredit": "Sold on account",
     "paymentsReceived": "Account payments received",
     "vatCollected": "VAT collected",
-    "vatCollectedHint": "Included in revenue, excluded from profit"
+    "vatCollectedHint": "Included in revenue, excluded from profit",
+    "groupVariants": "Group sizes/colours"
   },
   "settings": {
     "title": "Settings",
@@ -426,7 +427,7 @@
     "exportCustomers": "Customers",
     "exportSales": "Sales (last 12 months)",
     "importTitle": "Import products",
-    "importDescription": "CSV columns: name, barcode, category, brand, cost_price, sale_price, stock, low_stock_threshold. Products are matched by barcode; prices are in {currency}.",
+    "importDescription": "CSV columns: name, barcode, category, brand, cost_price, sale_price, stock, low_stock_threshold, unit (piece, kg, g, l, m), vat_rate. For sizes/colours, give the rows of one product the same family and fill option_1/value_1 (up to 3 options). Products are matched by barcode; prices are in {currency}.",
     "chooseFile": "Choose a CSV file",
     "preview": "{created} new, {updated} updated",
     "importNow": "Import",
@@ -693,7 +694,11 @@
     "invalid_low_stock_threshold": "invalid low stock threshold",
     "empty_file": "the file is empty",
     "missing_column": "a required column is missing",
-    "invalid_unit": "Unknown unit (use piece, kg, g, l or m)."
+    "invalid_unit": "Unknown unit (use piece, kg, g, l or m).",
+    "invalid_vat_rate": "VAT rate must be between 0 and 100",
+    "invalid_variant": "variant: fill family, option and value columns (max 30 characters)",
+    "inconsistent_options": "options differ from the other rows of this family",
+    "duplicate_variant": "this variant appears twice in the family"
   },
   "platform": {
     "title": "Platform console",

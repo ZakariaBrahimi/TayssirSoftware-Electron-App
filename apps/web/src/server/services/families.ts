@@ -29,7 +29,7 @@ export function parseValues(json: string | null): string[] {
   }
 }
 
-function parseOptions(json: string): FamilyOptionInput[] {
+export function parseOptions(json: string): FamilyOptionInput[] {
   try {
     const options = JSON.parse(json);
     return Array.isArray(options) ? options : [];

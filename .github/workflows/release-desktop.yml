@@ -3,10 +3,11 @@ name: Release desktop app
 # Builds the Windows, macOS and Linux installers and publishes them as the
 # GitHub Release "v<version>". Installed apps update themselves from it.
 #
-# Two ways to release:
-# - change "version" in apps/desktop/package.json and push it to main, or
-# - push a tag like `desktop-v2.1.0` (the version is taken from the tag).
-# A version that is already published is skipped.
+# Every push that changes the app releases a new version automatically:
+# "<major>.<minor>" from apps/desktop/package.json, and this workflow's run
+# number as the patch (e.g. 2.1.37), so each release is newer than the last.
+# Raise the minor/major in package.json for bigger releases. A tag like
+# `desktop-v2.3.0` releases exactly that version instead.
 on:
   push:
     tags: ["desktop-v*"]
@@ -15,8 +16,14 @@ on:
       # Branch of the pending Mizan pull request; remove once it is merged.
       - ccr-6e8e360f-qssrnw
     paths:
-      - apps/desktop/package.json
+      - apps/web/**
+      - apps/desktop/**
+      - package.json
+      - package-lock.json
       - .github/workflows/release-desktop.yml
+      # Tests and docs don't change the app.
+      - "!**/*.test.ts"
+      - "!**/*.md"
 
 permissions:
   contents: write
@@ -39,7 +46,8 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
             VERSION="${GITHUB_REF_NAME#desktop-v}"
           else
-            VERSION=$(node -p "require('./apps/desktop/package.json').version")
+            BASE=$(node -p "require('./apps/desktop/package.json').version.split('.').slice(0, 2).join('.')")
+            VERSION="$BASE.$GITHUB_RUN_NUMBER"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - id: release

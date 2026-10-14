@@ -4,9 +4,18 @@ import { toMajor, toMinor } from "@/lib/money";
 import { barcodeSchema } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database, Executor } from "../db/client";
-import { brands, categories, customers, products, saleItems, sales } from "../db/schema";
+import {
+  brands,
+  categories,
+  customers,
+  productFamilies,
+  products,
+  saleItems,
+  sales,
+} from "../db/schema";
 import { brandService, categoryService } from "./catalog";
 import { customerBalanceSql } from "./customers";
+import { parseOptions, parseValues, variantName } from "./families";
 import { moveStock } from "./stock";
 import { hasAtMost3Decimals, isMeasured, round3, type Unit } from "@/lib/quantity";
 
@@ -50,6 +59,21 @@ export const PRODUCT_COLUMNS = [
   "low_stock_threshold",
   "unit",
   "active",
+  "vat_rate",
+  // Variants: rows sharing a family are one product in several versions.
+  "family",
+  "option_1",
+  "value_1",
+  "option_2",
+  "value_2",
+  "option_3",
+  "value_3",
+] as const;
+type Column = (typeof PRODUCT_COLUMNS)[number];
+const OPTION_COLUMNS = [
+  ["option_1", "value_1"],
+  ["option_2", "value_2"],
+  ["option_3", "value_3"],
 ] as const;
 
 export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
@@ -65,10 +89,18 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
       lowStockThreshold: products.lowStockThreshold,
       unit: products.unit,
       isActive: products.isActive,
+      taxRate: products.taxRate,
+      family: productFamilies.name,
+      options: productFamilies.options,
+      values: products.variantValues,
     })
     .from(products)
     .leftJoin(categories, eq(categories.id, products.categoryId))
     .leftJoin(brands, eq(brands.id, products.brandId))
+    .leftJoin(
+      productFamilies,
+      and(eq(productFamilies.id, products.familyId), isNull(productFamilies.deletedAt)),
+    )
     .where(and(eq(products.storeId, ctx.storeId), isNull(products.deletedAt)))
     .orderBy(asc(products.name));
   return toCsv([
@@ -84,8 +116,29 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
       r.lowStockThreshold,
       r.unit,
       r.isActive ? "yes" : "no",
+      r.taxRate ?? "",
+      ...variantCells(r.family, r.options, r.values),
     ]),
   ]);
+}
+
+/** family, option_1, value_1, ... cells of a variant (empty otherwise). */
+function variantCells(
+  family: string | null,
+  optionsJson: string | null,
+  valuesJson: string | null,
+) {
+  const cells: string[] = [family ?? ""];
+  let names: string[] = [];
+  try {
+    names =
+      family && optionsJson ? JSON.parse(optionsJson).map((o: { name: string }) => o.name) : [];
+  } catch {
+    names = [];
+  }
+  const values = family ? parseValues(valuesJson) : [];
+  for (let k = 0; k < OPTION_COLUMNS.length; k++) cells.push(names[k] ?? "", values[k] ?? "");
+  return cells;
 }
 
 export async function exportSales(
@@ -191,7 +244,7 @@ export type ImportReport = {
   errors: { line: number; message: string }[];
 };
 
-const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
+const HEADER_ALIASES: Record<string, Column> = {
   name: "name",
   nom: "name",
   barcode: "barcode",
@@ -218,6 +271,22 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   unite: "unit",
   unité: "unit",
   active: "active",
+  actif: "active",
+  vat_rate: "vat_rate",
+  vat: "vat_rate",
+  tva: "vat_rate",
+  taux_tva: "vat_rate",
+  family: "family",
+  famille: "family",
+  option_1: "option_1",
+  option_2: "option_2",
+  option_3: "option_3",
+  value_1: "value_1",
+  value_2: "value_2",
+  value_3: "value_3",
+  valeur_1: "value_1",
+  valeur_2: "value_2",
+  valeur_3: "value_3",
 };
 
 /**
@@ -246,7 +315,7 @@ export async function importProducts(
       return { ...report, errors: [{ line: 1, message: `missing_column:${required}` }] };
     }
   }
-  const get = (row: string[], key: (typeof PRODUCT_COLUMNS)[number]) =>
+  const get = (row: string[], key: Column) =>
     index.has(key) ? (row[index.get(key)!] ?? "").trim() : "";
 
   type Parsed = {
@@ -261,6 +330,11 @@ export async function importProducts(
     lowStockThreshold: number | null;
     unit: Unit | null;
     isActive: boolean;
+    /** undefined: leave as is; null: the store's rate. */
+    taxRate: number | null | undefined;
+    family: string;
+    options: string[];
+    values: string[];
   };
   const parsed: Parsed[] = [];
   const seen = new Set<string>();
@@ -301,6 +375,32 @@ export async function importProducts(
       n >= 0 && (measured ? hasAtMost3Decimals(n) : Number.isInteger(n));
     if (stock !== null && !validAmount(stock)) return fail("invalid_stock");
     if (low !== null && !validAmount(low)) return fail("invalid_low_stock_threshold");
+    const vatRaw = get(row, "vat_rate").replace("%", "").trim();
+    const vat = vatRaw === "" ? undefined : parseDecimal(vatRaw);
+    if (
+      vat !== undefined &&
+      (!Number.isFinite(vat) || vat < 0 || vat > 100 || Math.round(vat * 100) !== vat * 100)
+    ) {
+      return fail("invalid_vat_rate");
+    }
+    const family = get(row, "family");
+    const options: string[] = [];
+    const values: string[] = [];
+    for (const [optionKey, valueKey] of OPTION_COLUMNS) {
+      const option = get(row, optionKey);
+      const value = get(row, valueKey);
+      if (!option && !value) break;
+      options.push(option);
+      values.push(value);
+    }
+    if (family) {
+      if (!values.length || options.some((o) => !o || o.length > 30)) {
+        return fail("invalid_variant");
+      }
+      if (values.some((v) => !v || v.length > 30) || family.length > 100) {
+        return fail("invalid_variant");
+      }
+    }
     seen.add(barcode);
     parsed.push({
       line,
@@ -314,8 +414,51 @@ export async function importProducts(
       lowStockThreshold: low,
       unit,
       isActive: !["no", "non", "false", "0", "لا"].includes(activeRaw),
+      taxRate: vat,
+      family,
+      options: family ? options : [],
+      values: family ? values : [],
     });
   });
+
+  // Variants of one family must use the same options and differ in values.
+  const families = new Map<string, { name: string; options: string[]; combos: Set<string> }>();
+  for (const p of parsed) {
+    if (!p.family) continue;
+    const key = p.family.toLowerCase();
+    const fam = families.get(key) ?? { name: p.family, options: p.options, combos: new Set() };
+    families.set(key, fam);
+    const sameOptions =
+      fam.options.length === p.options.length &&
+      fam.options.every((o, k) => o.toLowerCase() === p.options[k].toLowerCase());
+    const combo = p.values.join("\u0000").toLowerCase();
+    if (!sameOptions) report.errors.push({ line: p.line, message: "inconsistent_options" });
+    else if (fam.combos.has(combo)) {
+      report.errors.push({ line: p.line, message: "duplicate_variant" });
+    }
+    fam.combos.add(combo);
+  }
+  // Families already in the store, matched by name.
+  const storeFamilies = new Map(
+    (
+      await db
+        .select({
+          id: productFamilies.id,
+          name: productFamilies.name,
+          options: productFamilies.options,
+        })
+        .from(productFamilies)
+        .where(and(eq(productFamilies.storeId, ctx.storeId), isNull(productFamilies.deletedAt)))
+    ).map((f) => [f.name.toLowerCase(), f]),
+  );
+  for (const p of parsed) {
+    const known = p.family ? storeFamilies.get(p.family.toLowerCase()) : undefined;
+    if (!known) continue;
+    const names = parseOptions(known.options).map((o) => o.name.toLowerCase());
+    const same =
+      names.length === p.options.length && names.every((n, k) => n === p.options[k].toLowerCase());
+    if (!same) report.errors.push({ line: p.line, message: "inconsistent_options" });
+  }
 
   const existing = new Map(
     (
@@ -332,13 +475,52 @@ export async function importProducts(
   if (opts.dryRun || report.errors.length) return report;
 
   await db.transaction(async (tx) => {
+    // Create the new families and add new option values to existing ones.
+    const familyIds = new Map<string, string>();
+    for (const [key, fam] of families) {
+      const rows = parsed.filter((p) => p.family.toLowerCase() === key);
+      const known = storeFamilies.get(key);
+      const options: { name: string; values: string[] }[] = known
+        ? parseOptions(known.options)
+        : fam.options.map((name) => ({ name, values: [] }));
+      for (const p of rows) {
+        p.values.forEach((value, k) => {
+          if (!options[k].values.includes(value)) options[k].values.push(value);
+        });
+      }
+      if (known) {
+        await tx
+          .update(productFamilies)
+          .set({ options: JSON.stringify(options) })
+          .where(eq(productFamilies.id, known.id));
+        familyIds.set(key, known.id);
+      } else {
+        const [row] = await tx
+          .insert(productFamilies)
+          .values({ storeId: ctx.storeId, name: fam.name, options: JSON.stringify(options) })
+          .returning({ id: productFamilies.id });
+        familyIds.set(key, row.id);
+      }
+    }
+
     for (const p of parsed) {
+      const familyName = p.family
+        ? (storeFamilies.get(p.family.toLowerCase())?.name ??
+          families.get(p.family.toLowerCase())!.name)
+        : null;
       const categoryId = p.category
         ? await categoryService.findOrCreate(tx, ctx, p.category)
         : null;
       const brandId = p.brand ? await brandService.findOrCreate(tx, ctx, p.brand) : null;
       const fields = {
-        name: p.name,
+        name: familyName ? variantName(familyName, p.values) : p.name,
+        ...(familyName
+          ? {
+              familyId: familyIds.get(p.family.toLowerCase())!,
+              variantValues: JSON.stringify(p.values),
+            }
+          : {}),
+        ...(p.taxRate !== undefined ? { taxRate: p.taxRate } : {}),
         costPrice: p.costPrice,
         salePrice: p.salePrice,
         isActive: p.isActive,

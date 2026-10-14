@@ -27,6 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMoney } from "@/hooks/use-settings";
 import { presetRange, type RangePreset } from "@/lib/dates";
@@ -37,10 +39,12 @@ export function ReportsScreen() {
   const t = useTranslations("reports");
   const tp = useTranslations("pos");
   const ts = useTranslations("sales");
+  const tv = useTranslations("pos");
   const money = useMoney();
   const [preset, setPreset] = useState<RangePreset | "custom">("last30");
   const [range, setRange] = useState(presetRange("last30"));
-  const { data, isPending } = useSalesReport(range);
+  const [groupVariants, setGroupVariants] = useState(true);
+  const { data, isPending } = useSalesReport(range, true, groupVariants);
   const s = data?.summary;
 
   const selectPreset = (value: string) => {
@@ -176,8 +180,18 @@ export function ReportsScreen() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
             <CardTitle>{t("topProducts")}</CardTitle>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="group-variants"
+                checked={groupVariants}
+                onCheckedChange={setGroupVariants}
+              />
+              <Label htmlFor="group-variants" className="text-muted-foreground text-xs font-normal">
+                {t("groupVariants")}
+              </Label>
+            </div>
           </CardHeader>
           <CardContent>
             {!data?.topProducts.length ? (
@@ -195,9 +209,16 @@ export function ReportsScreen() {
                 </TableHeader>
                 <TableBody>
                   {data.topProducts.map((p, i) => (
-                    <TableRow key={`${p.productId}-${p.name}`}>
+                    <TableRow key={`${p.familyId ?? p.productId}-${p.name}`}>
                       <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                      <TableCell className="max-w-48 truncate font-medium">{p.name}</TableCell>
+                      <TableCell className="max-w-48 truncate font-medium">
+                        {p.name}
+                        {p.variants > 0 && (
+                          <span className="text-muted-foreground ms-1.5 text-xs font-normal">
+                            · {tv("variantCount", { count: p.variants })}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-end tabular-nums">{p.quantity}</TableCell>
                       <TableCell className="text-end tabular-nums">
                         {money.format(p.revenue)}

@@ -4,6 +4,7 @@ import { makeDb, makeStore } from "@/test/helpers";
 import type { Ctx } from "../context";
 import type { Database } from "../db/client";
 import { exportProducts, importProducts } from "./data-io";
+import { getFamily } from "./families";
 import { listProducts } from "./products";
 
 describe("csv", () => {
@@ -94,5 +95,50 @@ Huile 1L;222;Épicerie;550;650;5
     expect(
       (await listProducts(db, ctx, { stock: "all", sort: "name", page: 1, pageSize: 20 })).total,
     ).toBe(0);
+  });
+
+  it("imports variants as families and VAT rates, and exports them back", async () => {
+    const file = `name;barcode;sale_price;stock;tva;famille;option_1;valeur_1;option_2;valeur_2
+x;TS-SB;1500;4;;T-shirt;Size;S;Colour;Black
+x;TS-MB;1500;2;;T-shirt;Size;M;Colour;Black
+x;TS-MW;1700;1;;T-shirt;Size;M;Colour;White
+Livre;LV1;109;5;9;;;;;`;
+    const report = await importProducts(db, ctx, "DZD", file, { dryRun: false });
+    expect(report).toMatchObject({ created: 4, errors: [] });
+
+    const rows = (
+      await listProducts(db, ctx, { stock: "all", sort: "name", page: 1, pageSize: 20 })
+    ).rows;
+    const mw = rows.find((r) => r.barcode === "TS-MW")!;
+    expect(mw).toMatchObject({ name: "T-shirt — M / White", familyName: "T-shirt" });
+    const family = await getFamily(db, ctx, mw.familyId!);
+    expect(family.options).toEqual([
+      { name: "Size", values: ["S", "M"] },
+      { name: "Colour", values: ["Black", "White"] },
+    ]);
+    expect(family.variants).toHaveLength(3);
+    expect(rows.find((r) => r.barcode === "LV1")?.taxRate).toBe(9);
+
+    // Export, then import the same file: nothing new, same families.
+    const exported = await exportProducts(db, ctx, "DZD");
+    const [header, ...lines] = parseCsv(exported);
+    expect(header).toContain("family");
+    expect(lines.find((l) => l.includes("TS-MW"))).toEqual(
+      expect.arrayContaining(["T-shirt", "Size", "M", "Colour", "White"]),
+    );
+    const again = await importProducts(db, ctx, "DZD", exported, { dryRun: false });
+    expect(again).toMatchObject({ created: 0, updated: 4, errors: [] });
+    expect((await getFamily(db, ctx, mw.familyId!)).variants).toHaveLength(3);
+
+    // Options must match within a family.
+    const bad = await importProducts(
+      db,
+      ctx,
+      "DZD",
+      `name;barcode;sale_price;family;option_1;value_1
+x;TS-L;1500;T-shirt;Taille;L`,
+      { dryRun: true },
+    );
+    expect(bad.errors).toEqual([{ line: 2, message: "inconsistent_options" }]);
   });
 });

@@ -6,6 +6,7 @@ import type { Executor } from "../db/client";
 import {
   categories,
   customerPayments,
+  productFamilies,
   products,
   returnItems,
   saleItems,
@@ -137,10 +138,17 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
   const netTax = sql<number>`sum(${saleItems.taxAmount} - ${returnedTax})`;
   const netCost = sql<number>`sum(${saleItems.unitCost} * (${saleItems.quantity} - ${returnedQty}))`;
 
+  // Variants of a family count as one product unless asked otherwise.
+  const byFamily = query.groupVariants !== false;
+  const groupKey = byFamily
+    ? sql`coalesce(${productFamilies.id}, ${saleItems.productId}, ${saleItems.productName})`
+    : sql`coalesce(${saleItems.productId}, ${saleItems.productName})`;
   const topProducts = await db
     .select({
-      productId: saleItems.productId,
-      name: saleItems.productName,
+      productId: sql<string | null>`max(${saleItems.productId})`,
+      familyId: sql<string | null>`max(${byFamily ? productFamilies.id : sql`null`})`,
+      name: sql<string>`max(${byFamily ? sql`coalesce(${productFamilies.name}, ${saleItems.productName})` : saleItems.productName})`,
+      variants: sql<number>`count(distinct ${saleItems.productId})`,
       quantity: netQty,
       revenue: netRevenue,
       cost: netCost,
@@ -148,8 +156,13 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
     })
     .from(saleItems)
     .innerJoin(sales, eq(saleItems.saleId, sales.id))
+    .leftJoin(products, eq(saleItems.productId, products.id))
+    .leftJoin(
+      productFamilies,
+      and(eq(productFamilies.id, products.familyId), isNull(productFamilies.deletedAt)),
+    )
     .where(salesInRange)
-    .groupBy(saleItems.productId, saleItems.productName)
+    .groupBy(groupKey)
     .orderBy(desc(netRevenue))
     .limit(10);
 
@@ -212,6 +225,7 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       })),
     topProducts: topProducts.map((p) => ({
       ...p,
+      variants: p.familyId ? n(p.variants) : 0,
       quantity: n(p.quantity),
       revenue: n(p.revenue),
       profit: n(p.revenue) - n(p.tax) - n(p.cost),

@@ -341,7 +341,8 @@
     "soldOnCredit": "Vendu à crédit",
     "paymentsReceived": "Règlements clients reçus",
     "vatCollected": "TVA collectée",
-    "vatCollectedHint": "Incluse dans le chiffre d’affaires, exclue du bénéfice"
+    "vatCollectedHint": "Incluse dans le chiffre d’affaires, exclue du bénéfice",
+    "groupVariants": "Regrouper tailles/couleurs"
   },
   "settings": {
     "title": "Paramètres",
@@ -426,7 +427,7 @@
     "exportCustomers": "Clients",
     "exportSales": "Ventes (12 derniers mois)",
     "importTitle": "Importer des produits",
-    "importDescription": "Colonnes CSV : name, barcode, category, brand, cost_price, sale_price, stock, low_stock_threshold. Les produits sont reconnus par leur code-barres ; les prix sont en {currency}.",
+    "importDescription": "Colonnes CSV : name, barcode, category, brand, cost_price, sale_price, stock, low_stock_threshold, unit (piece, kg, g, l, m), vat_rate. Pour les tailles/couleurs, donnez la même family aux lignes d’un produit et remplissez option_1/value_1 (jusqu’à 3 options). Les produits sont reconnus par leur code-barres ; les prix sont en {currency}.",
     "chooseFile": "Choisir un fichier CSV",
     "preview": "{created} nouveau(x), {updated} mis à jour",
     "importNow": "Importer",
@@ -693,7 +694,11 @@
     "invalid_low_stock_threshold": "seuil de stock invalide",
     "empty_file": "le fichier est vide",
     "missing_column": "une colonne obligatoire manque",
-    "invalid_unit": "Unité inconnue (pièce, kg, g, l ou m)."
+    "invalid_unit": "Unité inconnue (pièce, kg, g, l ou m).",
+    "invalid_vat_rate": "le taux de TVA doit être entre 0 et 100",
+    "invalid_variant": "variante : remplissez les colonnes famille, option et valeur (30 caractères max.)",
+    "inconsistent_options": "options différentes des autres lignes de cette famille",
+    "duplicate_variant": "cette variante apparaît deux fois dans la famille"
   },
   "platform": {
     "title": "Console plateforme",

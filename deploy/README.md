@@ -136,9 +136,10 @@ In GitHub → the repository → Settings → Secrets and variables → Actions:
 | `LICENSE_PUBLIC_KEY` | Secret   | the `LICENSE_PUBLIC_KEY` line from `deploy/.env` |
 | `LICENSE_SERVER_URL` | Variable | `https://YOUR_DOMAIN`                            |
 
-Then publish a release: bump `version` in `apps/desktop/package.json`, commit,
-and push a tag such as `desktop-v2.1.0`. The installers appear under GitHub
-Releases, which is where the landing page's download button and the
+Releases then happen by themselves: every push to `main` that changes the
+app publishes a new version (e.g. `2.1.37`), and installed apps update to it.
+To release an exact version, push a tag such as `desktop-v2.3.0`. The
+installers appear under GitHub Releases, which is where the landing page's download button and the
 auto-update point by default.
 
 ## 5. Stock summaries on Telegram and email (optional)

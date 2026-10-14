@@ -4,6 +4,7 @@ import {
   familyInput,
   type FamilyInput,
   productCreateInput,
+  reportQuery,
   saleCreateInput,
 } from "@/lib/validators";
 import { makeDb, makeStore } from "@/test/helpers";
@@ -12,6 +13,7 @@ import type { Database } from "../db/client";
 import { products } from "../db/schema";
 import { createFamily, deleteFamily, getFamily, updateFamily } from "./families";
 import { createProduct, findByBarcode, listProducts } from "./products";
+import { salesReport } from "./reports";
 import { createSale } from "./sales";
 
 let db: Database;
@@ -143,5 +145,38 @@ describe("product families", () => {
     await expect(getFamily(db, ctx, family.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
     const list = await listProducts(db, ctx, { page: 1, pageSize: 20, sort: "name", stock: "all" });
     expect(list.total).toBe(0);
+  });
+
+  it("groups variants into one line in the top products report", async () => {
+    const family = await createFamily(db, ctx, familyInput.parse(shoe()));
+    const [b41, , w42] = family.variants;
+    await createSale(
+      db,
+      ctx,
+      saleCreateInput.parse({
+        items: [
+          { productId: b41.id, quantity: 2 },
+          { productId: w42.id, quantity: 1 },
+        ],
+      }),
+      { deviceCode: "T" },
+    );
+    const range = {
+      from: new Date(Date.now() - 86_400_000).toISOString(),
+      to: new Date(Date.now() + 86_400_000).toISOString(),
+    };
+    const grouped = await salesReport(db, ctx, reportQuery.parse(range));
+    expect(grouped.topProducts).toEqual([
+      expect.objectContaining({ name: "Air Max", variants: 2, quantity: 3, revenue: 2_700_000 }),
+    ]);
+    const split = await salesReport(
+      db,
+      ctx,
+      reportQuery.parse({ ...range, groupVariants: "false" }),
+    );
+    expect(split.topProducts.map((p) => [p.name, p.quantity])).toEqual([
+      ["Air Max — 41 / Black", 2],
+      ["Air Max — 42 / White", 1],
+    ]);
   });
 });
