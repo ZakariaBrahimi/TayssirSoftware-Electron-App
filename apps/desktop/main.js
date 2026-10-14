@@ -32,7 +32,9 @@ const webDir = app.isPackaged
 /** Build-time settings written by scripts/prepare-web.mjs. */
 function readAppConfig() {
   try {
-    return JSON.parse(fs.readFileSync(path.join(webDir, "app-config.json"), "utf8"));
+    return JSON.parse(
+      fs.readFileSync(path.join(webDir, "app-config.json"), "utf8"),
+    );
   } catch {
     return {};
   }
@@ -40,7 +42,10 @@ function readAppConfig() {
 
 function findServerEntry() {
   // Standalone output mirrors the monorepo layout: <root>/apps/web/server.js
-  const candidates = [path.join(webDir, "apps", "web", "server.js"), path.join(webDir, "server.js")];
+  const candidates = [
+    path.join(webDir, "bundle", "apps", "web", "server.js"),
+    path.join(webDir, "apps", "web", "server.js"),
+  ];
   return candidates.find((p) => fs.existsSync(p));
 }
 
@@ -60,7 +65,9 @@ function getFreePort() {
 function getSecret(dataDir) {
   const file = path.join(dataDir, "auth-secret");
   if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, crypto.randomBytes(32).toString("base64"), { mode: 0o600 });
+    fs.writeFileSync(file, crypto.randomBytes(32).toString("base64"), {
+      mode: 0o600,
+    });
   }
   return fs.readFileSync(file, "utf8").trim();
 }
@@ -73,10 +80,15 @@ function getMachineId(dataDir) {
   let raw = null;
   try {
     if (process.platform === "win32") {
-      const out = execSync("reg query HKLM\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid", { encoding: "utf8" });
+      const out = execSync(
+        "reg query HKLM\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid",
+        { encoding: "utf8" },
+      );
       raw = /MachineGuid\s+REG_SZ\s+(\S+)/.exec(out)?.[1] ?? null;
     } else if (process.platform === "darwin") {
-      const out = execSync("ioreg -rd1 -c IOPlatformExpertDevice", { encoding: "utf8" });
+      const out = execSync("ioreg -rd1 -c IOPlatformExpertDevice", {
+        encoding: "utf8",
+      });
       raw = /"IOPlatformUUID" = "([^"]+)"/.exec(out)?.[1] ?? null;
     } else {
       for (const file of ["/etc/machine-id", "/var/lib/dbus/machine-id"]) {
@@ -93,7 +105,11 @@ function getMachineId(dataDir) {
     if (!fs.existsSync(file)) fs.writeFileSync(file, crypto.randomUUID());
     raw = fs.readFileSync(file, "utf8").trim();
   }
-  return crypto.createHash("sha256").update(`tayssir:${raw}`).digest("hex").slice(0, 32);
+  return crypto
+    .createHash("sha256")
+    .update(`tayssir:${raw}`)
+    .digest("hex")
+    .slice(0, 32);
 }
 
 async function waitForServer(url, timeoutMs = 60_000) {
@@ -112,7 +128,10 @@ async function waitForServer(url, timeoutMs = 60_000) {
 
 async function startServer(port) {
   const entry = findServerEntry();
-  if (!entry) throw new Error(`Web build not found in ${webDir}. Run "npm run prepare:web".`);
+  if (!entry)
+    throw new Error(
+      `Web build not found in ${webDir}. Run "npm run prepare:web".`,
+    );
 
   const dataDir = app.getPath("userData");
   fs.mkdirSync(dataDir, { recursive: true });
@@ -137,12 +156,18 @@ async function startServer(port) {
       BETTER_AUTH_URL: url,
       TAYSSIR_DEVICE_ID: getMachineId(dataDir),
       TAYSSIR_DEVICE_NAME: os.hostname(),
-      ...(config.licensePublicKey ? { LICENSE_PUBLIC_KEY: config.licensePublicKey } : {}),
-      ...(config.licenseServerUrl ? { LICENSE_SERVER_URL: config.licenseServerUrl } : {}),
+      ...(config.licensePublicKey
+        ? { LICENSE_PUBLIC_KEY: config.licensePublicKey }
+        : {}),
+      ...(config.licenseServerUrl
+        ? { LICENSE_SERVER_URL: config.licenseServerUrl }
+        : {}),
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  const log = fs.createWriteStream(path.join(dataDir, "server.log"), { flags: "a" });
+  const log = fs.createWriteStream(path.join(dataDir, "server.log"), {
+    flags: "a",
+  });
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   server.on("exit", (code) => {
@@ -153,7 +178,11 @@ async function startServer(port) {
         .then(() => mainWindow?.reload())
         .catch((err) => fatal(err));
     } else if (code) {
-      fatal(new Error(`The local server stopped (code ${code}). See server.log in ${dataDir}.`));
+      fatal(
+        new Error(
+          `The local server stopped (code ${code}). See server.log in ${dataDir}.`,
+        ),
+      );
     }
   });
 
@@ -175,8 +204,20 @@ function createWindow(url) {
     show: false,
     autoHideMenuBar: true,
     title: "Tayssir POS",
-    icon: path.join(webDir, "apps", "web", "public", "icons", "icon-512.png"),
-    webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false },
+    icon: path.join(
+      webDir,
+      "bundle",
+      "apps",
+      "web",
+      "public",
+      "icons",
+      "icon-512.png",
+    ),
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+    },
   });
   mainWindow.once("ready-to-show", () => mainWindow.show());
   // Keep navigation inside the app; open anything external in the browser.
@@ -204,7 +245,11 @@ function setupAutoUpdates() {
   autoUpdater.logger = {
     info: () => {},
     warn: () => {},
-    error: (e) => fs.appendFileSync(path.join(app.getPath("userData"), "updater.log"), `${new Date().toISOString()} ${e}\n`),
+    error: (e) =>
+      fs.appendFileSync(
+        path.join(app.getPath("userData"), "updater.log"),
+        `${new Date().toISOString()} ${e}\n`,
+      ),
     debug: () => {},
   };
   autoUpdater.on("update-downloaded", async (info) => {

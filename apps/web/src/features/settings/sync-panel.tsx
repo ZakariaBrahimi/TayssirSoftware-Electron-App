@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Cloud, Laptop, Loader2, RefreshCw, Unlink } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -90,6 +90,7 @@ function LinkForm() {
 function SyncClientPanel() {
   const t = useTranslations("settings");
   const format = useFormatter();
+  const currentTime = useNow({ updateInterval: 30_000 });
   const errorMessage = useErrorMessage();
   const status = useSyncStatus(true);
   const { now, unlink } = useSyncMutations();
@@ -116,7 +117,7 @@ function SyncClientPanel() {
               {status.data.deviceName} ·{" "}
               {t("lastSync", {
                 time: status.data.lastSyncAt
-                  ? format.relativeTime(new Date(status.data.lastSyncAt))
+                  ? format.relativeTime(new Date(status.data.lastSyncAt), currentTime)
                   : "—",
               })}{" "}
               · {t("pending", { count: status.data.pending })}
@@ -159,6 +160,7 @@ function SyncClientPanel() {
 function SyncDevicesPanel() {
   const t = useTranslations("settings");
   const format = useFormatter();
+  const currentTime = useNow({ updateInterval: 30_000 });
   const errorMessage = useErrorMessage();
   const devices = useSyncDevices(true);
   const revoke = useRevokeDevice();
@@ -188,7 +190,9 @@ function SyncDevicesPanel() {
                   </span>
                   <span className="text-muted-foreground text-xs">
                     {d.lastSeenAt
-                      ? t("lastSeen", { time: format.relativeTime(new Date(d.lastSeenAt)) })
+                      ? t("lastSeen", {
+                          time: format.relativeTime(new Date(d.lastSeenAt), currentTime),
+                        })
                       : "—"}
                   </span>
                 </div>

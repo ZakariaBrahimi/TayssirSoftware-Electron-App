@@ -228,7 +228,8 @@
     "balanceAfter": "الرصيد بعد هذا البيع: {amount}",
     "creditNeedsCustomer": "اختر زبونًا للبيع بالدَّين.",
     "removeCustomer": "إزالة الزبون",
-    "downPayment": "دفعة مقدمة (اختياري)"
+    "downPayment": "دفعة مقدمة (اختياري)",
+    "creditLimit": "حد الدَّين: {amount}"
   },
   "sales": {
     "title": "المبيعات",

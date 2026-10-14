@@ -228,7 +228,8 @@
     "balanceAfter": "Balance after this sale: {amount}",
     "creditNeedsCustomer": "Choose a customer to sell on account.",
     "removeCustomer": "Remove customer",
-    "downPayment": "Paid now (optional)"
+    "downPayment": "Paid now (optional)",
+    "creditLimit": "Credit limit: {amount}"
   },
   "sales": {
     "title": "Sales",

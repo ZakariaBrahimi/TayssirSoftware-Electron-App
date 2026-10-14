@@ -1,7 +1,7 @@
 "use client";
 
 import { CloudCheck, CloudOff, RefreshCw } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -12,6 +12,7 @@ import { useSyncMutations, useSyncStatus } from "@/features/settings/api";
 export function SyncIndicator() {
   const t = useTranslations("nav");
   const format = useFormatter();
+  const currentTime = useNow({ updateInterval: 30_000 });
   const { data: me } = useMe();
   const { isAdmin } = useCurrentUser();
   const enabled = me?.mode === "local" && isAdmin;
@@ -25,7 +26,7 @@ export function SyncIndicator() {
     : failed
       ? t("syncError")
       : status.lastSyncAt
-        ? t("synced", { time: format.relativeTime(new Date(status.lastSyncAt)) })
+        ? t("synced", { time: format.relativeTime(new Date(status.lastSyncAt), currentTime) })
         : t("notSynced");
   const Icon = now.isPending ? RefreshCw : failed ? CloudOff : CloudCheck;
 

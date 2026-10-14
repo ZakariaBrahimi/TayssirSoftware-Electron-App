@@ -190,7 +190,7 @@ function CheckoutForm({ total, customer, isPending, onConfirm }: CheckoutProps) 
           <div className={cn("text-xs", overLimit ? "text-destructive" : "text-muted-foreground")}>
             {t("balanceAfter", { amount: money.format(balanceAfter) })}
             {customer.creditLimit != null &&
-              ` · ${tc("total")} ≤ ${money.format(customer.creditLimit)}`}
+              ` · ${t("creditLimit", { amount: money.format(customer.creditLimit) })}`}
           </div>
         )}
         {change === 0 && onAccount === 0 && (

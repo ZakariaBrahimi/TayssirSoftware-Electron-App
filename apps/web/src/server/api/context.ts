@@ -18,7 +18,13 @@ export type AppEnv = {
 
 /** Rejects unauthenticated requests and exposes the user and store context. */
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const result = await auth.api.getSession({ headers: c.req.raw.headers });
+  // Always read the session from the database (not the signed cookie cache):
+  // a user's store or role can change (sync linking, admin edits) and must
+  // take effect immediately. It is a cheap primary-key lookup.
+  const result = await auth.api.getSession({
+    headers: c.req.raw.headers,
+    query: { disableCookieCache: true },
+  });
   if (!result || result.user.banned) throw new AppError("UNAUTHORIZED");
   const user = result.user as AppEnv["Variables"]["user"];
   if (!user.storeId) throw new AppError("FORBIDDEN");

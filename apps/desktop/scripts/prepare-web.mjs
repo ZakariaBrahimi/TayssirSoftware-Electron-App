@@ -10,20 +10,34 @@ const standalone = path.join(webApp, ".next", "standalone");
 const out = path.resolve(here, "../web-dist");
 
 if (!existsSync(standalone)) {
-  console.error("No standalone build found. Run `npm run build -w @tayssir/web` first.");
+  console.error(
+    "No standalone build found. Run `npm run build -w @tayssir/web` first.",
+  );
   process.exit(1);
 }
 
 rmSync(out, { recursive: true, force: true });
-cpSync(standalone, out, { recursive: true, verbatimSymlinks: true });
+// Nested in "bundle/": electron-builder always drops a node_modules folder
+// sitting at the root of an extra resource, but keeps nested ones.
+const bundle = path.join(out, "bundle");
+cpSync(standalone, bundle, { recursive: true, verbatimSymlinks: true });
 
-const appOut = path.join(out, "apps", "web");
-cpSync(path.join(webApp, ".next", "static"), path.join(appOut, ".next", "static"), { recursive: true });
-cpSync(path.join(webApp, "public"), path.join(appOut, "public"), { recursive: true });
-cpSync(path.join(webApp, "drizzle"), path.join(appOut, "drizzle"), { recursive: true });
+const appOut = path.join(bundle, "apps", "web");
+cpSync(
+  path.join(webApp, ".next", "static"),
+  path.join(appOut, ".next", "static"),
+  { recursive: true },
+);
+cpSync(path.join(webApp, "public"), path.join(appOut, "public"), {
+  recursive: true,
+});
+cpSync(path.join(webApp, "drizzle"), path.join(appOut, "drizzle"), {
+  recursive: true,
+});
 // Never ship a development database or local secrets.
 rmSync(path.join(appOut, "data"), { recursive: true, force: true });
-for (const f of [".env", ".env.local", ".env.production"]) rmSync(path.join(appOut, f), { force: true });
+for (const f of [".env", ".env.local", ".env.production"])
+  rmSync(path.join(appOut, f), { force: true });
 
 // Build-time settings read by main.js: the license public key (installs
 // can verify licenses but never create them) and the license server URL.

@@ -228,7 +228,8 @@
     "balanceAfter": "Solde après cette vente : {amount}",
     "creditNeedsCustomer": "Choisissez un client pour vendre à crédit.",
     "removeCustomer": "Retirer le client",
-    "downPayment": "Acompte (facultatif)"
+    "downPayment": "Acompte (facultatif)",
+    "creditLimit": "Limite de crédit : {amount}"
   },
   "sales": {
     "title": "Ventes",

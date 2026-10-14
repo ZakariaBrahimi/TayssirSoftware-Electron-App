@@ -59,10 +59,14 @@
         "releaseType": "release"
       }
     ],
-    "artifactName": "Tayssir-POS-${version}-${os}-${arch}.${ext}"
+    "artifactName": "Tayssir-POS-${version}-${os}-${arch}.${ext}",
+    "executableName": "tayssir-pos",
+    "extraMetadata": {
+      "name": "tayssir-pos"
+    }
   },
   "devDependencies": {
-    "electron": "^44.7.1",
+    "electron": "44.7.1",
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
