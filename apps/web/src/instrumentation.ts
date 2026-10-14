@@ -27,5 +27,7 @@ export async function register() {
     backup.startAutoBackup(db);
     const { startSyncWorker } = await import("./server/sync/client");
     startSyncWorker(db, Number(process.env.SYNC_INTERVAL_MS) || 60_000);
+    const { startLicenseWorker } = await import("./server/licensing/client");
+    startLicenseWorker(db);
   }
 }

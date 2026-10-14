@@ -11,6 +11,7 @@ import {
   servePull,
 } from "../../sync/cloud";
 import { getSyncStatus, link, syncNow, unlink } from "../../sync/client";
+import { cleanVersion, VERSION_HEADER } from "../../version";
 import { type AppEnv, onlyMode, rateLimit, requireAdmin, validate } from "../context";
 
 /** Local mode: this install's connection to a cloud store. */
@@ -33,6 +34,14 @@ export const syncDevicesRoutes = new Hono<AppEnv>()
 
 const bearer = (header: string | undefined) => header?.replace(/^Bearer\s+/i, "");
 
+type HeaderReader = { req: { header(name: string): string | undefined } };
+const deviceAuth = (c: HeaderReader) =>
+  authenticateDevice(
+    db,
+    bearer(c.req.header("authorization")),
+    cleanVersion(c.req.header(VERSION_HEADER)),
+  );
+
 /** Cloud mode: endpoints called by desktop installs (device token auth). */
 export const syncServerRoutes = new Hono()
   .use(onlyMode("cloud"))
@@ -48,7 +57,11 @@ export const syncServerRoutes = new Hono()
         deviceId: z.string().max(128).default(""),
       }),
     ),
-    async (c) => c.json(await linkDevice(db, c.req.valid("json")), 201),
+    async (c) =>
+      c.json(
+        await linkDevice(db, c.req.valid("json"), cleanVersion(c.req.header(VERSION_HEADER))),
+        201,
+      ),
   )
   .post(
     "/push",
@@ -57,7 +70,7 @@ export const syncServerRoutes = new Hono()
       z.object({ changes: z.array(z.object({ tbl: z.string(), row: z.unknown() })).max(1000) }),
     ),
     async (c) => {
-      const device = await authenticateDevice(db, bearer(c.req.header("authorization")));
+      const device = await deviceAuth(c);
       return c.json(await receivePush(db, device.storeId, c.req.valid("json").changes));
     },
   )
@@ -71,7 +84,7 @@ export const syncServerRoutes = new Hono()
       }),
     ),
     async (c) => {
-      const device = await authenticateDevice(db, bearer(c.req.header("authorization")));
+      const device = await deviceAuth(c);
       const { cursor, deviceId } = c.req.valid("query");
       return c.json(await servePull(db, device.storeId, cursor, deviceId));
     },

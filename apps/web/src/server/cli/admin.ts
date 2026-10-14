@@ -8,18 +8,31 @@
  *   npm run admin -- license:reset <id|last-4-chars>     (frees its device slots)
  *   npm run admin -- store:list
  *   npm run admin -- store:subscription <storeId> --status active --plan pro --until 2027-01-31
+ *   npm run admin -- platform:admin <username> [--name "Your Name"] [--password ...]
+ *   npm run admin -- platform:2fa-reset <username>      (lost authenticator)
+ *
+ * License and store changes are written to the console's audit log as "CLI".
  */
-import { desc, eq, or } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
+import { and, desc, eq, or } from "drizzle-orm";
+import { endOfDay } from "@/lib/validators/platform";
 import { createDb } from "../db/client";
 import {
+  account,
   licenseActivations,
   licenses,
+  session,
   stores,
   SUBSCRIPTION_STATUSES,
+  twoFactor,
+  user,
   type SubscriptionStatus,
 } from "../db/schema";
-import { createLicense } from "../licensing/server";
 import { generateSigningKeys } from "../licensing/token";
+import { CLI_ACTOR, PLATFORM_ROLE, platformAdminUsernames } from "../platform/access";
+import { createLicense, removeActivations, setLicenseRevoked } from "../platform/licenses";
+import { setSubscription } from "../platform/stores";
 
 const [command, ...rest] = process.argv.slice(2);
 const flags = new Map<string, string>();
@@ -60,10 +73,10 @@ async function main() {
     }
     case "license:create": {
       const days = flags.get("days");
-      const { key, license } = await createLicense(db, {
+      const { key, license } = await createLicense(db, CLI_ACTOR, {
         plan: flags.get("plan") ?? "standard",
         maxDevices: Number(flags.get("devices") ?? 1),
-        expiresAt: days ? new Date(Date.now() + Number(days) * 86_400_000) : null,
+        days: days ? Number(days) : null,
         customerName: flags.get("customer"),
       });
       console.log(
@@ -88,15 +101,13 @@ async function main() {
     }
     case "license:revoke": {
       const l = await findLicense(positional[0]);
-      await db.update(licenses).set({ revokedAt: new Date() }).where(eq(licenses.id, l.id));
-      console.log(
-        `Revoked ${l.id}. Already activated installs keep working until their token expires.`,
-      );
+      await setLicenseRevoked(db, CLI_ACTOR, l.id, true);
+      console.log(`Revoked ${l.id}. Activated installs lose it at their next check-in.`);
       return;
     }
     case "license:reset": {
       const l = await findLicense(positional[0]);
-      await db.delete(licenseActivations).where(eq(licenseActivations.licenseId, l.id));
+      await removeActivations(db, CLI_ACTOR, l.id);
       console.log(`Freed all device slots of ${l.id}.`);
       return;
     }
@@ -114,24 +125,77 @@ async function main() {
       if (!SUBSCRIPTION_STATUSES.includes(status))
         throw new Error(`--status must be one of ${SUBSCRIPTION_STATUSES.join(", ")}`);
       const until = flags.get("until");
-      const [row] = await db
-        .update(stores)
-        .set({
-          subscriptionStatus: status,
-          ...(flags.has("plan") ? { plan: flags.get("plan")! } : {}),
-          ...(until ? { currentPeriodEnd: new Date(`${until}T23:59:59Z`) } : {}),
-        })
-        .where(eq(stores.id, positional[0]))
-        .returning();
-      if (!row) throw new Error("Store not found");
+      const row = await setSubscription(db, CLI_ACTOR, positional[0], {
+        status,
+        plan: flags.get("plan"),
+        currentPeriodEnd: until ? endOfDay(until) : undefined,
+      });
       console.log(
         `${row.name}: ${row.subscriptionStatus} (${row.plan}) until ${row.currentPeriodEnd?.toISOString() ?? "—"}`,
       );
       return;
     }
+    case "platform:admin": {
+      const username = positional[0]?.trim().toLowerCase();
+      if (!username || !/^[a-z0-9_.]{3,32}$/.test(username))
+        throw new Error("Usage: platform:admin <username> [--name ...] [--password ...]");
+      const [taken] = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.username, username));
+      if (taken) throw new Error(`Username "${username}" is already used`);
+      const password = flags.get("password") ?? randomBytes(12).toString("base64url");
+      if (password.length < 10) throw new Error("Use a password of at least 10 characters");
+      const id = crypto.randomUUID();
+      const now = new Date();
+      await db.insert(user).values({
+        id,
+        name: flags.get("name") ?? username,
+        email: `${username}@platform.tayssir.local`,
+        username,
+        displayUsername: username,
+        role: PLATFORM_ROLE,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await db.insert(account).values({
+        id: crypto.randomUUID(),
+        accountId: id,
+        providerId: "credential",
+        userId: id,
+        password: await hashPassword(password),
+        createdAt: now,
+        updatedAt: now,
+      });
+      console.log(`Platform admin "${username}" created.`);
+      if (!flags.has("password"))
+        console.log(`  password: ${password}  (change it after signing in)`);
+      if (!platformAdminUsernames().has(username)) {
+        console.log(
+          `\nAdd it to the server environment, then restart:\n  PLATFORM_ADMINS=${[...platformAdminUsernames(), username].join(",")}`,
+        );
+      }
+      console.log("\nSign in at /login: you will be asked to set up an authenticator app.");
+      return;
+    }
+    case "platform:2fa-reset": {
+      const username = positional[0]?.trim().toLowerCase();
+      const [target] = await db
+        .select({ id: user.id, role: user.role })
+        .from(user)
+        .where(eq(user.username, username ?? ""));
+      if (!target) throw new Error("User not found");
+      await db.delete(twoFactor).where(eq(twoFactor.userId, target.id));
+      await db.update(user).set({ twoFactorEnabled: false }).where(eq(user.id, target.id));
+      await db.delete(session).where(and(eq(session.userId, target.id)));
+      console.log(
+        `Two-factor authentication removed for "${username}". Set it up again at the next sign-in.`,
+      );
+      return;
+    }
     default:
       console.log(
-        "Commands: keys:generate, license:create, license:list, license:revoke, license:reset, store:list, store:subscription",
+        "Commands: keys:generate, license:create, license:list, license:revoke, license:reset, store:list, store:subscription, platform:admin, platform:2fa-reset",
       );
   }
 }

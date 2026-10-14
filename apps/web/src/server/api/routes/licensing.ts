@@ -4,7 +4,9 @@ import { licenseActivateInput } from "@/lib/validators";
 import { db } from "../../db";
 import { AppError } from "../../errors";
 import { getDeviceId, getEntitlement } from "../../licensing/entitlements";
-import { activateLicense } from "../../licensing/server";
+import { licenseServerUrl } from "../../licensing/client";
+import { activateLicense, refreshLicense } from "../../licensing/server";
+import { appVersion, cleanVersion, VERSION_HEADER } from "../../version";
 import { setMeta } from "../../services/meta";
 import { type AppEnv, onlyMode, rateLimit, requireAdmin, validate } from "../context";
 
@@ -13,13 +15,13 @@ export const licenseRoutes = new Hono<AppEnv>()
   .use(onlyMode("local"))
   .get("/", async (c) => c.json(await getEntitlement(db, c.get("ctx").storeId)))
   .post("/activate", requireAdmin, validate("json", licenseActivateInput), async (c) => {
-    const server = (process.env.LICENSE_SERVER_URL ?? "").replace(/\/+$/, "");
+    const server = licenseServerUrl();
     if (!server) throw new AppError("NOT_AVAILABLE", "No license server configured");
     let res: Response;
     try {
       res = await fetch(`${server}/api/licenses/activate`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", [VERSION_HEADER]: appVersion() },
         body: JSON.stringify({
           key: c.req.valid("json").key,
           deviceId: await getDeviceId(db),
@@ -54,9 +56,10 @@ export const licenseRoutes = new Hono<AppEnv>()
 
 /** Cloud mode: the vendor's license server used by desktop installs. */
 export const licenseServerRoutes = new Hono()
-  .use(onlyMode("cloud"), rateLimit("license-activate", 20, 60 * 60_000))
+  .use(onlyMode("cloud"))
   .post(
     "/activate",
+    rateLimit("license-activate", 20, 60 * 60_000),
     validate(
       "json",
       z.object({
@@ -65,5 +68,23 @@ export const licenseServerRoutes = new Hono()
         deviceName: z.string().max(60).optional(),
       }),
     ),
-    async (c) => c.json(await activateLicense(db, c.req.valid("json"))),
+    async (c) =>
+      c.json(
+        await activateLicense(db, {
+          ...c.req.valid("json"),
+          appVersion: cleanVersion(c.req.header(VERSION_HEADER)),
+        }),
+      ),
+  )
+  .post(
+    "/refresh",
+    rateLimit("license-refresh", 60, 60 * 60_000),
+    validate("json", z.object({ token: z.string().min(10).max(4096) })),
+    async (c) =>
+      c.json(
+        await refreshLicense(db, {
+          token: c.req.valid("json").token,
+          appVersion: cleanVersion(c.req.header(VERSION_HEADER)),
+        }),
+      ),
   );

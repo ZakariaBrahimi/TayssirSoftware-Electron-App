@@ -15,6 +15,13 @@
       "when": 1791942844579,
       "tag": "0001_sync_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791946790263,
+      "tag": "0002_platform_console",
+      "breakpoints": true
     }
   ]
 }

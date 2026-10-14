@@ -8,6 +8,7 @@ import { brandsRoutes, categoriesRoutes } from "./routes/catalog";
 import { dataRoutes } from "./routes/data";
 import { licenseRoutes, licenseServerRoutes } from "./routes/licensing";
 import { appInfoRoutes, setupRoutes, signupRoutes } from "./routes/onboarding";
+import { platformRoutes } from "./routes/platform";
 import { customersRoutes, suppliersRoutes } from "./routes/parties";
 import { productsRoutes } from "./routes/products";
 import { purchasesRoutes } from "./routes/purchases";
@@ -50,6 +51,7 @@ export const app = new Hono()
   .route("/signup", signupRoutes)
   .route("/licenses", licenseServerRoutes)
   .route("/sync", syncServerRoutes)
+  .route("/platform", platformRoutes)
   .route("/", protectedRoutes);
 
 app.onError((err, c) => {

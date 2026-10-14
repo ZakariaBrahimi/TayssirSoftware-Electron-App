@@ -3,6 +3,7 @@ import type { Database } from "../db/client";
 import { AppError } from "../errors";
 import { getDeviceId } from "../licensing/entitlements";
 import { getMeta, setMeta } from "../services/meta";
+import { appVersion, VERSION_HEADER } from "../version";
 import { getLocalStore } from "../services/stores";
 import { applyChanges, collectChanges, enqueueAll, rehomeStore, type SyncChange } from "./engine";
 
@@ -15,7 +16,11 @@ async function call<T>(fetcher: Fetch, url: string, init: RequestInit): Promise<
   try {
     res = await fetcher(url, {
       ...init,
-      headers: { "content-type": "application/json", ...(init.headers ?? {}) },
+      headers: {
+        "content-type": "application/json",
+        [VERSION_HEADER]: appVersion(),
+        ...(init.headers ?? {}),
+      },
       signal: AbortSignal.timeout(30_000),
     });
   } catch (err) {
@@ -95,7 +100,7 @@ export async function link(
     setMeta(db, "sync.pushCursor", "0"),
     setMeta(db, "sync.pullCursor", "0"),
     setMeta(db, "sync.lastError", null),
-    setMeta(db, "sync.entitlementToken", result.entitlementToken),
+    setMeta(db, "sync.entitlementToken", result.entitlementToken || null),
   ]);
   return syncNow(db, fetcher);
 }
@@ -171,8 +176,10 @@ async function runSync(db: Database, fetcher: Fetch) {
       if (batch.changes.length) {
         await applyChanges(db, store.id, batch.changes, { suppressLog: true });
       }
-      if (batch.entitlementToken)
-        await setMeta(db, "sync.entitlementToken", batch.entitlementToken);
+      // A token renews access; "" means the cloud store lost it (expired,
+      // cancelled or suspended); null means the cloud does not manage it.
+      if (batch.entitlementToken !== null)
+        await setMeta(db, "sync.entitlementToken", batch.entitlementToken || null);
       pullCursor = batch.cursor;
       await setMeta(db, "sync.pullCursor", String(pullCursor));
       if (!batch.hasMore) break;

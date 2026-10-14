@@ -21,7 +21,14 @@ export type SyncRow = Record<string, string | number | null>;
 export type SyncChange = { tbl: SyncTableName; row: SyncRow };
 
 const IGNORED_ON_APPLY: Partial<Record<SyncTableName, string[]>> = {
-  stores: ["plan", "subscription_status", "trial_ends_at", "current_period_end"],
+  stores: [
+    "plan",
+    "subscription_status",
+    "trial_ends_at",
+    "current_period_end",
+    "suspended_at",
+    "suspend_reason",
+  ],
   products: ["stock"],
 };
 

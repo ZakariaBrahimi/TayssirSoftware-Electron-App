@@ -16,7 +16,8 @@ export function StatusBanner() {
   const ent = me?.entitlement;
   if (!ent || ent.status === "active" || ent.status === "unmanaged") return null;
   const cloud = me.mode === "cloud";
-  const expired = ent.status === "expired";
+  const suspended = ent.status === "suspended";
+  const expired = ent.status === "expired" || suspended;
   // Remind during the last week of a trial, always when expired.
   if (!expired && (ent.daysLeft ?? 99) > 7) return null;
 
@@ -34,16 +35,18 @@ export function StatusBanner() {
         <Clock className="size-4 shrink-0" />
       )}
       <span className="flex-1">
-        {expired
-          ? t(cloud ? "expiredCloud" : "expired")
-          : t(cloud ? "trialCloud" : "trial", { days: ent.daysLeft ?? 0 })}
+        {suspended
+          ? t("suspended")
+          : expired
+            ? t(cloud ? "expiredCloud" : "expired")
+            : t(cloud ? "trialCloud" : "trial", { days: ent.daysLeft ?? 0 })}
       </span>
       {isAdmin && !cloud && (
         <Button asChild size="sm" variant={expired ? "destructive" : "outline"}>
           <Link href="/settings?tab=license">{t("activate")}</Link>
         </Button>
       )}
-      {cloud && <span className="text-xs opacity-80">{t("contact")}</span>}
+      {cloud && !suspended && <span className="text-xs opacity-80">{t("contact")}</span>}
     </div>
   );
 }

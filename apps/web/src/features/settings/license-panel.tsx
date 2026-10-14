@@ -31,7 +31,11 @@ export function LicensePanel() {
   const cloud = me.mode === "cloud";
 
   const statusVariant =
-    ent.status === "expired" ? "destructive" : ent.status === "active" ? "success" : "secondary";
+    ent.status === "expired" || ent.status === "suspended"
+      ? "destructive"
+      : ent.status === "active"
+        ? "success"
+        : "secondary";
   const rows: [string, React.ReactNode][] = [
     [
       t("licenseStatus"),

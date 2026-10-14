@@ -156,6 +156,7 @@ async function startServer(port) {
       BETTER_AUTH_URL: url,
       TAYSSIR_DEVICE_ID: getMachineId(dataDir),
       TAYSSIR_DEVICE_NAME: os.hostname(),
+      TAYSSIR_APP_VERSION: app.getVersion(),
       ...(config.licensePublicKey
         ? { LICENSE_PUBLIC_KEY: config.licensePublicKey }
         : {}),

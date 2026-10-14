@@ -6,7 +6,7 @@ import { verifyEntitlement } from "./token";
 
 export type Entitlement = {
   /** "unmanaged": licensing is not enforced by this build. */
-  status: "active" | "trial" | "expired" | "unmanaged";
+  status: "active" | "trial" | "expired" | "suspended" | "unmanaged";
   source: "license" | "subscription" | "trial" | "none";
   plan: string | null;
   expiresAt: number | null;
@@ -54,6 +54,16 @@ export async function getEntitlement(
 ): Promise<Entitlement> {
   if (getMode() === "cloud") {
     const store = await getStore(db, storeId);
+    if (store.suspendedAt) {
+      return {
+        status: "suspended",
+        source: "subscription",
+        plan: store.plan,
+        expiresAt: null,
+        daysLeft: 0,
+        canWrite: false,
+      };
+    }
     if (store.subscriptionStatus === "active" || store.subscriptionStatus === "past_due") {
       return fromExpiry(
         "active",

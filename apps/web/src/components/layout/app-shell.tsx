@@ -68,11 +68,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isPending } = useCurrentUser();
   const router = useRouter();
 
+  const isPlatform = (user as { role?: string } | undefined)?.role === "platform";
+
   useEffect(() => {
     if (!isPending && !user) router.replace("/login");
-  }, [isPending, user, router]);
+    // The platform owner has no store: their home is the console.
+    else if (isPlatform) router.replace("/platform");
+  }, [isPending, user, isPlatform, router]);
 
-  if (isPending || !user) {
+  if (isPending || !user || isPlatform) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
         <Skeleton className="h-8 w-40" />

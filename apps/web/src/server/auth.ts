@@ -2,7 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, username } from "better-auth/plugins";
+import { admin, twoFactor, username } from "better-auth/plugins";
 import { db, schema } from "./db";
 import { authSecret, env } from "./env";
 
@@ -17,6 +17,7 @@ export const auth = betterAuth({
       session: schema.session,
       account: schema.account,
       verification: schema.verification,
+      twoFactor: schema.twoFactor,
     },
   }),
   user: {
@@ -42,6 +43,9 @@ export const auth = betterAuth({
     // Provides roles. Its HTTP endpoints are blocked (see api/index.ts):
     // they are not store-aware, so user management goes through /api/users.
     admin({ defaultRole: "user", adminRoles: ["admin"] }),
+    // Authenticator app codes. Required for the platform console, optional
+    // for everyone else.
+    twoFactor({ issuer: "Tayssir POS" }),
     nextCookies(),
   ],
 });

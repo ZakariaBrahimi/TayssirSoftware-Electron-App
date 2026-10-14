@@ -7,6 +7,7 @@ import { type Ctx, getMode, type Mode } from "../context";
 import { db } from "../db";
 import { AppError } from "../errors";
 import { getEntitlement } from "../licensing/entitlements";
+import { touchStore } from "../platform/activity";
 
 export type AppEnv = {
   Variables: {
@@ -31,6 +32,7 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   c.set("user", user);
   c.set("session", result.session);
   c.set("ctx", { storeId: user.storeId, userId: user.id, userName: user.name });
+  if (getMode() === "cloud") await touchStore(db, user.storeId);
   await next();
 });
 

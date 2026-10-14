@@ -20,6 +20,7 @@
 import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { uuidv7 } from "@/lib/ids";
+import { PLATFORM_PAYMENT_METHODS, SUBSCRIPTION_STATUSES } from "@/lib/validators/platform";
 
 const ms = (name: string) => integer(name, { mode: "timestamp_ms" });
 
@@ -79,9 +80,27 @@ export const user = sqliteTable(
     banReason: text("ban_reason"),
     banExpires: integer("ban_expires", { mode: "timestamp" }),
     storeId: text("store_id"),
+    twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).default(false),
     ...authTimestamps,
   },
   (t) => [index("user_store_idx").on(t.storeId)],
+);
+
+/** Authenticator app (TOTP) secrets, managed by Better Auth's two-factor plugin. */
+export const twoFactor = sqliteTable(
+  "two_factor",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    verified: integer("verified", { mode: "boolean" }).default(true),
+    failedVerificationCount: integer("failed_verification_count").default(0),
+    lockedUntil: integer("locked_until", { mode: "timestamp" }),
+  },
+  (t) => [index("two_factor_user_idx").on(t.userId), index("two_factor_secret_idx").on(t.secret)],
 );
 
 export const session = sqliteTable(
@@ -134,7 +153,7 @@ export const verification = sqliteTable("verification", {
 /*                                   Stores                                   */
 /* -------------------------------------------------------------------------- */
 
-export const SUBSCRIPTION_STATUSES = ["trialing", "active", "past_due", "canceled"] as const;
+export { SUBSCRIPTION_STATUSES };
 export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 
 export const stores = sqliteTable("stores", {
@@ -153,6 +172,9 @@ export const stores = sqliteTable("stores", {
     .default("trialing"),
   trialEndsAt: ms("trial_ends_at"),
   currentPeriodEnd: ms("current_period_end"),
+  /** Set by the platform owner: the store becomes read-only. */
+  suspendedAt: ms("suspended_at"),
+  suspendReason: text("suspend_reason"),
   ...timestamps,
 });
 
@@ -551,6 +573,7 @@ export const licenseActivations = sqliteTable(
     licenseId: text("license_id").notNull(),
     deviceId: text("device_id").notNull(),
     deviceName: text("device_name"),
+    appVersion: text("app_version"),
     lastSeenAt: ms("last_seen_at"),
     ...timestamps,
   },
@@ -568,11 +591,77 @@ export const syncDevices = sqliteTable(
     deviceCode: text("device_code").notNull(),
     /** SHA-256 of the device token. */
     tokenHash: text("token_hash").notNull().unique(),
+    appVersion: text("app_version"),
     lastSeenAt: ms("last_seen_at"),
     revokedAt: ms("revoked_at"),
     ...timestamps,
   },
   (t) => [index("sync_devices_store_idx").on(t.storeId)],
+);
+
+/* -------------------------------------------------------------------------- */
+/*                    Cloud: platform owner console (not synced)              */
+/* -------------------------------------------------------------------------- */
+
+/** Last time anyone used a store (web session or synced device). */
+export const storeActivity = sqliteTable("store_activity", {
+  storeId: text("store_id").primaryKey(),
+  lastSeenAt: ms("last_seen_at").notNull(),
+});
+
+/** Payments received by the platform owner (subscriptions and licenses). */
+export const platformPayments = sqliteTable(
+  "platform_payments",
+  {
+    id: id(),
+    /** Exactly one of storeId / licenseId is set. */
+    storeId: text("store_id"),
+    licenseId: text("license_id"),
+    /** In the platform currency's minor unit. */
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull(),
+    method: text("method", { enum: PLATFORM_PAYMENT_METHODS }).notNull(),
+    reference: text("reference"),
+    plan: text("plan"),
+    /** Months of service paid for (0 for a one-off license sale). */
+    months: integer("months").notNull().default(0),
+    periodStart: ms("period_start"),
+    periodEnd: ms("period_end"),
+    note: text("note"),
+    ...actor("recordedBy", "recorded_by"),
+    voidedAt: ms("voided_at"),
+    voidedByName: text("voided_by_name"),
+    ...timestamps,
+  },
+  (t) => [
+    index("platform_payments_store_idx").on(t.storeId),
+    index("platform_payments_license_idx").on(t.licenseId),
+    index("platform_payments_created_idx").on(t.createdAt),
+  ],
+);
+
+/** Every action taken in the platform console or the vendor CLI. */
+export const platformAudit = sqliteTable(
+  "platform_audit",
+  {
+    id: id(),
+    ...actor("actor", "actor"),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    /** Store concerned, to show a store's history. */
+    storeId: text("store_id"),
+    /** JSON with the action's details. */
+    details: text("details"),
+    ip: text("ip"),
+    createdAt: ms("created_at")
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [
+    index("platform_audit_created_idx").on(t.createdAt),
+    index("platform_audit_store_idx").on(t.storeId),
+  ],
 );
 
 /* -------------------------------------------------------------------------- */

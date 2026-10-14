@@ -121,11 +121,39 @@ npm run admin -- license:revoke <id|last 4 chars>
 npm run admin -- license:reset <id|last 4 chars>   # frees its device slots (new PC)
 npm run admin -- store:list
 npm run admin -- store:subscription <storeId> --status active --plan pro --until 2027-01-31
+npm run admin -- platform:admin <username> --name "Your Name"   # console account
+npm run admin -- platform:2fa-reset <username>                  # lost authenticator
 ```
 
-Subscription payments are not connected to a payment provider yet: record them with `store:subscription` (or call the same service from a payment webhook later).
+Subscription payments are not connected to a payment provider yet: record them in the [platform console](#platform-console) (or call the same service from a payment webhook later).
+
+Desktops check their license in with the server every 12 hours when online: renewals and plan changes reach them, and a revoked license or a freed device slot takes effect at the next check-in.
 
 Without `LICENSE_PUBLIC_KEY`, a local install is unlicensed and unrestricted, which is handy for development or for your own shop.
+
+## Platform console
+
+On the cloud deployment, the owner of the SaaS manages everything at `/platform`:
+
+- **Overview**: monthly recurring revenue, revenue this month and per month, paying and active stores, new sign-ups, and the stores that need attention (trials ending, renewals due, recently lapsed).
+- **Stores**: search and filter by status; per store: subscription, usage totals, users, linked desktops, payments and history. Actions: record a payment (renews the subscription from the end of the paid period), change the subscription, extend the trial, suspend or reactivate (a suspended store is read-only, on the web and on its desktops), reset a user's password.
+- **Licenses**: create (the key is shown once), edit plan/devices/end date, revoke or restore, free one or all PCs, record a payment (extends a dated license).
+- **Devices**: every linked desktop with its store, app version and last sync; "not syncing" after 3 days; revoke.
+- **Payments**: all payments with filters and totals; void a mistaken one (kept in the history, excluded from revenue).
+- **Audit log**: every change made in the console or with the CLI, with who, when and from which IP.
+
+The console only shows store totals, never a store's sales, customers or products.
+
+Access is limited to accounts that have the `platform` role, belong to no store **and** are listed in `PLATFORM_ADMINS`. Anyone else gets a 404. Two-step verification (authenticator app, with backup codes) is required, and console sessions expire after 12 hours. To set it up:
+
+```sh
+# On the cloud server (from apps/web, with the cloud DATABASE_URL):
+npm run admin -- platform:admin yourname --name "Your Name"   # prints a temporary password
+# Add PLATFORM_ADMINS=yourname to the server environment and restart, then
+# sign in at /login and follow the authenticator setup.
+```
+
+Payment amounts use `PLATFORM_CURRENCY` (default `DZD`).
 
 ## Cloud sync for desktop installs
 

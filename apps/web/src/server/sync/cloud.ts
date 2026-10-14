@@ -4,6 +4,7 @@ import { syncDevices } from "../db/schema";
 import { AppError } from "../errors";
 import { signEntitlement, hashSecret } from "../licensing/token";
 import { getEntitlement } from "../licensing/entitlements";
+import { touchStore } from "../platform/activity";
 import { getStore, publicStore } from "../services/stores";
 import { applyChanges, collectChanges } from "./engine";
 
@@ -15,6 +16,7 @@ const randomToken = () =>
 export async function linkDevice(
   db: Executor,
   input: { username: string; password: string; deviceName: string; deviceId: string },
+  appVersion: string | null = null,
 ) {
   // Lazy: the auth module opens the app database (kept out of unit tests).
   const { verifyCredentials } = await import("../services/users");
@@ -38,6 +40,7 @@ export async function linkDevice(
       name: input.deviceName,
       deviceCode: `D${n}`,
       tokenHash: hashSecret(token),
+      appVersion,
       lastSeenAt: new Date(),
     })
     .returning();
@@ -47,18 +50,27 @@ export async function linkDevice(
     deviceToken: token,
     deviceCode: device.deviceCode,
     store: publicStore(store),
+    // "" means "no access"; the desktop stores nothing in that case.
     entitlementToken: await deviceEntitlementToken(db, account.storeId, input.deviceId),
   };
 }
 
-export async function authenticateDevice(db: Executor, token: string | undefined) {
+export async function authenticateDevice(
+  db: Executor,
+  token: string | undefined,
+  appVersion: string | null = null,
+) {
   if (!token) throw new AppError("UNAUTHORIZED");
   const [device] = await db
     .select()
     .from(syncDevices)
     .where(and(eq(syncDevices.tokenHash, hashSecret(token)), isNull(syncDevices.revokedAt)));
   if (!device) throw new AppError("UNAUTHORIZED");
-  await db.update(syncDevices).set({ lastSeenAt: new Date() }).where(eq(syncDevices.id, device.id));
+  await db
+    .update(syncDevices)
+    .set({ lastSeenAt: new Date(), ...(appVersion ? { appVersion } : {}) })
+    .where(eq(syncDevices.id, device.id));
+  await touchStore(db, device.storeId);
   return device;
 }
 
@@ -70,7 +82,9 @@ async function deviceEntitlementToken(db: Executor, storeId: string, deviceId: s
   const key = process.env.LICENSE_PRIVATE_KEY;
   if (!key || !deviceId) return null;
   const ent = await getEntitlement(db, storeId);
-  if (!ent.canWrite || ent.status === "unmanaged") return null;
+  if (ent.status === "unmanaged") return null;
+  // Expired, cancelled or suspended: tell the device to drop its token.
+  if (!ent.canWrite) return "";
   // Short-lived when open-ended, so a cancelled subscription stops working.
   const maxExp = Date.now() + 30 * 86_400_000;
   return signEntitlement(
