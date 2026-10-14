@@ -1,0 +1,52 @@
+{
+  "name": "@tayssir/desktop",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Tayssir POS desktop app: runs the web app locally with an embedded server and database (works offline).",
+  "author": "Zakaria Abdessame Brahimi",
+  "main": "main.js",
+  "scripts": {
+    "prepare:web": "npm run build -w @tayssir/web && node scripts/prepare-web.mjs",
+    "start": "npm run prepare:web && electron .",
+    "dist": "npm run prepare:web && electron-builder",
+    "dist:win": "npm run prepare:web && electron-builder --win",
+    "dist:mac": "npm run prepare:web && electron-builder --mac",
+    "dist:linux": "npm run prepare:web && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.tayssir.pos",
+    "productName": "Tayssir POS",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "web-dist",
+        "to": "web"
+      }
+    ],
+    "icon": "../web/public/icons/icon-512.png",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Office"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.7.1",
+    "electron-builder": "^26.15.3"
+  }
+}
