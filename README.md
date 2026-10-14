@@ -111,7 +111,7 @@ When access lapses, the app switches to **read-only**: sales, products and other
 
 Licenses and subscriptions are Ed25519-signed tokens. The private key stays on your cloud server; desktops only hold the public key, so they verify tokens offline and cannot forge them. Activation is bound to a machine fingerprint.
 
-Vendor operations (run against the cloud database, from `apps/web`):
+Vendor operations run against the cloud database. In the Docker image the CLI is bundled: `docker exec -it tayssir node admin.mjs <command>` (same commands as below). From a checkout, run them from `apps/web` with `DATABASE_URL` set:
 
 ```sh
 npm run admin -- keys:generate                      # once: prints LICENSE_PRIVATE_KEY / LICENSE_PUBLIC_KEY
@@ -147,8 +147,8 @@ The console only shows store totals, never a store's sales, customers or product
 Access is limited to accounts that have the `platform` role, belong to no store **and** are listed in `PLATFORM_ADMINS`. Anyone else gets a 404. Two-step verification (authenticator app, with backup codes) is required, and console sessions expire after 12 hours. To set it up:
 
 ```sh
-# On the cloud server (from apps/web, with the cloud DATABASE_URL):
-npm run admin -- platform:admin yourname --name "Your Name"   # prints a temporary password
+# On the cloud server (Docker; or `npm run admin --` from apps/web):
+docker exec -it tayssir node admin.mjs platform:admin yourname --name "Your Name"   # prints a temporary password
 # Add PLATFORM_ADMINS=yourname to the server environment and restart, then
 # sign in at /login and follow the authenticator setup.
 ```
@@ -201,7 +201,7 @@ Unsigned builds work, but Windows SmartScreen warns on first install, and macOS 
 
 ```sh
 docker build -t tayssir-pos .
-docker run -d --restart unless-stopped -p 3000:3000 -v tayssir-data:/data \
+docker run -d --name tayssir --restart unless-stopped -p 3000:3000 -v tayssir-data:/data \
   -e TAYSSIR_MODE=cloud \
   -e BETTER_AUTH_SECRET="$(openssl rand -base64 32)" \
   -e BETTER_AUTH_URL=https://pos.example.com \

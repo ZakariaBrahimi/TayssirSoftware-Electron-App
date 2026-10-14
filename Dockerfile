@@ -1,8 +1,11 @@
 # Self-hosted web server for Tayssir POS.
 #   docker build -t tayssir-pos .
-#   docker run -p 3000:3000 -v tayssir-data:/data \
+#   docker run -d --name tayssir --restart unless-stopped -p 3000:3000 -v tayssir-data:/data \
 #     -e BETTER_AUTH_SECRET="$(openssl rand -base64 32)" \
 #     -e BETTER_AUTH_URL=http://localhost:3000 tayssir-pos
+#
+# Vendor CLI (bundled in the image, uses the container's database):
+#   docker exec -it tayssir node admin.mjs <command>
 
 FROM node:22-bookworm-slim AS deps
 WORKDIR /repo
