@@ -283,7 +283,8 @@
     "refundTotal": "Refund: {amount}",
     "returnReason": "Reason (optional)",
     "nothingToReturn": "Choose the quantities to return.",
-    "balanceDue": "On account"
+    "balanceDue": "On account",
+    "itemsReturned": "(−{count} returned)"
   },
   "receipt": {
     "receipt": "Receipt",

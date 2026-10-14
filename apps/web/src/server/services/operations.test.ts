@@ -6,6 +6,7 @@ import {
   purchaseCreateInput,
   returnCreateInput,
   saleCreateInput,
+  saleListQuery,
   supplierInput,
 } from "@/lib/validators";
 import { makeDb, makeProduct, makeStore } from "@/test/helpers";
@@ -16,7 +17,7 @@ import { createCustomer, customerStatement, getCustomer, recordCustomerPayment }
 import { createPurchase, supplierStatement, weightedAverageCost } from "./purchases";
 import { salesReport } from "./reports";
 import { createReturn, lineRefund } from "./returns";
-import { createSale, voidSale } from "./sales";
+import { createSale, listSales, voidSale } from "./sales";
 import { addCashMovement, closeShift, currentShift, openShift } from "./shifts";
 import { createSupplier, getSupplier, recordSupplierPayment } from "./suppliers";
 
@@ -93,6 +94,19 @@ describe("returns", () => {
     // Cost: 4×600 sold − 1×600 restocked (the damaged unit stays a cost).
     expect(report.summary.cost).toBe(1800);
     expect(report.topProducts[0].quantity).toBe(2);
+
+    // The sales list keeps the ticket as sold and shows the returns beside it;
+    // its profit matches the report (the restocked unit's cost comes back).
+    const [row] = (await listSales(db, ctx, saleListQuery.parse({}))).rows;
+    expect(row).toMatchObject({
+      itemCount: 4,
+      returnedCount: 2,
+      refunded: 2000,
+      restockedCost: 600,
+    });
+    expect(row.total - row.totalCost - row.refunded + row.restockedCost).toBe(
+      report.summary.revenue - report.summary.cost,
+    );
   });
 
   it("can credit the refund to the customer's account", async () => {

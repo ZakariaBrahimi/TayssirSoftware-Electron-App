@@ -85,7 +85,16 @@ export function SalesList() {
         }),
         helper.accessor("itemCount", {
           header: t("items"),
-          cell: ({ getValue }) => <span className="tabular-nums">{getValue()}</span>,
+          cell: ({ row }) => (
+            <span className="tabular-nums">
+              {row.original.itemCount}
+              {row.original.returnedCount > 0 && (
+                <span className="text-muted-foreground ms-1 text-xs">
+                  {t("itemsReturned", { count: row.original.returnedCount })}
+                </span>
+              )}
+            </span>
+          ),
         }),
         helper.accessor("paymentMethod", {
           header: t("payment"),
@@ -114,7 +123,11 @@ export function SalesList() {
                     {row.original.status === "voided"
                       ? "—"
                       : money.format(
-                          row.original.total - row.original.totalCost - row.original.refunded,
+                          // Restocked items give their cost back; damaged ones don't.
+                          row.original.total -
+                            row.original.totalCost -
+                            row.original.refunded +
+                            row.original.restockedCost,
                         )}
                   </span>
                 ),

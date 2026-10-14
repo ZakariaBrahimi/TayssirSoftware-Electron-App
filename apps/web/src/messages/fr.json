@@ -283,7 +283,8 @@
     "refundTotal": "Remboursement : {amount}",
     "returnReason": "Motif (facultatif)",
     "nothingToReturn": "Choisissez les quantités à retourner.",
-    "balanceDue": "À crédit"
+    "balanceDue": "À crédit",
+    "itemsReturned": "(−{count} {count, plural, one {retourné} other {retournés}})"
   },
   "receipt": {
     "receipt": "Ticket",

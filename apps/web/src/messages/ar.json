@@ -283,7 +283,8 @@
     "refundTotal": "الاسترداد: {amount}",
     "returnReason": "السبب (اختياري)",
     "nothingToReturn": "اختر الكميات المراد إرجاعها.",
-    "balanceDue": "بالدَّين"
+    "balanceDue": "بالدَّين",
+    "itemsReturned": "(−{count} مُرجَع)"
   },
   "receipt": {
     "receipt": "إيصال",

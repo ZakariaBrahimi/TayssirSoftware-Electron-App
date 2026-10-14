@@ -332,6 +332,9 @@ export async function listSales(
 
   const itemCount = sql<number>`(select coalesce(sum(${saleItems.quantity}), 0) from ${saleItems} where ${saleItems.saleId} = ${col("sales", "id")})`;
   const refunded = sql<number>`(select coalesce(sum(${saleReturns.refundAmount}), 0) from ${saleReturns} where ${saleReturns.saleId} = ${col("sales", "id")})`;
+  // Returns are kept apart from the ticket: the list shows them next to it.
+  const returnedCount = sql<number>`(select coalesce(sum(${returnItems.quantity}), 0) from ${returnItems} inner join ${saleReturns} on ${saleReturns.id} = ${returnItems.returnId} where ${saleReturns.saleId} = ${col("sales", "id")})`;
+  const restockedCost = sql<number>`(select coalesce(sum(${saleReturns.restockedCost}), 0) from ${saleReturns} where ${saleReturns.saleId} = ${col("sales", "id")})`;
 
   const [rows, [{ total }]] = await Promise.all([
     db
@@ -350,6 +353,8 @@ export async function listSales(
         customerName: sales.customerName,
         itemCount,
         refunded,
+        returnedCount,
+        restockedCost,
       })
       .from(sales)
       .leftJoin(customers, eq(customers.id, sales.customerId))
@@ -370,6 +375,8 @@ export async function listSales(
       number: `${r.deviceCode}-${r.seq}`,
       itemCount: Number(r.itemCount),
       refunded: Number(r.refunded),
+      returnedCount: Number(r.returnedCount),
+      restockedCost: Number(r.restockedCost),
     })),
     total,
     page: query.page,
