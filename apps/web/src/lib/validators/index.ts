@@ -4,9 +4,25 @@ import { z } from "zod";
  * and typed clients), and reusable by a future mobile app. */
 
 const money = z.number().int().min(0).max(1_000_000_000_000);
-const id = z.coerce.number().int().positive();
+const positiveMoney = money.min(1);
+const id = z.string().uuid();
+const optionalText = (max: number) => z.string().trim().max(max).nullish();
 
 export const idParam = z.object({ id });
+
+const isoDate = z.iso.datetime({ offset: true });
+
+const pagination = {
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(200).default(20),
+};
+
+const booleanQuery = z
+  .enum(["true", "false"])
+  .transform((v) => v === "true")
+  .optional();
+
+/* --------------------------------- Catalog -------------------------------- */
 
 export const namedEntityInput = z.object({
   name: z.string().trim().min(1).max(80),
@@ -23,19 +39,19 @@ export const barcodeSchema = z
 export const productBase = z.object({
   name: z.string().trim().min(1).max(120),
   barcode: barcodeSchema,
-  description: z.string().trim().max(1000).nullish(),
+  description: optionalText(1000),
   costPrice: money,
   salePrice: money,
   lowStockThreshold: z.number().int().min(0).max(1_000_000).default(5),
-  categoryId: z.number().int().positive().nullish(),
-  brandId: z.number().int().positive().nullish(),
+  categoryId: id.nullish(),
+  brandId: id.nullish(),
   isActive: z.boolean().default(true),
 });
 
 export const productCreateInput = productBase.extend({
   stock: z.number().int().min(0).max(10_000_000).default(0),
 });
-export type ProductCreateInput = z.infer<typeof productCreateInput>;
+export type ProductCreateInput = z.input<typeof productCreateInput>;
 
 export const productUpdateInput = productBase.partial();
 export type ProductUpdateInput = z.infer<typeof productUpdateInput>;
@@ -66,23 +82,23 @@ export const productListQuery = z.object({
   categoryId: id.optional(),
   brandId: id.optional(),
   stock: z.enum(PRODUCT_STOCK_FILTERS).default("all"),
-  includeInactive: z
-    .enum(["true", "false"])
-    .transform((v) => v === "true")
-    .optional(),
+  includeInactive: booleanQuery,
   sort: z.enum(PRODUCT_SORTS).default("name"),
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(200).default(20),
+  ...pagination,
 });
 export type ProductListQuery = z.input<typeof productListQuery>;
 
+/* ---------------------------------- Sales --------------------------------- */
+
 export const PAYMENT_METHODS = ["cash", "card", "other"] as const;
+export const SALE_PAYMENT_METHODS = [...PAYMENT_METHODS, "credit"] as const;
+export const REFUND_METHODS = [...PAYMENT_METHODS, "account"] as const;
 
 export const saleCreateInput = z.object({
   items: z
     .array(
       z.object({
-        productId: z.number().int().positive(),
+        productId: id,
         quantity: z.number().int().min(1).max(100_000),
         discount: money.default(0),
       }),
@@ -90,24 +106,120 @@ export const saleCreateInput = z.object({
     .min(1)
     .max(500),
   discount: money.default(0),
-  paymentMethod: z.enum(PAYMENT_METHODS).default("cash"),
+  /** Required for credit sales and partial payments. */
+  customerId: id.nullish(),
+  paymentMethod: z.enum(SALE_PAYMENT_METHODS).default("cash"),
   /** Amount handed over by the customer. Defaults to the total. */
   amountPaid: money.optional(),
   note: z.string().trim().max(500).optional(),
 });
 export type SaleCreateInput = z.input<typeof saleCreateInput>;
 
-const isoDate = z.iso.datetime({ offset: true });
-
 export const saleListQuery = z.object({
   from: isoDate.optional(),
   to: isoDate.optional(),
   status: z.enum(["completed", "voided"]).optional(),
-  q: z.coerce.number().int().positive().optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(200).default(20),
+  customerId: id.optional(),
+  /** Receipt number, e.g. "KQM-42" or just "42". */
+  q: z.string().trim().max(30).optional(),
+  ...pagination,
 });
 export type SaleListQuery = z.input<typeof saleListQuery>;
+
+export const returnCreateInput = z.object({
+  items: z
+    .array(z.object({ saleItemId: id, quantity: z.number().int().min(1).max(100_000) }))
+    .min(1),
+  refundMethod: z.enum(REFUND_METHODS).default("cash"),
+  /** Put the returned items back in stock (false for damaged goods). */
+  restock: z.boolean().default(true),
+  reason: z.string().trim().max(300).optional(),
+});
+export type ReturnCreateInput = z.input<typeof returnCreateInput>;
+
+/* -------------------------------- Customers ------------------------------- */
+
+export const partyInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  phone: optionalText(40),
+  email: z
+    .string()
+    .trim()
+    .max(120)
+    .refine((v) => v === "" || z.email().safeParse(v).success, "invalid_email")
+    .nullish(),
+  address: optionalText(300),
+  notes: optionalText(1000),
+});
+
+export const customerInput = partyInput.extend({
+  creditLimit: money.nullish(),
+});
+export type CustomerInput = z.infer<typeof customerInput>;
+
+export const supplierInput = partyInput;
+export type SupplierInput = z.infer<typeof supplierInput>;
+
+export const partyListQuery = z.object({
+  q: z.string().trim().max(120).optional(),
+  /** Only parties with a non-zero balance. */
+  withBalance: booleanQuery,
+  ...pagination,
+});
+export type PartyListQuery = z.input<typeof partyListQuery>;
+
+export const paymentInput = z.object({
+  amount: positiveMoney,
+  method: z.enum(PAYMENT_METHODS).default("cash"),
+  note: z.string().trim().max(300).optional(),
+});
+export type PaymentInput = z.input<typeof paymentInput>;
+
+/* -------------------------------- Purchases ------------------------------- */
+
+export const purchaseCreateInput = z.object({
+  supplierId: id.nullish(),
+  reference: z.string().trim().max(60).optional(),
+  items: z
+    .array(
+      z.object({
+        productId: id,
+        quantity: z.number().int().min(1).max(10_000_000),
+        unitCost: money,
+      }),
+    )
+    .min(1)
+    .max(500),
+  amountPaid: money.default(0),
+  note: z.string().trim().max(500).optional(),
+});
+export type PurchaseCreateInput = z.input<typeof purchaseCreateInput>;
+
+export const purchaseListQuery = z.object({
+  supplierId: id.optional(),
+  from: isoDate.optional(),
+  to: isoDate.optional(),
+  ...pagination,
+});
+export type PurchaseListQuery = z.input<typeof purchaseListQuery>;
+
+/* --------------------------------- Shifts --------------------------------- */
+
+export const shiftOpenInput = z.object({ openingCash: money.default(0) });
+export const shiftCloseInput = z.object({
+  countedCash: money,
+  note: z.string().trim().max(500).optional(),
+});
+export const cashMovementInput = z.object({
+  type: z.enum(["in", "out"]),
+  amount: positiveMoney,
+  reason: z.string().trim().min(1).max(200),
+});
+export type CashMovementInput = z.input<typeof cashMovementInput>;
+
+export const shiftListQuery = z.object({ ...pagination });
+
+/* --------------------------------- Reports -------------------------------- */
 
 export const reportQuery = z.object({
   from: isoDate,
@@ -122,18 +234,23 @@ export const reportQuery = z.object({
 });
 export type ReportQuery = z.input<typeof reportQuery>;
 
-export const settingsInput = z.object({
-  storeName: z.string().trim().min(1).max(120),
-  address: z.string().trim().max(300).nullish(),
-  phone: z.string().trim().max(40).nullish(),
-  currency: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^[A-Z]{3}$/),
-  receiptFooter: z.string().trim().max(300).nullish(),
+/* ---------------------------- Settings & users ---------------------------- */
+
+export const currencySchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z]{3}$/);
+
+export const storeSettingsInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  address: optionalText(300),
+  phone: optionalText(40),
+  currency: currencySchema,
+  receiptFooter: optionalText(300),
+  requireShift: z.boolean().default(false),
 });
-export type SettingsInput = z.infer<typeof settingsInput>;
+export type StoreSettingsInput = z.infer<typeof storeSettingsInput>;
 
 export const usernameSchema = z
   .string()
@@ -142,11 +259,49 @@ export const usernameSchema = z
   .max(32)
   .regex(/^[a-zA-Z0-9_.]+$/, "invalid_username");
 
+export const passwordSchema = z.string().min(6).max(128);
+
+/** First-run setup (local mode) and sign-up (cloud mode). */
 export const setupInput = z.object({
   storeName: z.string().trim().min(1).max(120),
-  currency: settingsInput.shape.currency,
+  currency: currencySchema,
   name: z.string().trim().min(1).max(80),
   username: usernameSchema,
-  password: z.string().min(6).max(128),
+  password: passwordSchema,
 });
 export type SetupInput = z.infer<typeof setupInput>;
+
+export const ROLES = ["admin", "user"] as const;
+
+export const userCreateInput = z.object({
+  name: z.string().trim().min(1).max(80),
+  username: usernameSchema,
+  password: passwordSchema,
+  role: z.enum(ROLES).default("user"),
+});
+export type UserCreateInput = z.input<typeof userCreateInput>;
+
+export const userUpdateInput = z.object({
+  name: z.string().trim().min(1).max(80).optional(),
+  role: z.enum(ROLES).optional(),
+  password: passwordSchema.optional(),
+});
+export type UserUpdateInput = z.infer<typeof userUpdateInput>;
+
+/* --------------------------- Licensing & sync ----------------------------- */
+
+export const licenseKeySchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^TAYS(-[A-Z0-9]{4}){4}$/, "invalid_license_key");
+
+export const licenseActivateInput = z.object({ key: licenseKeySchema });
+
+export const syncLinkInput = z.object({
+  cloudUrl: z.url().refine((u) => /^https?:\/\//.test(u), "invalid_url"),
+  username: z.string().trim().min(1),
+  password: z.string().min(1),
+  deviceName: z.string().trim().min(1).max(60).default("Desktop"),
+});
+export type SyncLinkInput = z.input<typeof syncLinkInput>;

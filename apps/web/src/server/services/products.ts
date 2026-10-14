@@ -1,15 +1,18 @@
-import { and, asc, count, desc, eq, like, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull, like, lte, ne, or, sql, type SQL } from "drizzle-orm";
+import type { z } from "zod";
 import { generateInternalEan13 } from "@/lib/barcode";
 import type {
   ProductCreateInput,
   ProductUpdateInput,
   StockAdjustmentInput,
+  productCreateInput,
   productListQuery,
 } from "@/lib/validators";
-import type { z } from "zod";
+import type { Ctx } from "../context";
 import type { Database, Executor } from "../db/client";
 import { brands, categories, products, stockMovements } from "../db/schema";
-import { AppError, isUniqueViolation } from "../errors";
+import { AppError } from "../errors";
+import { moveStock } from "./stock";
 
 const productColumns = {
   id: products.id,
@@ -33,9 +36,11 @@ function baseSelect(db: Executor) {
   return db
     .select(productColumns)
     .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id))
-    .leftJoin(brands, eq(products.brandId, brands.id));
+    .leftJoin(categories, and(eq(products.categoryId, categories.id), isNull(categories.deletedAt)))
+    .leftJoin(brands, and(eq(products.brandId, brands.id), isNull(brands.deletedAt)));
 }
+
+const live = (ctx: Ctx) => and(eq(products.storeId, ctx.storeId), isNull(products.deletedAt));
 
 export type ProductDTO = Awaited<ReturnType<typeof getProduct>>;
 
@@ -43,8 +48,12 @@ function escapeLike(value: string) {
   return value.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
-export async function listProducts(db: Executor, query: z.output<typeof productListQuery>) {
-  const filters: SQL[] = [];
+export async function listProducts(
+  db: Executor,
+  ctx: Ctx,
+  query: z.output<typeof productListQuery>,
+) {
+  const filters: (SQL | undefined)[] = [live(ctx)];
   if (!query.includeInactive) filters.push(eq(products.isActive, true));
   if (query.q) {
     const term = `%${escapeLike(query.q)}%`;
@@ -52,21 +61,18 @@ export async function listProducts(db: Executor, query: z.output<typeof productL
       or(
         sql`${products.name} like ${term} escape '\\'`,
         like(products.barcode, `${escapeLike(query.q)}%`),
-      )!,
+      ),
     );
   }
   if (query.categoryId) filters.push(eq(products.categoryId, query.categoryId));
   if (query.brandId) filters.push(eq(products.brandId, query.brandId));
   if (query.stock === "out") filters.push(lte(products.stock, 0));
-  if (query.stock === "low") {
-    filters.push(lte(products.stock, products.lowStockThreshold));
-  }
-  const where = filters.length ? and(...filters) : undefined;
+  if (query.stock === "low") filters.push(lte(products.stock, products.lowStockThreshold));
+  const where = and(...filters);
 
-  const desc_ = query.sort.startsWith("-");
+  const isDesc = query.sort.startsWith("-");
   const key = query.sort.replace(/^-/, "") as "name" | "stock" | "salePrice" | "createdAt";
-  const orderCol = products[key];
-  const order = desc_ ? desc(orderCol) : asc(orderCol);
+  const order = isDesc ? desc(products[key]) : asc(products[key]);
 
   const [rows, [{ total }]] = await Promise.all([
     baseSelect(db)
@@ -86,33 +92,38 @@ export async function listProducts(db: Executor, query: z.output<typeof productL
   };
 }
 
-export async function getProduct(db: Executor, id: number) {
-  const [row] = await baseSelect(db).where(eq(products.id, id));
+export async function getProduct(db: Executor, ctx: Ctx, id: string) {
+  const [row] = await baseSelect(db).where(and(eq(products.id, id), live(ctx)));
   if (!row) throw new AppError("NOT_FOUND");
   return row;
 }
 
-export async function findByBarcode(db: Executor, barcode: string) {
-  const [row] = await baseSelect(db).where(
-    and(eq(products.barcode, barcode), eq(products.isActive, true)),
-  );
+export async function findByBarcode(db: Executor, ctx: Ctx, barcode: string) {
+  const [row] = await baseSelect(db)
+    .where(and(eq(products.barcode, barcode), eq(products.isActive, true), live(ctx)))
+    // If an offline sync produced duplicates, prefer the most recent.
+    .orderBy(desc(products.updatedAt))
+    .limit(1);
   if (!row) throw new AppError("NOT_FOUND");
   return row;
 }
 
-export async function isBarcodeTaken(db: Executor, barcode: string, exceptId?: number) {
+export async function isBarcodeTaken(db: Executor, ctx: Ctx, barcode: string, exceptId?: string) {
   const [row] = await db
     .select({ id: products.id })
     .from(products)
-    .where(eq(products.barcode, barcode));
-  return Boolean(row && row.id !== exceptId);
+    .where(
+      and(live(ctx), eq(products.barcode, barcode), exceptId ? ne(products.id, exceptId) : undefined),
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
-/** Returns an internal EAN-13 barcode that is not used by any product yet. */
-export async function generateUniqueBarcode(db: Executor) {
+/** Returns an internal EAN-13 barcode that is not used in this store yet. */
+export async function generateUniqueBarcode(db: Executor, ctx: Ctx) {
   for (let attempt = 0; attempt < 20; attempt++) {
     const code = generateInternalEan13();
-    if (!(await isBarcodeTaken(db, code))) return code;
+    if (!(await isBarcodeTaken(db, ctx, code))) return code;
   }
   throw new AppError("INTERNAL_ERROR", "Could not generate a unique barcode");
 }
@@ -130,100 +141,93 @@ function assertPrices(input: { costPrice?: number; salePrice?: number }) {
   }
 }
 
-function mapWriteError(err: unknown): never {
-  if (isUniqueViolation(err, "barcode")) throw new AppError("BARCODE_TAKEN");
-  if (isUniqueViolation(err)) throw new AppError("NAME_TAKEN");
-  throw err;
-}
-
-export async function createProduct(db: Database, input: ProductCreateInput, userId: string) {
+export async function createProduct(
+  db: Database,
+  ctx: Ctx,
+  input: z.output<typeof productCreateInput>,
+) {
   assertPrices(input);
-  try {
-    const id = await db.transaction(async (tx) => {
-      const [row] = await tx
-        .insert(products)
-        .values({ ...input, createdById: userId })
-        .returning({ id: products.id });
-      if (input.stock > 0) {
-        await tx.insert(stockMovements).values({
-          productId: row.id,
-          change: input.stock,
-          stockAfter: input.stock,
-          reason: "initial",
-          userId,
-        });
-      }
-      return row.id;
-    });
-    return getProduct(db, id);
-  } catch (err) {
-    mapWriteError(err);
-  }
+  if (await isBarcodeTaken(db, ctx, input.barcode)) throw new AppError("BARCODE_TAKEN");
+  const { stock, ...fields } = input;
+  const id = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(products)
+      .values({ ...fields, storeId: ctx.storeId, stock: 0 })
+      .returning({ id: products.id });
+    if (stock > 0) {
+      await moveStock(tx, ctx, { productId: row.id, change: stock, reason: "initial" });
+    }
+    return row.id;
+  });
+  return getProduct(db, ctx, id);
 }
 
-export async function updateProduct(db: Database, id: number, input: ProductUpdateInput) {
-  const current = await getProduct(db, id);
+/** Convenience overload for callers holding the raw (input) shape. */
+export type CreateProductInput = ProductCreateInput;
+
+export async function updateProduct(
+  db: Database,
+  ctx: Ctx,
+  id: string,
+  input: ProductUpdateInput,
+) {
+  const current = await getProduct(db, ctx, id);
   assertPrices({
     costPrice: input.costPrice ?? current.costPrice,
     salePrice: input.salePrice ?? current.salePrice,
   });
-  try {
-    await db.update(products).set(input).where(eq(products.id, id));
-  } catch (err) {
-    mapWriteError(err);
+  if (input.barcode && (await isBarcodeTaken(db, ctx, input.barcode, id))) {
+    throw new AppError("BARCODE_TAKEN");
   }
-  return getProduct(db, id);
+  await db.update(products).set(input).where(and(eq(products.id, id), live(ctx)));
+  return getProduct(db, ctx, id);
 }
 
-export async function deleteProduct(db: Executor, id: number) {
-  // Past sales keep their snapshot (name, price…) and are unaffected.
-  const [row] = await db.delete(products).where(eq(products.id, id)).returning({ id: products.id });
+/** Soft delete: the product disappears; past sales keep their snapshot. */
+export async function deleteProduct(db: Executor, ctx: Ctx, id: string) {
+  const [row] = await db
+    .update(products)
+    .set({ deletedAt: new Date(), isActive: false })
+    .where(and(eq(products.id, id), live(ctx)))
+    .returning({ id: products.id });
   if (!row) throw new AppError("NOT_FOUND");
   return row;
 }
 
 export async function adjustStock(
   db: Database,
-  id: number,
+  ctx: Ctx,
+  id: string,
   input: StockAdjustmentInput,
-  userId: string,
 ) {
+  await getProduct(db, ctx, id);
   await db.transaction(async (tx) => {
-    const [row] = await tx
-      .update(products)
-      .set({ stock: sql`${products.stock} + ${input.change}` })
-      .where(
-        and(
-          eq(products.id, id),
-          // Never let an adjustment push stock below zero.
-          sql`${products.stock} + ${input.change} >= 0`,
-        ),
-      )
-      .returning({ stock: products.stock });
-    if (!row) {
-      const [exists] = await tx
-        .select({ id: products.id })
-        .from(products)
-        .where(eq(products.id, id));
-      throw new AppError(exists ? "INSUFFICIENT_STOCK" : "NOT_FOUND");
-    }
-    await tx.insert(stockMovements).values({
+    const moved = await moveStock(tx, ctx, {
       productId: id,
       change: input.change,
-      stockAfter: row.stock,
       reason: "adjustment",
       note: input.note,
-      userId,
+      // Never let an adjustment push stock below zero.
+      requireAvailable: input.change < 0,
     });
+    if (!moved) throw new AppError("INSUFFICIENT_STOCK");
   });
-  return getProduct(db, id);
+  return getProduct(db, ctx, id);
 }
 
-export async function listStockMovements(db: Executor, productId: number) {
+export async function listStockMovements(db: Executor, ctx: Ctx, productId: string) {
   return db
-    .select()
+    .select({
+      id: stockMovements.id,
+      change: stockMovements.change,
+      reason: stockMovements.reason,
+      refId: stockMovements.refId,
+      note: stockMovements.note,
+      userName: stockMovements.userName,
+      createdAt: stockMovements.createdAt,
+    })
     .from(stockMovements)
-    .where(eq(stockMovements.productId, productId))
+    .where(and(eq(stockMovements.productId, productId), eq(stockMovements.storeId, ctx.storeId)))
     .orderBy(desc(stockMovements.createdAt), desc(stockMovements.id))
-    .limit(100);
+    .limit(200);
 }

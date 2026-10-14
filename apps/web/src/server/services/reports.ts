@@ -1,81 +1,148 @@
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { reportQuery } from "@/lib/validators";
+import type { Ctx } from "../context";
 import type { Executor } from "../db/client";
-import { categories, products, saleItems, sales } from "../db/schema";
+import { categories, customerPayments, products, returnItems, saleItems, saleReturns, sales } from "../db/schema";
+import { col } from "../db/sql";
+import { customerBalanceSql } from "./customers";
+import { customers } from "../db/schema";
 
 type Query = z.output<typeof reportQuery>;
 
-export async function salesReport(db: Executor, query: Query) {
+const n = (v: unknown) => Number(v ?? 0);
+
+/**
+ * Sales report for a period. Figures are net of returns: refunds are
+ * deducted from revenue on the day they happen, and the cost of items put
+ * back in stock is deducted from the cost of goods sold.
+ */
+export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
   const from = new Date(query.from);
   const to = new Date(query.to);
-  const inRange = and(
+  const salesInRange = and(
+    eq(sales.storeId, ctx.storeId),
     eq(sales.status, "completed"),
     gte(sales.createdAt, from),
     lte(sales.createdAt, to),
   );
-  // Bucket by the client's local calendar day.
+  const returnsInRange = and(
+    eq(saleReturns.storeId, ctx.storeId),
+    gte(saleReturns.createdAt, from),
+    lte(saleReturns.createdAt, to),
+  );
+  // Bucket by the client's local calendar day (timestamps are in ms).
   const offsetSeconds = query.tzOffset * 60;
-  const day = sql<string>`strftime('%Y-%m-%d', ${sales.createdAt} + ${offsetSeconds}, 'unixepoch')`;
+  const dayOf = (col: unknown) =>
+    sql<string>`strftime('%Y-%m-%d', ${col} / 1000 + ${offsetSeconds}, 'unixepoch')`;
 
   const [totals] = await db
     .select({
-      revenue: sql<number>`coalesce(sum(${sales.total}), 0)`,
+      gross: sql<number>`coalesce(sum(${sales.total}), 0)`,
       cost: sql<number>`coalesce(sum(${sales.totalCost}), 0)`,
       discounts: sql<number>`coalesce(sum(${sales.discount}), 0)`,
+      onCredit: sql<number>`coalesce(sum(${sales.balanceDue}), 0)`,
       salesCount: sql<number>`count(*)`,
     })
     .from(sales)
-    .where(inRange);
+    .where(salesInRange);
+
+  const [refundTotals] = await db
+    .select({
+      refunds: sql<number>`coalesce(sum(${saleReturns.refundAmount}), 0)`,
+      restockedCost: sql<number>`coalesce(sum(${saleReturns.restockedCost}), 0)`,
+      count: sql<number>`count(*)`,
+    })
+    .from(saleReturns)
+    .where(returnsInRange);
 
   const [{ itemsSold }] = await db
     .select({ itemsSold: sql<number>`coalesce(sum(${saleItems.quantity}), 0)` })
     .from(saleItems)
     .innerJoin(sales, eq(saleItems.saleId, sales.id))
-    .where(inRange);
+    .where(salesInRange);
 
-  const daily = await db
+  const [{ received }] = await db
+    .select({ received: sql<number>`coalesce(sum(${customerPayments.amount}), 0)` })
+    .from(customerPayments)
+    .where(
+      and(
+        eq(customerPayments.storeId, ctx.storeId),
+        gte(customerPayments.createdAt, from),
+        lte(customerPayments.createdAt, to),
+      ),
+    );
+
+  const saleDay = dayOf(sales.createdAt);
+  const dailySales = await db
     .select({
-      date: day,
+      date: saleDay,
       revenue: sql<number>`sum(${sales.total})`,
       cost: sql<number>`sum(${sales.totalCost})`,
       salesCount: sql<number>`count(*)`,
     })
     .from(sales)
-    .where(inRange)
-    .groupBy(day)
-    .orderBy(day);
+    .where(salesInRange)
+    .groupBy(saleDay);
 
-  const qty = sql<number>`sum(${saleItems.quantity})`;
+  const returnDay = dayOf(saleReturns.createdAt);
+  const dailyReturns = await db
+    .select({
+      date: returnDay,
+      refunds: sql<number>`sum(${saleReturns.refundAmount})`,
+      restockedCost: sql<number>`sum(${saleReturns.restockedCost})`,
+    })
+    .from(saleReturns)
+    .where(returnsInRange)
+    .groupBy(returnDay);
+
+  const days = new Map<string, { revenue: number; cost: number; salesCount: number }>();
+  for (const d of dailySales) {
+    days.set(d.date, { revenue: n(d.revenue), cost: n(d.cost), salesCount: n(d.salesCount) });
+  }
+  for (const r of dailyReturns) {
+    const d = days.get(r.date) ?? { revenue: 0, cost: 0, salesCount: 0 };
+    d.revenue -= n(r.refunds);
+    d.cost -= n(r.restockedCost);
+    days.set(r.date, d);
+  }
+
+  // Item-level figures net of the refunds made on each sale line.
+  const returnedQty = sql<number>`coalesce((select sum(${returnItems.quantity}) from ${returnItems} where ${returnItems.saleItemId} = ${col("sale_items", "id")}), 0)`;
+  const returnedAmount = sql<number>`coalesce((select sum(${returnItems.refundAmount}) from ${returnItems} where ${returnItems.saleItemId} = ${col("sale_items", "id")}), 0)`;
+  const netQty = sql<number>`sum(${saleItems.quantity} - ${returnedQty})`;
+  const netRevenue = sql<number>`sum(${saleItems.lineTotal} - ${returnedAmount})`;
+  const netCost = sql<number>`sum(${saleItems.unitCost} * (${saleItems.quantity} - ${returnedQty}))`;
+
   const topProducts = await db
     .select({
       productId: saleItems.productId,
       name: saleItems.productName,
-      quantity: qty,
-      revenue: sql<number>`sum(${saleItems.lineTotal})`,
-      cost: sql<number>`sum(${saleItems.unitCost} * ${saleItems.quantity})`,
+      quantity: netQty,
+      revenue: netRevenue,
+      cost: netCost,
     })
     .from(saleItems)
     .innerJoin(sales, eq(saleItems.saleId, sales.id))
-    .where(inRange)
+    .where(salesInRange)
     .groupBy(saleItems.productId, saleItems.productName)
-    .orderBy(desc(sql`sum(${saleItems.lineTotal})`))
+    .orderBy(desc(netRevenue))
     .limit(10);
 
   const byCategory = await db
     .select({
       categoryId: categories.id,
       name: categories.name,
-      revenue: sql<number>`sum(${saleItems.lineTotal})`,
-      quantity: qty,
+      revenue: netRevenue,
+      quantity: netQty,
     })
     .from(saleItems)
     .innerJoin(sales, eq(saleItems.saleId, sales.id))
     .leftJoin(products, eq(saleItems.productId, products.id))
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(inRange)
+    .where(salesInRange)
     .groupBy(categories.id, categories.name)
-    .orderBy(desc(sql`sum(${saleItems.lineTotal})`));
+    .orderBy(desc(netRevenue));
 
   const byPaymentMethod = await db
     .select({
@@ -84,52 +151,60 @@ export async function salesReport(db: Executor, query: Query) {
       salesCount: sql<number>`count(*)`,
     })
     .from(sales)
-    .where(inRange)
+    .where(salesInRange)
     .groupBy(sales.paymentMethod);
 
-  const revenue = Number(totals.revenue);
-  const cost = Number(totals.cost);
-  const salesCount = Number(totals.salesCount);
+  const revenue = n(totals.gross) - n(refundTotals.refunds);
+  const cost = n(totals.cost) - n(refundTotals.restockedCost);
+  const salesCount = n(totals.salesCount);
 
   return {
     summary: {
       revenue,
+      grossSales: n(totals.gross),
+      refunds: n(refundTotals.refunds),
+      returnsCount: n(refundTotals.count),
       cost,
       profit: revenue - cost,
       margin: revenue > 0 ? (revenue - cost) / revenue : 0,
-      discounts: Number(totals.discounts),
+      discounts: n(totals.discounts),
       salesCount,
-      itemsSold: Number(itemsSold),
-      averageTicket: salesCount > 0 ? Math.round(revenue / salesCount) : 0,
+      itemsSold: n(itemsSold),
+      averageTicket: salesCount > 0 ? Math.round(n(totals.gross) / salesCount) : 0,
+      soldOnCredit: n(totals.onCredit),
+      paymentsReceived: n(received),
     },
-    daily: daily.map((d) => ({
-      date: d.date,
-      revenue: Number(d.revenue),
-      profit: Number(d.revenue) - Number(d.cost),
-      salesCount: Number(d.salesCount),
-    })),
+    daily: [...days.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, d]) => ({
+        date,
+        revenue: d.revenue,
+        profit: d.revenue - d.cost,
+        salesCount: d.salesCount,
+      })),
     topProducts: topProducts.map((p) => ({
       ...p,
-      quantity: Number(p.quantity),
-      revenue: Number(p.revenue),
-      profit: Number(p.revenue) - Number(p.cost),
+      quantity: n(p.quantity),
+      revenue: n(p.revenue),
+      profit: n(p.revenue) - n(p.cost),
     })),
-    byCategory: byCategory.map((c) => ({
-      ...c,
-      revenue: Number(c.revenue),
-      quantity: Number(c.quantity),
-    })),
+    byCategory: byCategory.map((c) => ({ ...c, revenue: n(c.revenue), quantity: n(c.quantity) })),
     byPaymentMethod: byPaymentMethod.map((p) => ({
       ...p,
-      revenue: Number(p.revenue),
-      salesCount: Number(p.salesCount),
+      revenue: n(p.revenue),
+      salesCount: n(p.salesCount),
     })),
   };
 }
 
 export type SalesReport = Awaited<ReturnType<typeof salesReport>>;
 
-export async function inventoryOverview(db: Executor) {
+export async function inventoryOverview(db: Executor, ctx: Ctx) {
+  const live = and(
+    eq(products.storeId, ctx.storeId),
+    eq(products.isActive, true),
+    isNull(products.deletedAt),
+  );
   const [totals] = await db
     .select({
       productCount: sql<number>`count(*)`,
@@ -139,7 +214,7 @@ export async function inventoryOverview(db: Executor) {
       outOfStockCount: sql<number>`sum(case when ${products.stock} <= 0 then 1 else 0 end)`,
     })
     .from(products)
-    .where(eq(products.isActive, true));
+    .where(live);
 
   const lowStock = await db
     .select({
@@ -149,16 +224,22 @@ export async function inventoryOverview(db: Executor) {
       lowStockThreshold: products.lowStockThreshold,
     })
     .from(products)
-    .where(and(eq(products.isActive, true), lte(products.stock, products.lowStockThreshold)))
+    .where(and(live, lte(products.stock, products.lowStockThreshold)))
     .orderBy(products.stock, products.name)
     .limit(8);
 
+  const [{ receivables }] = await db
+    .select({ receivables: sql<number>`coalesce(sum(${customerBalanceSql}), 0)` })
+    .from(customers)
+    .where(and(eq(customers.storeId, ctx.storeId), isNull(customers.deletedAt)));
+
   return {
-    productCount: Number(totals.productCount),
-    stockValueCost: Number(totals.stockValueCost),
-    stockValueRetail: Number(totals.stockValueRetail),
-    lowStockCount: Number(totals.lowStockCount ?? 0),
-    outOfStockCount: Number(totals.outOfStockCount ?? 0),
+    productCount: n(totals.productCount),
+    stockValueCost: n(totals.stockValueCost),
+    stockValueRetail: n(totals.stockValueRetail),
+    lowStockCount: n(totals.lowStockCount),
+    outOfStockCount: n(totals.outOfStockCount),
+    receivables: n(receivables),
     lowStock,
   };
 }

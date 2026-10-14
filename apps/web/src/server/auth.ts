@@ -19,11 +19,17 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  user: {
+    additionalFields: {
+      // The store the user belongs to. Set by the server only.
+      storeId: { type: "string", required: false, input: false },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
-    // Accounts are created by an administrator (or by the first-run setup),
-    // never through public sign-up.
+    // Accounts are created by the server (setup, sign-up, store admins),
+    // never through Better Auth's public sign-up endpoint.
     disableSignUp: true,
   },
   session: {
@@ -33,6 +39,8 @@ export const auth = betterAuth({
   },
   plugins: [
     username({ minUsernameLength: 3, maxUsernameLength: 32 }),
+    // Provides roles. Its HTTP endpoints are blocked (see api/index.ts):
+    // they are not store-aware, so user management goes through /api/users.
     admin({ defaultRole: "user", adminRoles: ["admin"] }),
     nextCookies(),
   ],
