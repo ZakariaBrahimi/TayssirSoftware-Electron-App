@@ -170,6 +170,13 @@ Desktops check their license in with the server every 12 hours when online: rene
 
 Without `LICENSE_PUBLIC_KEY`, a local install is unlicensed and unrestricted, which is handy for development or for your own shop.
 
+## Stock alerts and reorder
+
+- **Runs out in X days.** Each product's sales speed is the average of the last 4 weeks of the stock ledger (sales, minus voids and restocked returns; shorter for new products). Stock divided by that speed gives the days left.
+- **Bell.** A bell on every screen counts the products that are out, low (under their alert level) or running out within the store's alert window (Settings → Store, 7 days by default), and lists the most urgent.
+- **Reorder page** (admins). Those products grouped by the supplier of their last purchase, with a suggested quantity covering the store's reorder period (14 days by default) at the last purchase price. **Create purchase** opens a prefilled purchase for that supplier (plans with suppliers). **Use suggested alert levels** sets each product's alert level to what it sells during the alert window.
+- **Daily summary** (cloud stores, and desktops linked to them). Settings → Notifications: Telegram chats (via a one-time link to the platform's bot) and email addresses get one message a day at the chosen hour and language, only when something needs attention. The platform owner sets `TELEGRAM_BOT_TOKEN` and/or `SMTP_URL` + `MAIL_FROM` on the server (see [deploy/README.md](deploy/README.md)).
+
 ## Landing page
 
 In cloud mode, signed-out visitors of `/` see a public landing page (English, French, Arabic) with the features, pricing, questions and links to sign-up and the Windows download. Signed-in users go straight to the app, and local installs keep opening the sign-in screen.
@@ -280,6 +287,10 @@ Each device (desktop, tablet or phone) can then **install the app** from the bro
 | `LICENSE_PUBLIC_KEY`            |                          | Verifies them; without it, local installs are not licensed    |
 | `LICENSE_SERVER_URL`            |                          | Local: the cloud deployment used for activation and sync      |
 | `SYNC_INTERVAL_MS`              | `60000`                  | Local: background sync interval                               |
+| `TELEGRAM_BOT_TOKEN`            |                          | Cloud: bot for daily stock summaries (from @BotFather)        |
+| `TELEGRAM_BOT_USERNAME`         | from the token           | Cloud: the bot's @username, if `getMe` should be skipped      |
+| `SMTP_URL` / `MAIL_FROM`        |                          | Cloud: SMTP service and sender for summaries by email         |
+| `DIGEST_TIME_ZONE`              | `Africa/Algiers`         | Cloud: time zone of the summaries' hour                       |
 | `MIGRATIONS_DIR`                |                          | Override the migrations folder (set by the desktop app)       |
 | `TAYSSIR_HOST` / `TAYSSIR_PORT` | `127.0.0.1` / random     | Desktop app: where the local server listens                   |
 

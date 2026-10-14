@@ -141,6 +141,25 @@ and push a tag such as `desktop-v2.1.0`. The installers appear under GitHub
 Releases, which is where the landing page's download button and the
 auto-update point by default.
 
+## 5. Stock summaries on Telegram and email (optional)
+
+Shops can get a daily summary of products that are out, low or about to run
+out (Settings → Notifications).
+
+**Telegram (free):**
+
+1. In Telegram, open **@BotFather**, send `/newbot`, choose a name (e.g. _Mizan Alerts_)
+   and a username ending in `bot` (e.g. `MizanAlertsBot`).
+2. Copy the token it gives you into `deploy/.env` as `TELEGRAM_BOT_TOKEN=...`.
+3. `sudo ./update.sh` (or `docker compose up -d`). The log shows "Telegram bot connected".
+
+**Email:** set `SMTP_URL` and `MAIL_FROM` in `deploy/.env` with the SMTP
+details of any email service (Brevo's free plan sends 300 emails a day; Zoho
+Mail and Gmail app passwords also work), then restart.
+
+Summaries go out at the hour each shop chooses, in Algeria time
+(`DIGEST_TIME_ZONE` changes it).
+
 ## Everyday operations
 
 All commands run on the server from `/opt/mizan/deploy`.

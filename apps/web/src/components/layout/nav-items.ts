@@ -4,6 +4,7 @@ import {
   Gem,
   LayoutDashboard,
   Package,
+  PackageSearch,
   Receipt,
   Settings,
   ShoppingCart,
@@ -19,6 +20,7 @@ export type NavKey =
   | "shifts"
   | "products"
   | "purchases"
+  | "reorder"
   | "sales"
   | "customers"
   | "suppliers"
@@ -40,6 +42,7 @@ export const navItems: NavItem[] = [
   { href: "/sales", key: "sales", icon: Receipt },
   { href: "/customers", key: "customers", icon: Users },
   { href: "/products", key: "products", icon: Package },
+  { href: "/reorder", key: "reorder", icon: PackageSearch, adminOnly: true },
   { href: "/purchases", key: "purchases", icon: Truck, adminOnly: true },
   { href: "/suppliers", key: "suppliers", icon: Contact, adminOnly: true },
   { href: "/reports", key: "reports", icon: BarChart3, adminOnly: true },

@@ -3,7 +3,7 @@
 import { Loader2, Trash2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminOnly } from "@/components/admin-only";
 import { PageHeader } from "@/components/page-header";
@@ -32,6 +32,7 @@ import { useMoney } from "@/hooks/use-settings";
 import { useRouter } from "@/i18n/navigation";
 import { type PickedProduct, ProductPicker } from "../products/product-picker";
 import { useSuppliers } from "../suppliers/api";
+import { PURCHASE_PREFILL_KEY, type PurchasePrefill } from "../stock/api";
 import { useCreatePurchase } from "./api";
 
 type Line = {
@@ -54,8 +55,32 @@ export function PurchaseForm() {
   const create = useCreatePurchase();
 
   const [supplierId, setSupplierId] = useState<string>(params.get("supplier") ?? NONE);
+  // Clear the reorder prefill once it is in the form.
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(PURCHASE_PREFILL_KEY);
+    } catch {
+      // Storage unavailable: nothing to clear.
+    }
+  }, []);
   const [reference, setReference] = useState("");
-  const [lines, setLines] = useState<Line[]>([]);
+  // Lines prepared on the reorder page, read once. The form only renders
+  // in the browser (after the session loads), so storage is available.
+  const [lines, setLines] = useState<Line[]>(() => {
+    try {
+      const raw = sessionStorage.getItem(PURCHASE_PREFILL_KEY);
+      if (!raw) return [];
+      return (JSON.parse(raw) as PurchasePrefill).map((p) => ({
+        productId: p.productId,
+        name: p.name,
+        currentCost: p.currentCost,
+        quantity: String(p.quantity),
+        unitCost: String(money.toMajor(p.unitCost)),
+      }));
+    } catch {
+      return [];
+    }
+  });
   const [paid, setPaid] = useState("");
   const [note, setNote] = useState("");
 

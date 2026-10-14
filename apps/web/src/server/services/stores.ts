@@ -57,5 +57,7 @@ export function publicStore(s: Store) {
     currency: s.currency,
     receiptFooter: s.receiptFooter,
     requireShift: s.requireShift,
+    stockAlertDays: s.stockAlertDays,
+    reorderCoverDays: s.reorderCoverDays,
   };
 }

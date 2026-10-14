@@ -18,7 +18,7 @@
  * - Money is stored as integers in the currency's minor unit.
  */
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { uuidv7 } from "@/lib/ids";
 import {
   BILLING_PERIODS,
@@ -170,6 +170,10 @@ export const stores = sqliteTable("stores", {
   receiptFooter: text("receipt_footer"),
   /** When true, sales require an open cash register shift. */
   requireShift: integer("require_shift", { mode: "boolean" }).notNull().default(false),
+  /** Stock alerts: warn when stock covers fewer days of sales than this. */
+  stockAlertDays: integer("stock_alert_days").notNull().default(7),
+  /** Reorder suggestions buy enough for this many days of sales. */
+  reorderCoverDays: integer("reorder_cover_days").notNull().default(14),
   // Cloud subscription (managed by the platform, never accepted from a sync).
   plan: text("plan").notNull().default("trial"),
   subscriptionStatus: text("subscription_status", { enum: SUBSCRIPTION_STATUSES })
@@ -766,6 +770,47 @@ export const SYNC_TABLES = {
 } as const;
 
 export type SyncTableName = keyof typeof SYNC_TABLES;
+
+/* -------------------------------------------------------------------------- */
+/*                Stock alert summaries (cloud only, not synced)              */
+/* -------------------------------------------------------------------------- */
+
+/** When and in which language a store gets its daily stock summary. */
+export const alertSettings = sqliteTable("alert_settings", {
+  storeId: text("store_id").primaryKey(),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  /** Local hour (Algeria time by default) the summary is sent at. */
+  digestHour: integer("digest_hour").notNull().default(8),
+  locale: text("locale").notNull().default("fr"),
+  /** Local date (yyyy-mm-dd) of the last summary, so it goes once a day. */
+  lastSentOn: text("last_sent_on"),
+  ...timestamps,
+});
+
+export const ALERT_CHANNEL_KINDS = ["telegram", "email"] as const;
+export type AlertChannelKind = (typeof ALERT_CHANNEL_KINDS)[number];
+
+/** Where a store's summaries go: Telegram chats and email addresses. */
+export const alertChannels = sqliteTable(
+  "alert_channels",
+  {
+    id: id(),
+    storeId: storeId(),
+    kind: text("kind", { enum: ALERT_CHANNEL_KINDS }).notNull(),
+    /** Telegram chat id or email address; null while a Telegram link waits. */
+    address: text("address"),
+    /** Telegram name shown in the settings. */
+    label: text("label"),
+    /** One-time code of a pending Telegram link (t.me/<bot>?start=<code>). */
+    linkCode: text("link_code"),
+    linkExpiresAt: ms("link_expires_at"),
+    ...timestamps,
+  },
+  (t) => [
+    index("alert_channels_store_idx").on(t.storeId),
+    uniqueIndex("alert_channels_link_code_idx").on(t.linkCode),
+  ],
+);
 
 /**
  * Change log filled by SQLite triggers (see the sync_triggers migration):

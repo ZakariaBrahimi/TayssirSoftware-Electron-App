@@ -249,6 +249,10 @@ export const storeSettingsInput = z.object({
   currency: currencySchema,
   receiptFooter: optionalText(300),
   requireShift: z.boolean().default(false),
+  /** Warn when stock covers fewer days of sales than this. */
+  stockAlertDays: z.number().int().min(1).max(90).default(7),
+  /** Reorder suggestions cover this many days of sales. */
+  reorderCoverDays: z.number().int().min(1).max(180).default(14),
 });
 export type StoreSettingsInput = z.infer<typeof storeSettingsInput>;
 
@@ -306,3 +310,11 @@ export const syncLinkInput = z.object({
   deviceName: z.string().trim().min(1).max(60).default("Desktop"),
 });
 export type SyncLinkInput = z.input<typeof syncLinkInput>;
+
+export const thresholdsInput = z.object({
+  items: z
+    .array(z.object({ productId: id, threshold: z.number().int().min(0).max(1_000_000) }))
+    .min(1)
+    .max(2000),
+});
+export type ThresholdsInput = z.infer<typeof thresholdsInput>;

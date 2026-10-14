@@ -29,6 +29,13 @@
       "when": 1791953730528,
       "tag": "0003_subscription_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791980266221,
+      "tag": "0004_stock_alerts",
+      "breakpoints": true
     }
   ]
 }

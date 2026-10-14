@@ -29,6 +29,19 @@ export async function register() {
     backup.startAutoBackup(db);
   }
 
+  if (getMode() === "cloud") {
+    const { db } = await import("./server/db");
+    const alerts = await import("./server/alerts/service");
+    alerts.startAlertScheduler(db);
+    const telegram = await import("./server/alerts/telegram");
+    if (telegram.telegramAvailable() && process.env.BETTER_AUTH_URL?.startsWith("https://")) {
+      telegram
+        .setTelegramWebhook(process.env.BETTER_AUTH_URL)
+        .then(() => console.log("✔ Telegram bot connected"))
+        .catch((err) => console.error("Telegram webhook not set:", err));
+    }
+  }
+
   if (getMode() === "local") {
     const { db } = await import("./server/db");
     const { startSyncWorker } = await import("./server/sync/client");

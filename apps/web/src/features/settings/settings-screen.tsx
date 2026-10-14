@@ -12,6 +12,7 @@ import { BackupPanel } from "./backup-panel";
 import { CatalogManager } from "./catalog-manager";
 import { DataPanel } from "./data-panel";
 import { LicensePanel } from "./license-panel";
+import { NotificationsPanel } from "./notifications-panel";
 import { StoreSettingsForm } from "./store-settings-form";
 import { SyncPanel } from "./sync-panel";
 import { UsersManager } from "./users-manager";
@@ -21,6 +22,7 @@ const TABS = [
   "categories",
   "brands",
   "users",
+  "notifications",
   "license",
   "sync",
   "data",
@@ -67,6 +69,9 @@ export function SettingsScreen() {
         </TabsContent>
         <TabsContent value="users" className="mt-4">
           <UsersManager />
+        </TabsContent>
+        <TabsContent value="notifications" className="mt-4">
+          <NotificationsPanel />
         </TabsContent>
         <TabsContent value="license" className="mt-4">
           <LicensePanel />

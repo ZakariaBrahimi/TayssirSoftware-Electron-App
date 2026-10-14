@@ -35,9 +35,11 @@ const schema = z.object({
     .regex(/^[A-Za-z]{3}$/, "invalid_currency"),
   receiptFooter: z.string().trim().max(300),
   requireShift: z.boolean(),
+  stockAlertDays: z.coerce.number().int().min(1, "range_1_90").max(90, "range_1_90"),
+  reorderCoverDays: z.coerce.number().int().min(1, "range_1_180").max(180, "range_1_180"),
 });
 
-type Values = z.infer<typeof schema>;
+type Values = z.output<typeof schema>;
 
 export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
   const t = useTranslations("settings");
@@ -45,7 +47,7 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
   const errorMessage = useErrorMessage();
   const qc = useQueryClient();
 
-  const form = useForm<Values>({
+  const form = useForm<z.input<typeof schema>, unknown, Values>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: settings.name,
@@ -54,6 +56,8 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
       currency: settings.currency,
       receiptFooter: settings.receiptFooter ?? "",
       requireShift: settings.requireShift,
+      stockAlertDays: settings.stockAlertDays,
+      reorderCoverDays: settings.reorderCoverDays,
     },
   });
 
@@ -68,6 +72,8 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
             phone: v.phone || null,
             receiptFooter: v.receiptFooter || null,
             requireShift: v.requireShift,
+            stockAlertDays: v.stockAlertDays,
+            reorderCoverDays: v.reorderCoverDays,
           },
         }),
       ),
@@ -161,6 +167,35 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
                 </FormItem>
               )}
             />
+            <fieldset className="grid gap-3 rounded-lg border p-3">
+              <legend className="px-1 text-sm font-medium">{t("stockAlerts")}</legend>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {(["stockAlertDays", "reorderCoverDays"] as const).map((name) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t(name)}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            className="w-28"
+                            {...field}
+                            value={field.value as number}
+                          />
+                        </FormControl>
+                        <FormDescription>{t(`${name}Hint`)}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </fieldset>
             <div>
               <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty}>
                 {mutation.isPending && <Loader2 className="animate-spin" />}

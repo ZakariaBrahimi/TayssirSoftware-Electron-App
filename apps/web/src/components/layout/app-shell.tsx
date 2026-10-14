@@ -13,6 +13,7 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 import { StatusBanner } from "./status-banner";
+import { StockBell } from "./stock-bell";
 import { SyncIndicator } from "./sync-indicator";
 import { UserMenu } from "./user-menu";
 
@@ -117,6 +118,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="ms-auto flex items-center gap-1">
             <SyncIndicator />
+            <StockBell />
             <UserMenu />
           </div>
         </header>

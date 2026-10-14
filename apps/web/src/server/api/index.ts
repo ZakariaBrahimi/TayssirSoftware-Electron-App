@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { auth } from "../auth";
 import { AppError } from "../errors";
 import { type AppEnv, requireAuth } from "./context";
+import { alertsRoutes, telegramWebhookRoutes } from "./routes/alerts";
 import { backupRoutes } from "./routes/backup";
 import { billingRoutes, subscriptionRoutes } from "./routes/billing";
 import { brandsRoutes, categoriesRoutes } from "./routes/catalog";
@@ -16,6 +17,7 @@ import { purchasesRoutes } from "./routes/purchases";
 import { reportsRoutes } from "./routes/reports";
 import { salesRoutes } from "./routes/sales";
 import { shiftsRoutes } from "./routes/shifts";
+import { stockRoutes } from "./routes/stock";
 import { meRoutes, settingsRoutes, usersRoutes } from "./routes/store";
 import { syncClientRoutes, syncDevicesRoutes, syncServerRoutes } from "./routes/sync";
 
@@ -30,6 +32,8 @@ const protectedRoutes = new Hono<AppEnv>()
   .route("/suppliers", suppliersRoutes)
   .route("/purchases", purchasesRoutes)
   .route("/shifts", shiftsRoutes)
+  .route("/stock", stockRoutes)
+  .route("/alerts", alertsRoutes)
   .route("/reports", reportsRoutes)
   .route("/settings", settingsRoutes)
   .route("/users", usersRoutes)
@@ -54,6 +58,7 @@ export const app = new Hono()
   .route("/licenses", licenseServerRoutes)
   .route("/sync", syncServerRoutes)
   .route("/platform", platformRoutes)
+  .route("/telegram", telegramWebhookRoutes)
   .route("/billing", billingRoutes)
   .route("/", protectedRoutes);
 
