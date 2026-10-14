@@ -19,11 +19,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorMessage } from "@/hooks/use-error-message";
 import type { StoreSettings } from "@/hooks/use-settings";
 import { api, unwrap } from "@/lib/api-client";
+import { SCALE_BARCODE_MODES } from "@/lib/validators";
 
 const schema = z.object({
   name: z.string().trim().min(1, "required").max(120),
@@ -37,6 +45,7 @@ const schema = z.object({
   requireShift: z.boolean(),
   stockAlertDays: z.coerce.number().int().min(1, "range_1_90").max(90, "range_1_90"),
   reorderCoverDays: z.coerce.number().int().min(1, "range_1_180").max(180, "range_1_180"),
+  scaleBarcodes: z.enum(SCALE_BARCODE_MODES),
 });
 
 type Values = z.output<typeof schema>;
@@ -58,6 +67,7 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
       requireShift: settings.requireShift,
       stockAlertDays: settings.stockAlertDays,
       reorderCoverDays: settings.reorderCoverDays,
+      scaleBarcodes: settings.scaleBarcodes,
     },
   });
 
@@ -74,6 +84,7 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
             requireShift: v.requireShift,
             stockAlertDays: v.stockAlertDays,
             reorderCoverDays: v.reorderCoverDays,
+            scaleBarcodes: v.scaleBarcodes,
           },
         }),
       ),
@@ -164,6 +175,30 @@ export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
                   <FormControl>
                     <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="scaleBarcodes"
+              render={({ field }) => (
+                <FormItem className="rounded-lg border p-3">
+                  <FormLabel>{t("scaleBarcodes")}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full sm:w-80">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SCALE_BARCODE_MODES.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {t(`scale_${m}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>{t("scaleBarcodesHint")}</FormDescription>
                 </FormItem>
               )}
             />

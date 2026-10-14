@@ -6,6 +6,7 @@ import type { Database, Executor } from "../db/client";
 import { products, purchaseItems, purchases, supplierPayments } from "../db/schema";
 import { col } from "../db/sql";
 import { AppError } from "../errors";
+import { isMeasured, lineAmount } from "@/lib/quantity";
 import { moveStock } from "./stock";
 import { getSupplier } from "./suppliers";
 
@@ -45,12 +46,15 @@ export async function createPurchase(
     const lines = input.items.map((item) => {
       const product = byId.get(item.productId);
       if (!product) throw new AppError("NOT_FOUND", undefined, { productId: item.productId });
+      if (!isMeasured(product.unit) && !Number.isInteger(item.quantity)) {
+        throw new AppError("QUANTITY_WHOLE", undefined, { name: product.name });
+      }
       return {
         productId: item.productId,
         productName: product.name,
         quantity: item.quantity,
         unitCost: item.unitCost,
-        lineTotal: item.quantity * item.unitCost,
+        lineTotal: lineAmount(item.unitCost, item.quantity),
       };
     });
     const total = lines.reduce((s, l) => s + l.lineTotal, 0);

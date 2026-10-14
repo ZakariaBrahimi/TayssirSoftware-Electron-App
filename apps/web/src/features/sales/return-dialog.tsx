@@ -24,6 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useErrorMessage } from "@/hooks/use-error-message";
 import { useMoney } from "@/hooks/use-settings";
+import { isMeasured, round3 } from "@/lib/quantity";
 import { lineRefund } from "@/lib/refunds";
 import { type Sale, useCreateReturn } from "./api";
 
@@ -65,7 +66,7 @@ function ReturnForm({ sale, onDone }: { sale: Sale; onDone: () => void }) {
   const [reason, setReason] = useState("");
 
   const lines = sale.items.map((item) => {
-    const returnable = item.quantity - item.returnedQuantity;
+    const returnable = round3(item.quantity - item.returnedQuantity);
     const qty = Math.min(returnable, Math.max(0, quantities[item.id] ?? 0));
     return {
       item,
@@ -118,14 +119,20 @@ function ReturnForm({ sale, onDone }: { sale: Sale; onDone: () => void }) {
             </div>
             <Input
               type="number"
-              inputMode="numeric"
+              inputMode={isMeasured(item.unit) ? "decimal" : "numeric"}
+              step={isMeasured(item.unit) ? "any" : 1}
               min={0}
               max={returnable}
               disabled={returnable === 0}
               value={qty || ""}
               placeholder="0"
               onChange={(e) =>
-                setQuantities((q) => ({ ...q, [item.id]: Math.floor(Number(e.target.value) || 0) }))
+                setQuantities((q) => ({
+                  ...q,
+                  [item.id]: isMeasured(item.unit)
+                    ? round3(Number(e.target.value) || 0)
+                    : Math.floor(Number(e.target.value) || 0),
+                }))
               }
               className="h-8 w-20 text-center tabular-nums"
               aria-label={item.productName}

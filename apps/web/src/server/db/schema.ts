@@ -174,6 +174,8 @@ export const stores = sqliteTable("stores", {
   stockAlertDays: integer("stock_alert_days").notNull().default(7),
   /** Reorder suggestions buy enough for this many days of sales. */
   reorderCoverDays: integer("reorder_cover_days").notNull().default(14),
+  /** Label-scale barcodes: off, or the 5 digits hold a weight / a price. */
+  scaleBarcodes: text("scale_barcodes").notNull().default("off"),
   // Cloud subscription (managed by the platform, never accepted from a sync).
   plan: text("plan").notNull().default("trial"),
   subscriptionStatus: text("subscription_status", { enum: SUBSCRIPTION_STATUSES })
@@ -231,6 +233,10 @@ export const products = sqliteTable(
     /** Cache of SUM(stock_movements.change); recomputed after a sync. */
     stock: integer("stock").notNull().default(0),
     lowStockThreshold: integer("low_stock_threshold").notNull().default(5),
+    /** piece, or a measured unit (kg, g, l, m) sold in fractions. */
+    unit: text("unit").notNull().default("piece"),
+    /** Item code programmed in a label scale (see stores.scaleBarcodes). */
+    scaleCode: text("scale_code"),
     categoryId: text("category_id"),
     brandId: text("brand_id"),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),

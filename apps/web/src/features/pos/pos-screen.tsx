@@ -31,6 +31,15 @@ import { useCurrentShift } from "../shifts/api";
 import { CartPanel } from "./cart-panel";
 import { CheckoutDialog } from "./checkout-dialog";
 import { type CartProduct, useCart } from "./use-cart";
+import { WeightDialog } from "./weight-dialog";
+import {
+  formatQuantity,
+  formatWithUnit,
+  isMeasured,
+  round3,
+  UNIT_SYMBOLS,
+  type Unit,
+} from "@/lib/quantity";
 
 export function PosScreen() {
   const t = useTranslations("pos");
@@ -54,16 +63,24 @@ export function PosScreen() {
 
   const focusInput = () => setTimeout(() => inputRef.current?.focus(), 0);
 
+  // Weighed products clicked or typed in: ask for the weight first.
+  const [weighing, setWeighing] = useState<CartProduct | null>(null);
+
   const addToCart = useCallback(
-    (product: CartProduct) => {
-      const inCart = cart.lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
-      if (product.stock <= inCart) {
-        toast.error(t("notEnoughStock", { available: product.stock }));
+    (product: CartProduct, quantity?: number) => {
+      if (quantity === undefined && isMeasured(product.unit)) {
+        setWeighing(product);
         return;
       }
-      cart.add(product);
+      const qty = quantity ?? 1;
+      const inCart = cart.lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
+      if (round3(product.stock - inCart - qty) < 0) {
+        toast.error(t("notEnoughStock", { available: formatQuantity(product.stock) }));
+        return;
+      }
+      cart.add(product, qty);
     },
-    [cart, t],
+    [cart, t, setWeighing],
   );
 
   // Barcode scanners type the code then press Enter.
@@ -73,7 +90,8 @@ export function PosScreen() {
     setLooking(true);
     try {
       const product = await fetchProductByBarcode(code);
-      addToCart(product);
+      // A scale label carries the weight: add it as is.
+      addToCart(product, product.scaleQuantity ?? undefined);
       setSearch("");
     } catch (err) {
       const only = products.data?.rows.length === 1 ? products.data.rows[0] : null;
@@ -193,6 +211,12 @@ export function PosScreen() {
                     <span className="flex items-end justify-between gap-2">
                       <span className="font-semibold tabular-nums">
                         {money.format(p.salePrice)}
+                        {isMeasured(p.unit) && (
+                          <span className="text-muted-foreground text-xs font-normal">
+                            {" "}
+                            / {UNIT_SYMBOLS[p.unit as Unit]}
+                          </span>
+                        )}
                       </span>
                       {out ? (
                         <Badge variant="destructive">{t("outOfStock")}</Badge>
@@ -203,7 +227,11 @@ export function PosScreen() {
                             p.stock <= p.lowStockThreshold && "text-warning",
                           )}
                         >
-                          {t("inStock", { count: p.stock })}
+                          {isMeasured(p.unit)
+                            ? t("inStockMeasured", {
+                                amount: formatWithUnit(p.stock, p.unit),
+                              })
+                            : t("inStock", { count: p.stock })}
                         </span>
                       )}
                     </span>
@@ -319,6 +347,18 @@ export function PosScreen() {
         </DialogContent>
       </Dialog>
       {printArea}
+      <WeightDialog
+        product={weighing}
+        onClose={() => {
+          setWeighing(null);
+          focusInput();
+        }}
+        onConfirm={(quantity) => {
+          if (weighing) addToCart(weighing, quantity);
+          setWeighing(null);
+          focusInput();
+        }}
+      />
     </div>
   );
 }

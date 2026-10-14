@@ -196,7 +196,16 @@
     "pricing": "التسعير",
     "inventory": "المخزون",
     "reason_return": "إرجاع زبون",
-    "reason_purchase": "شراء"
+    "reason_purchase": "شراء",
+    "soldBy": "يُباع بـ",
+    "unit_piece": "القطعة (وحدة)",
+    "unit_kg": "الوزن: كيلوغرام (kg)",
+    "unit_g": "الوزن: غرام (g)",
+    "unit_l": "الحجم: لتر (L)",
+    "unit_m": "الطول: متر (m)",
+    "unitChangeHint": "الأسعار لكل وحدة: تحقق منها بعد تغيير طريقة البيع.",
+    "scaleCode": "رمز المنتج في الميزان",
+    "scaleCodeHint": "رمز هذا المنتج في ميزان طباعة الملصقات (5 أرقام كحد أقصى)."
   },
   "pos": {
     "title": "نقطة البيع",
@@ -241,7 +250,10 @@
     "creditNeedsCustomer": "اختر زبونًا للبيع بالدَّين.",
     "removeCustomer": "إزالة الزبون",
     "downPayment": "دفعة مقدمة (اختياري)",
-    "creditLimit": "حد الدَّين: {amount}"
+    "creditLimit": "حد الدَّين: {amount}",
+    "inStockMeasured": "{amount} في المخزون",
+    "weight": "الوزن بـ {unit}",
+    "addToCart": "إضافة إلى السلة"
   },
   "sales": {
     "title": "المبيعات",
@@ -445,7 +457,12 @@
     "stockAlertDaysHint": "حسب سرعة بيع كل منتج خلال الأسابيع الأربعة الأخيرة.",
     "reorderCoverDays": "اطلب ما يكفي لـ (أيام)",
     "reorderCoverDaysHint": "الكميات المقترحة تغطي هذا العدد من أيام البيع.",
-    "notifications": "الإشعارات"
+    "notifications": "الإشعارات",
+    "scaleBarcodes": "باركود الميزان",
+    "scale_off": "غير مستعمل",
+    "scale_weight": "الملصقات تحتوي على الوزن",
+    "scale_price": "الملصقات تحتوي على السعر",
+    "scaleBarcodesHint": "باركود يطبعه ميزان (يبدأ بـ 2). أعطِ كل منتج موزون رمزه في الميزان."
   },
   "validation": {
     "invalid": "قيمة غير صالحة",
@@ -468,7 +485,9 @@
     "invalid_license_key": "مفتاح ترخيص غير صالح",
     "invalid_url": "عنوان غير صالح",
     "range_1_90": "أدخل رقمًا بين 1 و90.",
-    "range_1_180": "أدخل رقمًا بين 1 و180."
+    "range_1_180": "أدخل رقمًا بين 1 و180.",
+    "invalid_scale_code": "5 أرقام كحد أقصى.",
+    "too_many_decimals": "3 أرقام عشرية كحد أقصى."
   },
   "errors": {
     "UNAUTHORIZED": "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجددًا.",
@@ -507,7 +526,8 @@
     "PLAN_REQUIRED": "باقتك لا تشمل هذه الميزة. قم بالترقية لاستخدامها.",
     "PLAN_LIMIT": "بلغت حد باقتك. قم بالترقية لإضافة المزيد.",
     "PRICE_NOT_SET": "لا يوجد سعر لهذه الباقة لهذه المدة بعد. تواصل معنا.",
-    "REQUEST_PENDING": "لديك طلب في انتظار التأكيد بالفعل."
+    "REQUEST_PENDING": "لديك طلب في انتظار التأكيد بالفعل.",
+    "QUANTITY_WHOLE": "هذا المنتج يُباع بالقطعة: استعمل عددًا صحيحًا."
   },
   "banner": {
     "trial": "الفترة التجريبية: {days, plural, one {يوم واحد متبقٍ} two {يومان متبقيان} few {# أيام متبقية} many {# يومًا متبقيًا} other {# يوم متبقٍ}}.",
@@ -656,7 +676,8 @@
     "invalid_stock": "مخزون غير صالح",
     "invalid_low_stock_threshold": "حد مخزون غير صالح",
     "empty_file": "الملف فارغ",
-    "missing_column": "عمود إلزامي مفقود"
+    "missing_column": "عمود إلزامي مفقود",
+    "invalid_unit": "وحدة غير معروفة (قطعة، kg، g، l أو m)."
   },
   "platform": {
     "title": "لوحة المنصة",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { isMeasured, lineAmount, round3 } from "@/lib/quantity";
 
 export type CartProduct = {
   id: string;
@@ -8,6 +9,8 @@ export type CartProduct = {
   barcode: string;
   salePrice: number;
   stock: number;
+  /** piece, or a measured unit (kg, g, l, m) sold in fractions. */
+  unit?: string;
 };
 
 export type CartLine = { product: CartProduct; quantity: number; discount: number };
@@ -35,7 +38,11 @@ function reducer(state: State, action: Action): State {
           ...state,
           lines: state.lines.map((l) =>
             l.product.id === action.product.id
-              ? { ...l, product: action.product, quantity: l.quantity + (action.quantity ?? 1) }
+              ? {
+                  ...l,
+                  product: action.product,
+                  quantity: round3(l.quantity + (action.quantity ?? 1)),
+                }
               : l,
           ),
         };
@@ -55,7 +62,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         lines: state.lines.map((l) =>
-          l.product.id === action.productId ? { ...l, quantity: action.quantity } : l,
+          l.product.id === action.productId ? { ...l, quantity: round3(action.quantity) } : l,
         ),
       };
     case "setLineDiscount":
@@ -65,7 +72,10 @@ function reducer(state: State, action: Action): State {
           l.product.id === action.productId
             ? {
                 ...l,
-                discount: Math.max(0, Math.min(action.discount, l.product.salePrice * l.quantity)),
+                discount: Math.max(
+                  0,
+                  Math.min(action.discount, lineAmount(l.product.salePrice, l.quantity)),
+                ),
               }
             : l,
         ),
@@ -104,11 +114,15 @@ export function useCart() {
 
   const totals = useMemo(() => {
     const subtotal = state.lines.reduce(
-      (sum, l) => sum + l.product.salePrice * l.quantity - l.discount,
+      (sum, l) => sum + lineAmount(l.product.salePrice, l.quantity) - l.discount,
       0,
     );
     const discount = Math.min(state.discount, subtotal);
-    const itemCount = state.lines.reduce((sum, l) => sum + l.quantity, 0);
+    // A weighed line counts as one item (0.75 kg of tomatoes = 1 item).
+    const itemCount = state.lines.reduce(
+      (sum, l) => sum + (isMeasured(l.product.unit) ? 1 : l.quantity),
+      0,
+    );
     return { subtotal, discount, total: subtotal - discount, itemCount };
   }, [state]);
 

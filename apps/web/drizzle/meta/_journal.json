@@ -36,6 +36,13 @@
       "when": 1791980266221,
       "tag": "0004_stock_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791982710669,
+      "tag": "0005_units",
+      "breakpoints": true
     }
   ]
 }

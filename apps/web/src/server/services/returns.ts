@@ -1,11 +1,12 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { lineRefund } from "@/lib/refunds";
 import type { returnCreateInput } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database } from "../db/client";
-import { returnItems, saleItems, saleReturns, sales } from "../db/schema";
+import { products, returnItems, saleItems, saleReturns, sales } from "../db/schema";
 import { AppError } from "../errors";
+import { isMeasured, lineAmount, round3 } from "@/lib/quantity";
 import { getSale } from "./sales";
 import { findOpenShift } from "./shifts";
 import { moveStock } from "./stock";
@@ -32,6 +33,18 @@ export async function createReturn(
     }
 
     const lines = await tx.select().from(saleItems).where(eq(saleItems.saleId, saleId));
+    // Pieces are returned whole; weighed products in fractions.
+    const productIds = lines.map((l) => l.productId).filter((v): v is string => Boolean(v));
+    const unitOf = new Map(
+      productIds.length
+        ? (
+            await tx
+              .select({ id: products.id, unit: products.unit })
+              .from(products)
+              .where(inArray(products.id, productIds))
+          ).map((p) => [p.id, p.unit])
+        : [],
+    );
     const returned = await tx
       .select({
         saleItemId: returnItems.saleItemId,
@@ -46,7 +59,7 @@ export async function createReturn(
     // Merge duplicate lines in the request.
     const requested = new Map<string, number>();
     for (const item of input.items) {
-      requested.set(item.saleItemId, (requested.get(item.saleItemId) ?? 0) + item.quantity);
+      requested.set(item.saleItemId, round3((requested.get(item.saleItemId) ?? 0) + item.quantity));
     }
 
     const toInsert: {
@@ -61,10 +74,13 @@ export async function createReturn(
       const line = lines.find((l) => l.id === saleItemId);
       if (!line) throw new AppError("NOT_FOUND", undefined, { saleItemId });
       const already = returnedBy.get(saleItemId) ?? 0;
-      if (already + quantity > line.quantity) {
+      if (!Number.isInteger(quantity) && !isMeasured(unitOf.get(line.productId ?? ""))) {
+        throw new AppError("QUANTITY_WHOLE", undefined, { name: line.productName });
+      }
+      if (round3(already + quantity - line.quantity) > 0) {
         throw new AppError("RETURN_EXCEEDS_SALE", undefined, {
           name: line.productName,
-          returnable: line.quantity - already,
+          returnable: round3(line.quantity - already),
         });
       }
       toInsert.push({
@@ -79,7 +95,7 @@ export async function createReturn(
 
     const refundAmount = toInsert.reduce((s, i) => s + i.refundAmount, 0);
     const restockedCost = input.restock
-      ? toInsert.reduce((s, i) => s + i.unitCost * i.quantity, 0)
+      ? toInsert.reduce((s, i) => s + lineAmount(i.unitCost, i.quantity), 0)
       : 0;
 
     const [ret] = await tx

@@ -10,8 +10,10 @@ import type {
 } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database, Executor } from "../db/client";
-import { brands, categories, products, stockMovements } from "../db/schema";
+import { brands, categories, products, stockMovements, stores } from "../db/schema";
 import { AppError } from "../errors";
+import { isMeasured, round3 } from "@/lib/quantity";
+import { parseScaleBarcode } from "@/lib/scale-barcode";
 import { moveStock } from "./stock";
 
 const productColumns = {
@@ -23,6 +25,8 @@ const productColumns = {
   salePrice: products.salePrice,
   stock: products.stock,
   lowStockThreshold: products.lowStockThreshold,
+  unit: products.unit,
+  scaleCode: products.scaleCode,
   isActive: products.isActive,
   categoryId: products.categoryId,
   brandId: products.brandId,
@@ -98,15 +102,50 @@ export async function getProduct(db: Executor, ctx: Ctx, id: string) {
   return row;
 }
 
+/**
+ * Finds the product of a scanned barcode. Label-scale barcodes (when the
+ * store uses them) also give the quantity: weight, or price ÷ unit price.
+ */
 export async function findByBarcode(db: Executor, ctx: Ctx, barcode: string) {
   const [row] = await baseSelect(db)
     .where(and(eq(products.barcode, barcode), eq(products.isActive, true), live(ctx)))
     // If an offline sync produced duplicates, prefer the most recent.
     .orderBy(desc(products.updatedAt))
     .limit(1);
-  if (!row) throw new AppError("NOT_FOUND");
-  return row;
+  if (row) return { ...row, scaleQuantity: null as number | null };
+
+  const scale = parseScaleBarcode(barcode);
+  if (scale) {
+    const [store] = await db
+      .select({ mode: stores.scaleBarcodes })
+      .from(stores)
+      .where(eq(stores.id, ctx.storeId));
+    if (store && store.mode !== "off") {
+      const [product] = await baseSelect(db)
+        .where(and(eq(products.scaleCode, scale.code), eq(products.isActive, true), live(ctx)))
+        .orderBy(desc(products.updatedAt))
+        .limit(1);
+      if (product) {
+        const quantity =
+          store.mode === "weight"
+            ? scaleWeight(scale.value, product.unit)
+            : product.salePrice > 0
+              ? round3(toMinorWhole(scale.value) / product.salePrice)
+              : 0;
+        if (quantity > 0) return { ...product, scaleQuantity: quantity };
+      }
+    }
+  }
+  throw new AppError("NOT_FOUND");
 }
+
+/** Scale value → quantity in the product's unit (grams on the label). */
+function scaleWeight(grams: number, unit: string) {
+  return unit === "g" ? grams : round3(grams / 1000);
+}
+
+/** Scale prices are printed in whole currency units (e.g. dinars). */
+const toMinorWhole = (units: number) => units * 100;
 
 export async function isBarcodeTaken(db: Executor, ctx: Ctx, barcode: string, exceptId?: string) {
   const [row] = await db
@@ -197,7 +236,10 @@ export async function deleteProduct(db: Executor, ctx: Ctx, id: string) {
 }
 
 export async function adjustStock(db: Database, ctx: Ctx, id: string, input: StockAdjustmentInput) {
-  await getProduct(db, ctx, id);
+  const product = await getProduct(db, ctx, id);
+  if (!isMeasured(product.unit) && !Number.isInteger(input.change)) {
+    throw new AppError("QUANTITY_WHOLE", undefined, { name: product.name });
+  }
   await db.transaction(async (tx) => {
     const moved = await moveStock(tx, ctx, {
       productId: id,

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorMessage } from "@/hooks/use-error-message";
 import { useMoney } from "@/hooks/use-settings";
 import { Link, useRouter } from "@/i18n/navigation";
+import { lineAmount } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
 import {
   PURCHASE_PREFILL_KEY,
@@ -66,9 +67,9 @@ function SupplierGroup({
   const router = useRouter();
   const canBuy = useHasFeature("suppliers");
   const qty = (i: StockAlertItem) =>
-    Math.max(0, Math.floor(Number(quantities[i.id] ?? i.suggestedQuantity) || 0));
+    Math.max(0, Number(quantities[i.id] ?? i.suggestedQuantity) || 0);
   const unitCost = (i: StockAlertItem) => i.lastCost ?? i.costPrice;
-  const total = group.items.reduce((s, i) => s + qty(i) * unitCost(i), 0);
+  const total = group.items.reduce((s, i) => s + lineAmount(unitCost(i), qty(i)), 0);
   const lines = group.items.filter((i) => qty(i) > 0);
 
   const createPurchase = () => {
@@ -78,6 +79,7 @@ function SupplierGroup({
       currentCost: i.costPrice,
       quantity: qty(i),
       unitCost: unitCost(i),
+      unit: i.unit,
     }));
     try {
       sessionStorage.setItem(PURCHASE_PREFILL_KEY, JSON.stringify(prefill));
@@ -166,7 +168,7 @@ function SupplierGroup({
                     />
                   </td>
                   <td className="px-4 py-2 text-end tabular-nums">
-                    {qty(i) > 0 ? money.format(qty(i) * unitCost(i)) : "—"}
+                    {qty(i) > 0 ? money.format(lineAmount(unitCost(i), qty(i))) : "—"}
                   </td>
                 </tr>
               ))}

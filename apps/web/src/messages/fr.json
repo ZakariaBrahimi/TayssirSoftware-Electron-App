@@ -196,7 +196,16 @@
     "pricing": "Prix",
     "inventory": "Inventaire",
     "reason_return": "Retour client",
-    "reason_purchase": "Achat"
+    "reason_purchase": "Achat",
+    "soldBy": "Vendu à",
+    "unit_piece": "La pièce (unité)",
+    "unit_kg": "Au poids : kilogramme (kg)",
+    "unit_g": "Au poids : gramme (g)",
+    "unit_l": "Au volume : litre (L)",
+    "unit_m": "À la longueur : mètre (m)",
+    "unitChangeHint": "Les prix sont par unité : vérifiez-les après avoir changé le mode de vente.",
+    "scaleCode": "Code article balance",
+    "scaleCodeHint": "Le code de ce produit dans votre balance étiqueteuse (5 chiffres max)."
   },
   "pos": {
     "title": "Caisse",
@@ -241,7 +250,10 @@
     "creditNeedsCustomer": "Choisissez un client pour vendre à crédit.",
     "removeCustomer": "Retirer le client",
     "downPayment": "Acompte (facultatif)",
-    "creditLimit": "Limite de crédit : {amount}"
+    "creditLimit": "Limite de crédit : {amount}",
+    "inStockMeasured": "{amount} en stock",
+    "weight": "Poids en {unit}",
+    "addToCart": "Ajouter au panier"
   },
   "sales": {
     "title": "Ventes",
@@ -445,7 +457,12 @@
     "stockAlertDaysHint": "D'après la vitesse de vente de chaque produit sur les 4 dernières semaines.",
     "reorderCoverDays": "Commander pour (jours)",
     "reorderCoverDaysHint": "Les quantités suggérées couvrent ce nombre de jours de ventes.",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "scaleBarcodes": "Codes-barres de balance",
+    "scale_off": "Non utilisés",
+    "scale_weight": "Les étiquettes contiennent le poids",
+    "scale_price": "Les étiquettes contiennent le prix",
+    "scaleBarcodesHint": "Codes-barres imprimés par une balance (commençant par 2). Donnez à chaque produit pesé son code article balance."
   },
   "validation": {
     "invalid": "Valeur invalide",
@@ -468,7 +485,9 @@
     "invalid_license_key": "Clé de licence invalide",
     "invalid_url": "Adresse invalide",
     "range_1_90": "Saisissez un nombre entre 1 et 90.",
-    "range_1_180": "Saisissez un nombre entre 1 et 180."
+    "range_1_180": "Saisissez un nombre entre 1 et 180.",
+    "invalid_scale_code": "5 chiffres maximum.",
+    "too_many_decimals": "3 décimales maximum."
   },
   "errors": {
     "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
@@ -507,7 +526,8 @@
     "PLAN_REQUIRED": "Votre formule n'inclut pas cette fonction. Passez à une formule supérieure pour l'utiliser.",
     "PLAN_LIMIT": "Vous avez atteint la limite de votre formule. Passez à une formule supérieure pour en ajouter.",
     "PRICE_NOT_SET": "Cette formule n'a pas encore de prix pour cette période. Contactez-nous.",
-    "REQUEST_PENDING": "Vous avez déjà une demande en attente de confirmation."
+    "REQUEST_PENDING": "Vous avez déjà une demande en attente de confirmation.",
+    "QUANTITY_WHOLE": "Ce produit se vend à la pièce : utilisez un nombre entier."
   },
   "banner": {
     "trial": "Essai : {days, plural, one {# jour restant} other {# jours restants}}.",
@@ -656,7 +676,8 @@
     "invalid_stock": "stock invalide",
     "invalid_low_stock_threshold": "seuil de stock invalide",
     "empty_file": "le fichier est vide",
-    "missing_column": "une colonne obligatoire manque"
+    "missing_column": "une colonne obligatoire manque",
+    "invalid_unit": "Unité inconnue (pièce, kg, g, l ou m)."
   },
   "platform": {
     "title": "Console plateforme",

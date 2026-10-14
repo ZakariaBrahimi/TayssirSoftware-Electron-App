@@ -7,6 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useMoney } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import {
+  formatQuantity,
+  isMeasured,
+  lineAmount,
+  quantityStep,
+  UNIT_SYMBOLS,
+  type Unit,
+} from "@/lib/quantity";
+import { QuantityInput } from "./quantity-input";
 import type { Cart } from "./use-cart";
 
 export function CartPanel({
@@ -60,6 +69,7 @@ export function CartPanel({
                       <p className="truncate text-sm font-medium">{product.name}</p>
                       <p className="text-muted-foreground text-xs tabular-nums">
                         {money.format(product.salePrice)}
+                        {isMeasured(product.unit) && ` / ${UNIT_SYMBOLS[product.unit as Unit]}`}
                       </p>
                     </div>
                     <Button
@@ -77,41 +87,47 @@ export function CartPanel({
                       <Button
                         variant="outline"
                         size="icon-sm"
-                        onClick={() => cart.setQuantity(product.id, quantity - 1)}
+                        onClick={() =>
+                          cart.setQuantity(product.id, quantity - quantityStep(product.unit))
+                        }
                         aria-label="-1"
                       >
                         <Minus />
                       </Button>
-                      <Input
+                      <QuantityInput
                         aria-label={t("qty")}
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
                         value={quantity}
-                        onChange={(e) =>
-                          cart.setQuantity(product.id, Math.floor(Number(e.target.value)) || 0)
-                        }
+                        unit={product.unit}
+                        onCommit={(q) => cart.setQuantity(product.id, q)}
                         className={cn(
-                          "h-8 w-14 text-center tabular-nums",
+                          "h-8 text-center",
+                          isMeasured(product.unit) ? "w-20" : "w-14",
                           over && "border-destructive",
                         )}
                       />
+                      {isMeasured(product.unit) && (
+                        <span className="text-muted-foreground text-xs">
+                          {UNIT_SYMBOLS[product.unit as Unit]}
+                        </span>
+                      )}
                       <Button
                         variant="outline"
                         size="icon-sm"
-                        onClick={() => cart.setQuantity(product.id, quantity + 1)}
+                        onClick={() =>
+                          cart.setQuantity(product.id, quantity + quantityStep(product.unit))
+                        }
                         aria-label="+1"
                       >
                         <Plus />
                       </Button>
                     </div>
                     <span className="font-semibold tabular-nums">
-                      {money.format(product.salePrice * quantity - discount)}
+                      {money.format(lineAmount(product.salePrice, quantity) - discount)}
                     </span>
                   </div>
                   {over && (
                     <p className="text-destructive text-xs">
-                      {t("notEnoughStock", { available: product.stock })}
+                      {t("notEnoughStock", { available: formatQuantity(product.stock) })}
                     </p>
                   )}
                 </li>

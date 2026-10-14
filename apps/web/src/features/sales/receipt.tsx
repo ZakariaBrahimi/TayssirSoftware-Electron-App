@@ -1,5 +1,6 @@
 "use client";
 
+import { formatWithUnit } from "@/lib/quantity";
 import { useTranslations } from "next-intl";
 import { useDateFormat, useMoney, useSettings } from "@/hooks/use-settings";
 import type { Sale } from "./api";
@@ -44,7 +45,7 @@ export function Receipt({ sale }: { sale: Sale }) {
               <td className="pe-1">
                 <div>{item.productName}</div>
                 <div className="text-[10px]">
-                  {item.quantity} × {money.format(item.unitPrice)}
+                  {formatWithUnit(item.quantity, item.unit)} × {money.format(item.unitPrice)}
                   {item.discount > 0 && ` (−${money.format(item.discount)})`}
                 </div>
               </td>

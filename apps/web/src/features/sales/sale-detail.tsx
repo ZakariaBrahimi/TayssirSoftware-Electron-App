@@ -1,5 +1,6 @@
 "use client";
 
+import { formatWithUnit } from "@/lib/quantity";
 import { Ban, Printer, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -87,7 +88,7 @@ export function SaleDetailSheet({
                     <div className="min-w-0">
                       <p className="truncate font-medium">{item.productName}</p>
                       <p className="text-muted-foreground text-xs tabular-nums">
-                        {item.quantity} × {money.format(item.unitPrice)}
+                        {formatWithUnit(item.quantity, item.unit)} × {money.format(item.unitPrice)}
                         {item.discount > 0 && ` · −${money.format(item.discount)}`}
                         {item.returnedQuantity > 0 &&
                           ` · ${t("returned", { count: item.returnedQuantity })}`}

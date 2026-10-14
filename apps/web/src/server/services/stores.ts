@@ -3,6 +3,7 @@ import type { StoreSettingsInput } from "@/lib/validators";
 import type { Executor } from "../db/client";
 import { stores, user } from "../db/schema";
 import { AppError } from "../errors";
+import type { ScaleBarcodeMode } from "@/lib/validators";
 
 export type Store = typeof stores.$inferSelect;
 
@@ -59,5 +60,6 @@ export function publicStore(s: Store) {
     requireShift: s.requireShift,
     stockAlertDays: s.stockAlertDays,
     reorderCoverDays: s.reorderCoverDays,
+    scaleBarcodes: s.scaleBarcodes as ScaleBarcodeMode,
   };
 }

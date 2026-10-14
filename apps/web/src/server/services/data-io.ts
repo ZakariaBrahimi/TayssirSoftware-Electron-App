@@ -8,6 +8,34 @@ import { brands, categories, customers, products, saleItems, sales } from "../db
 import { brandService, categoryService } from "./catalog";
 import { customerBalanceSql } from "./customers";
 import { moveStock } from "./stock";
+import { hasAtMost3Decimals, isMeasured, round3, type Unit } from "@/lib/quantity";
+
+/** Units accepted in CSV files, in English, French and Arabic. */
+const UNIT_ALIASES: Record<string, Unit> = {
+  piece: "piece",
+  pièce: "piece",
+  pc: "piece",
+  pcs: "piece",
+  u: "piece",
+  unit: "piece",
+  unité: "piece",
+  قطعة: "piece",
+  kg: "kg",
+  kilo: "kg",
+  كغ: "kg",
+  g: "g",
+  gramme: "g",
+  غ: "g",
+  l: "l",
+  litre: "l",
+  liter: "l",
+  لتر: "l",
+  m: "m",
+  metre: "m",
+  mètre: "m",
+  meter: "m",
+  متر: "m",
+};
 
 /* CSV export / import. Amounts are in major units (e.g. 120.50). */
 
@@ -20,6 +48,7 @@ export const PRODUCT_COLUMNS = [
   "sale_price",
   "stock",
   "low_stock_threshold",
+  "unit",
   "active",
 ] as const;
 
@@ -34,6 +63,7 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
       salePrice: products.salePrice,
       stock: products.stock,
       lowStockThreshold: products.lowStockThreshold,
+      unit: products.unit,
       isActive: products.isActive,
     })
     .from(products)
@@ -52,6 +82,7 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
       toMajor(r.salePrice, currency),
       r.stock,
       r.lowStockThreshold,
+      r.unit,
       r.isActive ? "yes" : "no",
     ]),
   ]);
@@ -183,6 +214,9 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   quantite: "stock",
   quantité: "stock",
   low_stock_threshold: "low_stock_threshold",
+  unit: "unit",
+  unite: "unit",
+  unité: "unit",
   active: "active",
 };
 
@@ -225,11 +259,21 @@ export async function importProducts(
     salePrice: number;
     stock: number | null;
     lowStockThreshold: number | null;
+    unit: Unit | null;
     isActive: boolean;
   };
   const parsed: Parsed[] = [];
   const seen = new Set<string>();
 
+  // Units of products already in the store (rows may leave the unit out).
+  const existingUnit = new Map(
+    (
+      await db
+        .select({ barcode: products.barcode, unit: products.unit })
+        .from(products)
+        .where(and(eq(products.storeId, ctx.storeId), isNull(products.deletedAt)))
+    ).map((p) => [p.barcode, p.unit]),
+  );
   lines.forEach((row, i) => {
     const line = i + 2;
     const name = get(row, "name");
@@ -242,6 +286,8 @@ export async function importProducts(
     const lowRaw = get(row, "low_stock_threshold");
     const low = lowRaw === "" ? null : parseDecimal(lowRaw);
     const activeRaw = get(row, "active").toLowerCase();
+    const unitRaw = get(row, "unit").toLowerCase();
+    const unit = unitRaw === "" ? null : (UNIT_ALIASES[unitRaw] ?? undefined);
 
     const fail = (message: string) => report.errors.push({ line, message });
     if (!name) return fail("name_required");
@@ -249,9 +295,12 @@ export async function importProducts(
     if (seen.has(barcode)) return fail("duplicate_barcode");
     if (!Number.isFinite(sale) || sale < 0) return fail("invalid_sale_price");
     if (!Number.isFinite(cost) || cost < 0) return fail("invalid_cost_price");
-    if (stock !== null && (!Number.isInteger(stock) || stock < 0)) return fail("invalid_stock");
-    if (low !== null && (!Number.isInteger(low) || low < 0))
-      return fail("invalid_low_stock_threshold");
+    if (unit === undefined) return fail("invalid_unit");
+    const measured = isMeasured(unit ?? existingUnit.get(barcode));
+    const validAmount = (n: number) =>
+      n >= 0 && (measured ? hasAtMost3Decimals(n) : Number.isInteger(n));
+    if (stock !== null && !validAmount(stock)) return fail("invalid_stock");
+    if (low !== null && !validAmount(low)) return fail("invalid_low_stock_threshold");
     seen.add(barcode);
     parsed.push({
       line,
@@ -263,6 +312,7 @@ export async function importProducts(
       salePrice: toMinor(sale, currency),
       stock,
       lowStockThreshold: low,
+      unit,
       isActive: !["no", "non", "false", "0", "لا"].includes(activeRaw),
     });
   });
@@ -295,6 +345,7 @@ export async function importProducts(
         ...(p.category ? { categoryId } : {}),
         ...(p.brand ? { brandId } : {}),
         ...(p.lowStockThreshold !== null ? { lowStockThreshold: p.lowStockThreshold } : {}),
+        ...(p.unit !== null ? { unit: p.unit } : {}),
       };
       const current = existing.get(p.barcode);
       let productId: string;
@@ -313,7 +364,7 @@ export async function importProducts(
       if (p.stock !== null && p.stock !== currentStock) {
         await moveStock(tx, ctx, {
           productId,
-          change: p.stock - currentStock,
+          change: round3(p.stock - currentStock),
           reason: current ? "adjustment" : "initial",
           note: "CSV import",
         });

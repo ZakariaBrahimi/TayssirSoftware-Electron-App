@@ -34,6 +34,7 @@ import { type PickedProduct, ProductPicker } from "../products/product-picker";
 import { useSuppliers } from "../suppliers/api";
 import { PURCHASE_PREFILL_KEY, type PurchasePrefill } from "../stock/api";
 import { useCreatePurchase } from "./api";
+import { isMeasured, lineAmount, round3 } from "@/lib/quantity";
 
 type Line = {
   productId: string;
@@ -41,8 +42,15 @@ type Line = {
   currentCost: number;
   quantity: string;
   unitCost: string;
+  unit?: string;
 };
 const NONE = "none";
+
+/** Whole pieces, or up to 3 decimals for weighed / measured products. */
+const lineQuantity = (l: Line) => {
+  const n = Math.max(0, Number(l.quantity.replace(",", ".")) || 0);
+  return isMeasured(l.unit) ? round3(n) : Math.floor(n);
+};
 
 export function PurchaseForm() {
   const t = useTranslations("purchases");
@@ -75,6 +83,7 @@ export function PurchaseForm() {
         name: p.name,
         currentCost: p.currentCost,
         quantity: String(p.quantity),
+        unit: p.unit,
         unitCost: String(money.toMajor(p.unitCost)),
       }));
     } catch {
@@ -85,7 +94,7 @@ export function PurchaseForm() {
   const [note, setNote] = useState("");
 
   const lineTotal = (l: Line) =>
-    Math.max(0, Math.floor(Number(l.quantity) || 0)) * money.toMinor(Number(l.unitCost) || 0);
+    lineAmount(money.toMinor(Number(l.unitCost) || 0), lineQuantity(l));
   const total = lines.reduce((s, l) => s + lineTotal(l), 0);
   const paidMinor =
     paid === "" ? (supplierId === NONE ? total : 0) : money.toMinor(Number(paid) || 0);
@@ -104,6 +113,7 @@ export function PurchaseForm() {
               name: p.name,
               currentCost: p.costPrice,
               quantity: "1",
+              unit: p.unit,
               unitCost: String(money.toMajor(p.costPrice)),
             },
           ],
@@ -120,7 +130,7 @@ export function PurchaseForm() {
         reference: reference.trim() || undefined,
         items: lines.map((l) => ({
           productId: l.productId,
-          quantity: Math.max(1, Math.floor(Number(l.quantity) || 1)),
+          quantity: lineQuantity(l) || 1,
           unitCost: money.toMinor(Number(l.unitCost) || 0),
         })),
         amountPaid: Math.min(paidMinor, total),
@@ -171,8 +181,9 @@ export function PurchaseForm() {
                       <TableCell>
                         <Input
                           type="number"
-                          inputMode="numeric"
-                          min={1}
+                          inputMode={isMeasured(l.unit) ? "decimal" : "numeric"}
+                          step={isMeasured(l.unit) ? "any" : 1}
+                          min={0}
                           value={l.quantity}
                           onChange={(e) => update(l.productId, { quantity: e.target.value })}
                           className="h-8 tabular-nums"

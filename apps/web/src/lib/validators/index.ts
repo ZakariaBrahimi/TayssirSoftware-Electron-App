@@ -1,9 +1,20 @@
 import { z } from "zod";
+import { hasAtMost3Decimals, UNITS } from "@/lib/quantity";
+
+/** off, weight (grams) or price (whole currency units) in scale barcodes. */
+export const SCALE_BARCODE_MODES = ["off", "weight", "price"] as const;
+export type ScaleBarcodeMode = (typeof SCALE_BARCODE_MODES)[number];
 
 /* Shared request schemas. Used by the API (validation) and by the UI (forms
  * and typed clients), and reusable by a future mobile app. */
 
 const money = z.number().int().min(0).max(1_000_000_000_000);
+/** Pieces or measured amounts (kg, L, m): positive, at most 3 decimals. */
+const quantity = (max: number) =>
+  z.number().positive().max(max).refine(hasAtMost3Decimals, "too_many_decimals");
+/** Stock levels and alert levels: same precision, zero allowed. */
+const stockAmount = (max: number) =>
+  z.number().min(0).max(max).refine(hasAtMost3Decimals, "too_many_decimals");
 const positiveMoney = money.min(1);
 const id = z.string().uuid();
 const optionalText = (max: number) => z.string().trim().max(max).nullish();
@@ -42,14 +53,24 @@ export const productBase = z.object({
   description: optionalText(1000),
   costPrice: money,
   salePrice: money,
-  lowStockThreshold: z.number().int().min(0).max(1_000_000).default(5),
+  lowStockThreshold: stockAmount(1_000_000).default(5),
+  /** piece, or a measured unit sold in fractions (kg, g, L, m). */
+  unit: z.enum(UNITS).default("piece"),
+  /** Item code programmed in a label scale (scale barcodes), digits only. */
+  scaleCode: z
+    .string()
+    .trim()
+    .regex(/^\d{1,5}$/, "invalid_scale_code")
+    .nullish()
+    // Leading zeros don't matter: "00123" and "123" are the same code.
+    .transform((v) => (v === undefined ? undefined : v ? String(Number(v)) : null)),
   categoryId: id.nullish(),
   brandId: id.nullish(),
   isActive: z.boolean().default(true),
 });
 
 export const productCreateInput = productBase.extend({
-  stock: z.number().int().min(0).max(10_000_000).default(0),
+  stock: stockAmount(10_000_000).default(0),
 });
 export type ProductCreateInput = z.input<typeof productCreateInput>;
 
@@ -59,8 +80,8 @@ export type ProductUpdateInput = z.infer<typeof productUpdateInput>;
 export const stockAdjustmentInput = z.object({
   change: z
     .number()
-    .int()
-    .refine((v) => v !== 0, "change_must_not_be_zero"),
+    .refine((v) => v !== 0, "change_must_not_be_zero")
+    .refine(hasAtMost3Decimals, "too_many_decimals"),
   note: z.string().trim().max(200).optional(),
 });
 export type StockAdjustmentInput = z.infer<typeof stockAdjustmentInput>;
@@ -99,7 +120,7 @@ export const saleCreateInput = z.object({
     .array(
       z.object({
         productId: id,
-        quantity: z.number().int().min(1).max(100_000),
+        quantity: quantity(100_000),
         discount: money.default(0),
       }),
     )
@@ -127,9 +148,7 @@ export const saleListQuery = z.object({
 export type SaleListQuery = z.input<typeof saleListQuery>;
 
 export const returnCreateInput = z.object({
-  items: z
-    .array(z.object({ saleItemId: id, quantity: z.number().int().min(1).max(100_000) }))
-    .min(1),
+  items: z.array(z.object({ saleItemId: id, quantity: quantity(100_000) })).min(1),
   refundMethod: z.enum(REFUND_METHODS).default("cash"),
   /** Put the returned items back in stock (false for damaged goods). */
   restock: z.boolean().default(true),
@@ -184,7 +203,7 @@ export const purchaseCreateInput = z.object({
     .array(
       z.object({
         productId: id,
-        quantity: z.number().int().min(1).max(10_000_000),
+        quantity: quantity(10_000_000),
         unitCost: money,
       }),
     )
@@ -253,6 +272,8 @@ export const storeSettingsInput = z.object({
   stockAlertDays: z.number().int().min(1).max(90).default(7),
   /** Reorder suggestions cover this many days of sales. */
   reorderCoverDays: z.number().int().min(1).max(180).default(14),
+  /** Label-scale barcodes (EAN-13 starting with 2): what the 5 digits hold. */
+  scaleBarcodes: z.enum(SCALE_BARCODE_MODES).default("off"),
 });
 export type StoreSettingsInput = z.infer<typeof storeSettingsInput>;
 
@@ -313,7 +334,7 @@ export type SyncLinkInput = z.input<typeof syncLinkInput>;
 
 export const thresholdsInput = z.object({
   items: z
-    .array(z.object({ productId: id, threshold: z.number().int().min(0).max(1_000_000) }))
+    .array(z.object({ productId: id, threshold: stockAmount(1_000_000) }))
     .min(1)
     .max(2000),
 });

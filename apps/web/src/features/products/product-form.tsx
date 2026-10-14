@@ -21,12 +21,27 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorMessage } from "@/hooks/use-error-message";
 import { useMoney } from "@/hooks/use-settings";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
+import {
+  formatWithUnit,
+  hasAtMost3Decimals,
+  isMeasured,
+  UNIT_SYMBOLS,
+  UNITS,
+  type Unit,
+} from "@/lib/quantity";
 import { CatalogSelect } from "../catalog/catalog-select";
 import { generateBarcode, isBarcodeAvailable, type Product, useProductMutations } from "./api";
 import { PrintLabelsDialog } from "./labels";
@@ -54,12 +69,17 @@ const schema = z
     salePrice: amount,
     stock: z.preprocess(
       emptyToUndefined,
-      z.coerce.number({ message: "required" }).int("invalid_type").min(0, "must_be_positive"),
+      z.coerce.number({ message: "required" }).min(0, "must_be_positive"),
     ),
     lowStockThreshold: z.preprocess(
       emptyToUndefined,
-      z.coerce.number({ message: "required" }).int("invalid_type").min(0, "must_be_positive"),
+      z.coerce.number({ message: "required" }).min(0, "must_be_positive"),
     ),
+    unit: z.enum(UNITS),
+    scaleCode: z
+      .string()
+      .trim()
+      .regex(/^(\d{1,5})?$/, "invalid_scale_code"),
     categoryId: z.string().nullable(),
     brandId: z.string().nullable(),
     isActive: z.boolean(),
@@ -67,6 +87,13 @@ const schema = z
   .refine((v) => v.salePrice >= v.costPrice, {
     message: "price_below_cost",
     path: ["salePrice"],
+  })
+  // Pieces are counted whole; weights and lengths take up to 3 decimals.
+  .superRefine((v, ctx) => {
+    for (const key of ["stock", "lowStockThreshold"] as const) {
+      const ok = isMeasured(v.unit) ? hasAtMost3Decimals(v[key]) : Number.isInteger(v[key]);
+      if (!ok) ctx.addIssue({ code: "custom", message: "invalid_type", path: [key] });
+    }
   });
 
 type FormInput = z.input<typeof schema>;
@@ -93,16 +120,23 @@ export function ProductForm({ product }: { product?: Product }) {
       salePrice: product ? money.toMajor(product.salePrice) : "",
       stock: product?.stock ?? 0,
       lowStockThreshold: product?.lowStockThreshold ?? 5,
+      unit: (product?.unit as Unit | undefined) ?? "piece",
+      scaleCode: product?.scaleCode ?? "",
       categoryId: product?.categoryId ?? null,
       brandId: product?.brandId ?? null,
       isActive: product?.isActive ?? true,
     },
   });
 
-  const [barcode, cost, price, name] = useWatch({
+  const [barcode, cost, price, name, unit] = useWatch({
     control: form.control,
-    name: ["barcode", "costPrice", "salePrice", "name"],
+    name: ["barcode", "costPrice", "salePrice", "name", "unit"],
   });
+  const measured = isMeasured(unit);
+  const perUnit = measured ? ` / ${UNIT_SYMBOLS[unit]}` : "";
+  const amountProps = measured
+    ? ({ inputMode: "decimal", step: "any" } as const)
+    : ({ inputMode: "numeric", step: 1 } as const);
   const costN = Number(cost) || 0;
   const priceN = Number(price) || 0;
   const margin = priceN > 0 ? ((priceN - costN) / priceN) * 100 : null;
@@ -141,6 +175,8 @@ export function ProductForm({ product }: { product?: Product }) {
       costPrice: money.toMinor(values.costPrice),
       salePrice: money.toMinor(values.salePrice),
       lowStockThreshold: values.lowStockThreshold,
+      unit: values.unit,
+      scaleCode: values.scaleCode || null,
       categoryId: values.categoryId,
       brandId: values.brandId,
       isActive: values.isActive,
@@ -281,6 +317,33 @@ export function ProductForm({ product }: { product?: Product }) {
               <CardTitle>{t("pricing")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-3">
+                    <FormLabel>{t("soldBy")}</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full sm:w-64">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {UNITS.map((u) => (
+                          <SelectItem key={u} value={u}>
+                            {t(`unit_${u}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {isEdit && field.value !== product?.unit && (
+                      <FormDescription>{t("unitChangeHint")}</FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {(["costPrice", "salePrice"] as const).map((name) => (
                 <FormField
                   key={name}
@@ -289,7 +352,8 @@ export function ProductForm({ product }: { product?: Product }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {t(name)} ({money.currency})
+                        {t(name)} ({money.currency}
+                        {perUnit})
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -325,7 +389,7 @@ export function ProductForm({ product }: { product?: Product }) {
                   <span className="text-sm font-medium">{t("stock")}</span>
                   <div className="flex items-center gap-2">
                     <div className="bg-muted flex h-9 flex-1 items-center rounded-md px-3 text-sm tabular-nums">
-                      {product?.stock}
+                      {product ? formatWithUnit(product.stock, product.unit) : null}
                     </div>
                     <Button type="button" variant="outline" onClick={() => setStockOpen(true)}>
                       <Boxes />
@@ -343,9 +407,8 @@ export function ProductForm({ product }: { product?: Product }) {
                       <FormControl>
                         <Input
                           type="number"
-                          inputMode="numeric"
                           min={0}
-                          step={1}
+                          {...amountProps}
                           {...field}
                           value={field.value as string | number}
                         />
@@ -364,9 +427,8 @@ export function ProductForm({ product }: { product?: Product }) {
                     <FormControl>
                       <Input
                         type="number"
-                        inputMode="numeric"
                         min={0}
-                        step={1}
+                        {...amountProps}
                         {...field}
                         value={field.value as string | number}
                       />
@@ -375,6 +437,22 @@ export function ProductForm({ product }: { product?: Product }) {
                   </FormItem>
                 )}
               />
+              {measured && (
+                <FormField
+                  control={form.control}
+                  name="scaleCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("scaleCode")}</FormLabel>
+                      <FormControl>
+                        <Input inputMode="numeric" maxLength={5} dir="ltr" {...field} />
+                      </FormControl>
+                      <FormDescription>{t("scaleCodeHint")}</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="isActive"

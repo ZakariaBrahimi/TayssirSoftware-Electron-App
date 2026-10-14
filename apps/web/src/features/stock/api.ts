@@ -36,4 +36,5 @@ export type PurchasePrefill = {
   currentCost: number;
   quantity: number;
   unitCost: number;
+  unit?: string;
 }[];

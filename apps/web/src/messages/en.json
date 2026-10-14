@@ -196,7 +196,16 @@
     "pricing": "Pricing",
     "inventory": "Inventory",
     "reason_return": "Customer return",
-    "reason_purchase": "Purchase"
+    "reason_purchase": "Purchase",
+    "soldBy": "Sold by",
+    "unit_piece": "Piece (unit)",
+    "unit_kg": "Weight: kilogram (kg)",
+    "unit_g": "Weight: gram (g)",
+    "unit_l": "Volume: litre (L)",
+    "unit_m": "Length: metre (m)",
+    "unitChangeHint": "Prices are per unit: check them after changing how the product is sold.",
+    "scaleCode": "Scale item code",
+    "scaleCodeHint": "The code of this product in your label scale (up to 5 digits)."
   },
   "pos": {
     "title": "Point of sale",
@@ -241,7 +250,10 @@
     "creditNeedsCustomer": "Choose a customer to sell on account.",
     "removeCustomer": "Remove customer",
     "downPayment": "Paid now (optional)",
-    "creditLimit": "Credit limit: {amount}"
+    "creditLimit": "Credit limit: {amount}",
+    "inStockMeasured": "{amount} in stock",
+    "weight": "Weight in {unit}",
+    "addToCart": "Add to cart"
   },
   "sales": {
     "title": "Sales",
@@ -445,7 +457,12 @@
     "stockAlertDaysHint": "Based on how fast each product sold over the last 4 weeks.",
     "reorderCoverDays": "Reorder enough for (days)",
     "reorderCoverDaysHint": "Suggested quantities cover this many days of sales.",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "scaleBarcodes": "Label scale barcodes",
+    "scale_off": "Not used",
+    "scale_weight": "Labels contain the weight",
+    "scale_price": "Labels contain the price",
+    "scaleBarcodesHint": "Barcodes printed by a weighing scale (starting with 2). Give each weighed product its scale item code."
   },
   "validation": {
     "invalid": "Invalid value",
@@ -468,7 +485,9 @@
     "invalid_license_key": "Invalid license key",
     "invalid_url": "Invalid address",
     "range_1_90": "Enter a number between 1 and 90.",
-    "range_1_180": "Enter a number between 1 and 180."
+    "range_1_180": "Enter a number between 1 and 180.",
+    "invalid_scale_code": "Up to 5 digits.",
+    "too_many_decimals": "Use at most 3 decimals."
   },
   "errors": {
     "UNAUTHORIZED": "Your session has expired. Please sign in again.",
@@ -507,7 +526,8 @@
     "PLAN_REQUIRED": "Your plan doesn't include this feature. Upgrade to use it.",
     "PLAN_LIMIT": "You have reached your plan's limit. Upgrade to add more.",
     "PRICE_NOT_SET": "This plan has no price for this period yet. Contact us.",
-    "REQUEST_PENDING": "You already have a request waiting for confirmation."
+    "REQUEST_PENDING": "You already have a request waiting for confirmation.",
+    "QUANTITY_WHOLE": "This product is sold by the piece: use a whole number."
   },
   "banner": {
     "trial": "Trial: {days, plural, one {# day} other {# days}} left.",
@@ -656,7 +676,8 @@
     "invalid_stock": "invalid stock",
     "invalid_low_stock_threshold": "invalid low stock threshold",
     "empty_file": "the file is empty",
-    "missing_column": "a required column is missing"
+    "missing_column": "a required column is missing",
+    "invalid_unit": "Unknown unit (use piece, kg, g, l or m)."
   },
   "platform": {
     "title": "Platform console",

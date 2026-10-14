@@ -14,6 +14,7 @@ import {
 } from "../db/schema";
 import { col } from "../db/sql";
 import { AppError } from "../errors";
+import { isMeasured, lineAmount, round3 } from "@/lib/quantity";
 import { getCustomer } from "./customers";
 import { findOpenShift } from "./shifts";
 import { moveStock } from "./stock";
@@ -28,6 +29,7 @@ export type CatalogEntry = {
   costPrice: number;
   stock: number;
   isActive: boolean;
+  unit: string;
 };
 
 export interface PricedLine {
@@ -51,7 +53,7 @@ export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) 
   for (const item of input.items) {
     const prev = merged.get(item.productId);
     merged.set(item.productId, {
-      quantity: (prev?.quantity ?? 0) + item.quantity,
+      quantity: round3((prev?.quantity ?? 0) + item.quantity),
       discount: (prev?.discount ?? 0) + item.discount,
     });
   }
@@ -63,7 +65,10 @@ export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) 
     if (!product.isActive) {
       throw new AppError("PRODUCT_INACTIVE", undefined, { productId, name: product.name });
     }
-    if (product.stock < quantity) {
+    if (!isMeasured(product.unit) && !Number.isInteger(quantity)) {
+      throw new AppError("QUANTITY_WHOLE", undefined, { productId, name: product.name });
+    }
+    if (round3(product.stock - quantity) < 0) {
       throw new AppError("INSUFFICIENT_STOCK", undefined, {
         productId,
         name: product.name,
@@ -71,7 +76,7 @@ export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) 
         requested: quantity,
       });
     }
-    const gross = product.salePrice * quantity;
+    const gross = lineAmount(product.salePrice, quantity);
     if (discount > gross) throw new AppError("INVALID_DISCOUNT", undefined, { productId });
     lines.push({
       productId,
@@ -88,7 +93,7 @@ export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) 
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
   if (input.discount > subtotal) throw new AppError("INVALID_DISCOUNT");
   const total = subtotal - input.discount;
-  const totalCost = lines.reduce((sum, l) => sum + l.unitCost * l.quantity, 0);
+  const totalCost = lines.reduce((sum, l) => sum + lineAmount(l.unitCost, l.quantity), 0);
 
   let amountPaid: number;
   if (input.paymentMethod === "credit") {
@@ -155,6 +160,7 @@ export async function createSale(
         costPrice: products.costPrice,
         stock: products.stock,
         isActive: products.isActive,
+        unit: products.unit,
       })
       .from(products)
       .where(
@@ -298,10 +304,27 @@ export async function getSale(db: Executor, ctx: Ctx, id: string) {
     .where(eq(saleReturns.saleId, id))
     .orderBy(saleReturns.createdAt);
 
+  // Units come from the products (pieces when a product was deleted).
+  const productIds = items.map((i) => i.productId).filter((v): v is string => Boolean(v));
+  const unitOf = new Map(
+    productIds.length
+      ? (
+          await db
+            .select({ id: products.id, unit: products.unit })
+            .from(products)
+            .where(inArray(products.id, productIds))
+        ).map((p) => [p.id, p.unit])
+      : [],
+  );
+
   return {
     ...sale,
     number: `${sale.deviceCode}-${sale.seq}`,
-    items: items.map((i) => ({ ...i, returnedQuantity: returnedBy.get(i.id) ?? 0 })),
+    items: items.map((i) => ({
+      ...i,
+      unit: unitOf.get(i.productId ?? "") ?? "piece",
+      returnedQuantity: returnedBy.get(i.id) ?? 0,
+    })),
     returns,
     refundedAmount: returns.reduce((s, r) => s + r.refundAmount, 0),
   };
@@ -330,10 +353,12 @@ export async function listSales(
   if (options.cashierId) filters.push(eq(sales.cashierId, options.cashierId));
   const where = and(...filters);
 
-  const itemCount = sql<number>`(select coalesce(sum(${saleItems.quantity}), 0) from ${saleItems} where ${saleItems.saleId} = ${col("sales", "id")})`;
+  // A weighed or measured line (0.75 kg) counts as one item, like the cart.
+  const measured = sql`(select ${products.unit} from ${products} where ${products.id} = ${saleItems.productId}) not in ('piece')`;
+  const itemCount = sql<number>`(select coalesce(sum(case when ${measured} then 1 else ${saleItems.quantity} end), 0) from ${saleItems} where ${saleItems.saleId} = ${col("sales", "id")})`;
   const refunded = sql<number>`(select coalesce(sum(${saleReturns.refundAmount}), 0) from ${saleReturns} where ${saleReturns.saleId} = ${col("sales", "id")})`;
   // Returns are kept apart from the ticket: the list shows them next to it.
-  const returnedCount = sql<number>`(select coalesce(sum(${returnItems.quantity}), 0) from ${returnItems} inner join ${saleReturns} on ${saleReturns.id} = ${returnItems.returnId} where ${saleReturns.saleId} = ${col("sales", "id")})`;
+  const returnedCount = sql<number>`(select coalesce(sum(case when ${measured} then 1 else q end), 0) from (select ${returnItems.saleItemId} as sid, sum(${returnItems.quantity}) as q from ${returnItems} inner join ${saleReturns} on ${saleReturns.id} = ${returnItems.returnId} where ${saleReturns.saleId} = ${col("sales", "id")} group by ${returnItems.saleItemId}) r inner join ${saleItems} on ${saleItems.id} = r.sid)`;
   const restockedCost = sql<number>`(select coalesce(sum(${saleReturns.restockedCost}), 0) from ${saleReturns} where ${saleReturns.saleId} = ${col("sales", "id")})`;
 
   const [rows, [{ total }]] = await Promise.all([

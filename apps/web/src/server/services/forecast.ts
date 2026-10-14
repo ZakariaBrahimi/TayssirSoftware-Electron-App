@@ -26,6 +26,7 @@ export type ForecastRow = {
   stock: number;
   lowStockThreshold: number;
   costPrice: number;
+  unit: string;
   /** Units sold per day (0 when nothing sold in the window). */
   dailyRate: number;
   /** Days the stock lasts at that rate; null when it doesn't sell. */
@@ -105,6 +106,7 @@ export async function stockForecast(db: Executor, ctx: Pick<Ctx, "storeId">, now
         stock: products.stock,
         lowStockThreshold: products.lowStockThreshold,
         costPrice: products.costPrice,
+        unit: products.unit,
         createdAt: products.createdAt,
         supplierId: lastPurchase("supplier_id"),
         supplierName: lastPurchase("supplier_name"),
@@ -146,6 +148,7 @@ export async function stockForecast(db: Executor, ctx: Pick<Ctx, "storeId">, now
       stock: r.stock,
       lowStockThreshold: r.lowStockThreshold,
       costPrice: r.costPrice,
+      unit: r.unit,
       supplierId: (r.supplierId as string | null) ?? null,
       supplierName: (r.supplierName as string | null) ?? null,
       lastCost: r.lastCost === null ? null : Number(r.lastCost),

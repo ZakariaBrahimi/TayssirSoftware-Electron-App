@@ -26,12 +26,13 @@ export async function moveStock(
 ): Promise<{ stock: number } | null> {
   const where = [eq(products.id, input.productId), eq(products.storeId, ctx.storeId)];
   if (input.requireAvailable) {
-    where.push(sql`${products.stock} + ${input.change} >= 0`);
+    // Rounded: measured quantities (0.75 kg) must not drift (0.1 + 0.2).
+    where.push(sql`round(${products.stock} + ${input.change}, 3) >= 0`);
   }
   const [row] = await db
     .update(products)
     .set({
-      stock: sql`${products.stock} + ${input.change}`,
+      stock: sql`round(${products.stock} + ${input.change}, 3)`,
       updatedAt: sql`${products.updatedAt}`,
     })
     .where(and(...where))
@@ -59,7 +60,7 @@ export async function recomputeStock(db: Executor, productIds: string[]) {
     await db
       .update(products)
       .set({
-        stock: sql`(select coalesce(sum(${stockMovements.change}), 0) from ${stockMovements} where ${stockMovements.productId} = ${col("products", "id")})`,
+        stock: sql`round((select coalesce(sum(${stockMovements.change}), 0) from ${stockMovements} where ${stockMovements.productId} = ${col("products", "id")}), 3)`,
         updatedAt: sql`${products.updatedAt}`,
       })
       .where(inArray(products.id, chunk));

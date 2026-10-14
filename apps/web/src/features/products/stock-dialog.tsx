@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useErrorMessage } from "@/hooks/use-error-message";
+import { formatWithUnit, hasAtMost3Decimals, isMeasured, round3 } from "@/lib/quantity";
 import { useProductMutations } from "./api";
 
 export function StockAdjustDialog({
@@ -22,7 +23,7 @@ export function StockAdjustDialog({
   open,
   onOpenChange,
 }: {
-  product: { id: string; name: string; stock: number };
+  product: { id: string; name: string; stock: number; unit?: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -32,8 +33,14 @@ export function StockAdjustDialog({
   const { adjustStock } = useProductMutations();
   const [change, setChange] = useState("");
   const [note, setNote] = useState("");
-  const value = Number.parseInt(change, 10);
-  const valid = Number.isInteger(value) && value !== 0 && product.stock + value >= 0;
+  const measured = isMeasured(product.unit);
+  const value = Number(change.replace(",", "."));
+  const valid =
+    change.trim() !== "" &&
+    Number.isFinite(value) &&
+    value !== 0 &&
+    (measured ? hasAtMost3Decimals(value) : Number.isInteger(value)) &&
+    round3(product.stock + value) >= 0;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +75,8 @@ export function StockAdjustDialog({
               <Input
                 id="stock-change"
                 type="number"
-                step={1}
-                inputMode="numeric"
+                step={measured ? "any" : 1}
+                inputMode={measured ? "decimal" : "numeric"}
                 placeholder="+10 / -2"
                 value={change}
                 onChange={(e) => setChange(e.target.value)}
@@ -77,7 +84,8 @@ export function StockAdjustDialog({
               />
             </div>
             <div className="text-muted-foreground pb-2 text-sm tabular-nums">
-              {product.stock} → {Number.isInteger(value) ? product.stock + value : product.stock}
+              {formatWithUnit(product.stock, product.unit)} →{" "}
+              {formatWithUnit(valid ? round3(product.stock + value) : product.stock, product.unit)}
             </div>
           </div>
           <div className="grid gap-2">

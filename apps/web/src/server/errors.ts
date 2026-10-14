@@ -8,6 +8,8 @@ const STATUS = {
   NAME_TAKEN: 409,
   USERNAME_TAKEN: 409,
   INSUFFICIENT_STOCK: 409,
+  /** A product sold by the piece got a fractional quantity. */
+  QUANTITY_WHOLE: 422,
   PRODUCT_INACTIVE: 409,
   INVALID_DISCOUNT: 400,
   INSUFFICIENT_PAYMENT: 400,
