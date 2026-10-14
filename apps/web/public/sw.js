@@ -1,5 +1,5 @@
 /*
- * Tayssir POS service worker.
+ * Mizan POS service worker.
  * - Static assets (/_next/static, icons): cache-first (they are content-hashed).
  * - Pages: network-first, falling back to the last cached copy when offline.
  * - API calls are never cached: sales must always hit the server.

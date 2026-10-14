@@ -7,7 +7,7 @@ import { db, schema } from "./db";
 import { authSecret, env } from "./env";
 
 export const auth = betterAuth({
-  appName: "Tayssir POS",
+  appName: "Mizan POS",
   secret: authSecret(),
   baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, {
@@ -45,7 +45,7 @@ export const auth = betterAuth({
     admin({ defaultRole: "user", adminRoles: ["admin"] }),
     // Authenticator app codes. Required for the platform console, optional
     // for everyone else.
-    twoFactor({ issuer: "Tayssir POS" }),
+    twoFactor({ issuer: "Mizan POS" }),
     nextCookies(),
   ],
 });

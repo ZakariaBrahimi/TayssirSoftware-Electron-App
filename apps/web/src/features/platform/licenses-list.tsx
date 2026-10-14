@@ -311,7 +311,7 @@ function LicenseSheet({ id, onClose }: { id: string | null; onClose: () => void 
             {data && <LicenseStatusBadge status={data.license.status} />}
           </SheetTitle>
           <SheetDescription dir="ltr" className="font-mono">
-            {data ? `TAYS-····-····-····-${data.license.keyHint}` : ""}
+            {data ? `····-····-····-····-${data.license.keyHint}` : ""}
           </SheetDescription>
         </SheetHeader>
         {!data ? (

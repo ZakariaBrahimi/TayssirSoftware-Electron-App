@@ -1,8 +1,22 @@
-# Tayssir POS
+# Mizan POS · ميزان
 
 Point of sale, inventory and sales reporting for small shops. It runs **in the browser, as an installable app (PWA) on desktop, tablet and phone, and as an offline desktop app**, all from one codebase.
 
 > Version 2 is a full rewrite of the original Electron + Sequelize app (kept for reference in [`legacy/electron-app`](legacy/electron-app)). See [What changed](#what-changed-from-v1) below.
+
+## Brand
+
+The product was renamed from Tayssir POS to **Mizan** (ميزان, "scale, balance"). The mark is the letter م with its loop drawn as a coin; sources are in [`apps/web/public/brand`](apps/web/public/brand) and the React component in `apps/web/src/components/brand/logo.tsx`.
+
+| Role                                        | Color                             |
+| ------------------------------------------- | --------------------------------- |
+| Primary (teal)                              | `#0E7C6B`, `#2BB39C` in dark mode |
+| Accent (brass), always with dark text on it | `#D6A23A`                         |
+| Ink                                         | `#0B2A26`                         |
+
+Headings, the logo and big totals use Readex Pro (Arabic and Latin). The app icons in `apps/web/public/icons`, `apps/web/src/app/icon.png` and `apps/desktop/build/icon.png` are rendered from the SVGs.
+
+For compatibility, the rename only touches what people see. License keys sold before it (`TAYS-…`) stay valid next to new `MIZN-…` keys; the desktop app keeps its `com.tayssir.pos` id and an existing "Tayssir POS" data folder; environment variables keep their `TAYSSIR_` prefix; backups named `tayssir-…` can still be restored.
 
 ## Features
 
@@ -111,7 +125,7 @@ When access lapses, the app switches to **read-only**: sales, products and other
 
 Licenses and subscriptions are Ed25519-signed tokens. The private key stays on your cloud server; desktops only hold the public key, so they verify tokens offline and cannot forge them. Activation is bound to a machine fingerprint.
 
-Vendor operations run against the cloud database. In the Docker image the CLI is bundled: `docker exec -it tayssir node admin.mjs <command>` (same commands as below). From a checkout, run them from `apps/web` with `DATABASE_URL` set:
+Vendor operations run against the cloud database. In the Docker image the CLI is bundled: `docker exec -it mizan node admin.mjs <command>` (same commands as below). From a checkout, run them from `apps/web` with `DATABASE_URL` set:
 
 ```sh
 npm run admin -- keys:generate                      # once: prints LICENSE_PRIVATE_KEY / LICENSE_PUBLIC_KEY
@@ -148,7 +162,7 @@ Access is limited to accounts that have the `platform` role, belong to no store 
 
 ```sh
 # On the cloud server (Docker; or `npm run admin --` from apps/web):
-docker exec -it tayssir node admin.mjs platform:admin yourname --name "Your Name"   # prints a temporary password
+docker exec -it mizan node admin.mjs platform:admin yourname --name "Your Name"   # prints a temporary password
 # Add PLATFORM_ADMINS=yourname to the server environment and restart, then
 # sign in at /login and follow the authenticator setup.
 ```
@@ -185,7 +199,7 @@ Local installs back up the database every day and before every migration into a 
 npm run dist:win -w @tayssir/desktop    # or dist:mac / dist:linux
 ```
 
-The installer bundles the web app and starts it on `localhost` with a local SQLite database stored in the user's app-data folder (`%APPDATA%/Tayssir POS` on Windows). Nothing needs to be installed or configured. To let tablets or phones on the shop's network use the same data, start it with `TAYSSIR_HOST=0.0.0.0` and `TAYSSIR_PORT=3000`.
+The installer bundles the web app and starts it on `localhost` with a local SQLite database stored in the user's app-data folder (`%APPDATA%/Mizan POS` on Windows; installs from before the rename keep using `Tayssir POS`). Nothing needs to be installed or configured. To let tablets or phones on the shop's network use the same data, start it with `TAYSSIR_HOST=0.0.0.0` and `TAYSSIR_PORT=3000`.
 
 **Releases and auto-update.** Push a tag such as `desktop-v2.1.0` (matching `version` in `apps/desktop/package.json`). The `Release desktop` workflow builds Windows, macOS and Linux installers and publishes them to GitHub Releases. Installed apps check for updates at launch and every 6 hours, download in the background and offer to restart. Configure in the repository settings:
 
@@ -200,13 +214,13 @@ Unsigned builds work, but Windows SmartScreen warns on first install, and macOS 
 ### 2. Shop server or cloud (Docker)
 
 ```sh
-docker build -t tayssir-pos .
-docker run -d --name tayssir --restart unless-stopped -p 3000:3000 -v tayssir-data:/data \
+docker build -t mizan-pos .
+docker run -d --name mizan --restart unless-stopped -p 3000:3000 -v mizan-data:/data \
   -e TAYSSIR_MODE=cloud \
   -e BETTER_AUTH_SECRET="$(openssl rand -base64 32)" \
   -e BETTER_AUTH_URL=https://pos.example.com \
   -e LICENSE_PRIVATE_KEY=... -e LICENSE_PUBLIC_KEY=... \
-  tayssir-pos
+  mizan-pos
 ```
 
 Use `TAYSSIR_MODE=local` (the default) for a single shop server on the local network.

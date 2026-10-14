@@ -2,15 +2,15 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Tayssir POS",
-    short_name: "Tayssir",
+    name: "Mizan POS",
+    short_name: "Mizan",
     description: "Point of sale, inventory and sales reporting for your store.",
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "any",
     background_color: "#ffffff",
-    theme_color: "#4f46e5",
+    theme_color: "#0e7c6b",
     categories: ["business", "finance", "productivity"],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },

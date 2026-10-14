@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { MizanMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -75,12 +76,12 @@ function Brand() {
   const t = useTranslations("platform");
   return (
     <div className="flex items-center gap-2 px-3">
-      <div className="bg-foreground text-background flex size-8 items-center justify-center rounded-md">
-        <ShieldCheck className="size-4" />
-      </div>
+      <MizanMark size={32} />
       <div className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-sm font-semibold">{t("title")}</span>
-        <span className="text-muted-foreground text-xs">Tayssir POS</span>
+        <span className="text-muted-foreground font-display text-xs">
+          Mizan · <span lang="ar">ميزان</span>
+        </span>
       </div>
     </div>
   );

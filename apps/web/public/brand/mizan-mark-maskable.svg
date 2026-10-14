@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Full-bleed version for maskable / home-screen icons: the glyph stays in the 80% safe zone. -->
+  <rect width="64" height="64" fill="#0E7C6B"/>
+  <g transform="translate(32 32) scale(0.72) translate(-32 -32)">
+    <circle cx="37" cy="24" r="9.5" fill="none" stroke="#FFFFFF" stroke-width="6.5"/>
+    <circle cx="37" cy="24" r="3.6" fill="#D6A23A"/>
+    <path d="M28.5 28.5C23 34 21 41 22.5 50" fill="none" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -14,7 +14,13 @@ import { getMeta, setMeta } from "./meta";
  */
 
 const KEEP = 30;
-const NAME_RE = /^tayssir-\d{8}-\d{6}-(auto|manual|pre-migration|pre-restore)\.db$/;
+/** "mizan-…"; "tayssir-…" files come from before the rename and stay usable. */
+const NAME_RE = /^(?:mizan|tayssir)-\d{8}-\d{6}-(auto|manual|pre-migration|pre-restore)\.db$/;
+const PREFIX = "mizan";
+
+/** Newest first, by the timestamp in the name (whatever the prefix). */
+const byNewest = (a: string, b: string) =>
+  b.replace(/^[a-z]+-/, "").localeCompare(a.replace(/^[a-z]+-/, ""));
 
 const stamp = (d = new Date()) =>
   d.toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
@@ -35,15 +41,14 @@ export function backupsAvailable() {
 function prune(dir: string) {
   const files = readdirSync(dir)
     .filter((f) => NAME_RE.test(f))
-    .sort()
-    .reverse();
+    .sort(byNewest);
   for (const old of files.slice(KEEP)) rmSync(path.join(dir, old), { force: true });
 }
 
 /** Consistent snapshot of the live database (VACUUM INTO). */
 export async function createBackup(db: Executor, kind: "auto" | "manual") {
   const { dir } = requireLocal();
-  const name = `tayssir-${stamp()}-${kind}.db`;
+  const name = `${PREFIX}-${stamp()}-${kind}.db`;
   const target = path.join(dir, name);
   await db.run(sql.raw(`VACUUM INTO '${target.replace(/'/g, "''")}'`));
   await setMeta(db, "lastBackupAt", String(Date.now()));
@@ -59,7 +64,7 @@ export function listBackups() {
       const st = statSync(path.join(dir, name));
       return { name, size: st.size, createdAt: st.mtime };
     })
-    .sort((a, b) => b.name.localeCompare(a.name));
+    .sort((a, b) => byNewest(a.name, b.name));
 }
 
 export function backupFilePath(name: string) {
@@ -70,7 +75,7 @@ export function backupFilePath(name: string) {
   return file;
 }
 
-/** Checks that a file is a Tayssir database we can restore. */
+/** Checks that a file is a Mizan database we can restore. */
 async function validateDatabaseFile(file: string) {
   const header = (await readFile(file)).subarray(0, 16).toString("latin1");
   if (header !== "SQLite format 3\u0000") throw new AppError("RESTORE_INVALID");
@@ -114,7 +119,7 @@ export function applyStagedRestore() {
   if (!dbPath || !existsSync(`${dbPath}.restore`)) return false;
   const dir = backupsDir(dbPath);
   mkdirSync(dir, { recursive: true });
-  if (existsSync(dbPath)) renameSync(dbPath, path.join(dir, `tayssir-${stamp()}-pre-restore.db`));
+  if (existsSync(dbPath)) renameSync(dbPath, path.join(dir, `${PREFIX}-${stamp()}-pre-restore.db`));
   for (const suffix of ["-wal", "-shm", "-journal"]) rmSync(`${dbPath}${suffix}`, { force: true });
   renameSync(`${dbPath}.restore`, dbPath);
   return true;
@@ -126,7 +131,7 @@ export async function backupBeforeMigration(pendingMigrations: number) {
   if (!dbPath || !existsSync(dbPath) || pendingMigrations === 0) return null;
   const dir = backupsDir(dbPath);
   mkdirSync(dir, { recursive: true });
-  const target = path.join(dir, `tayssir-${stamp()}-pre-migration.db`);
+  const target = path.join(dir, `${PREFIX}-${stamp()}-pre-migration.db`);
   await copyFile(dbPath, target);
   return target;
 }

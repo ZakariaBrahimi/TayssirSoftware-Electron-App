@@ -2,7 +2,7 @@
   "name": "@tayssir/desktop",
   "version": "2.0.0",
   "private": true,
-  "description": "Tayssir POS desktop app: runs the web app locally with an embedded server and database (works offline).",
+  "description": "Mizan POS desktop app: runs the web app locally with an embedded server and database (works offline).",
   "author": "Zakaria Abdessame Brahimi",
   "main": "main.js",
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.tayssir.pos",
-    "productName": "Tayssir POS",
+    "productName": "Mizan POS",
     "directories": {
       "output": "release"
     },
@@ -30,7 +30,7 @@
         "to": "web"
       }
     ],
-    "icon": "../web/public/icons/icon-512.png",
+    "icon": "build/icon.png",
     "win": {
       "target": "nsis"
     },
@@ -59,10 +59,10 @@
         "releaseType": "release"
       }
     ],
-    "artifactName": "Tayssir-POS-${version}-${os}-${arch}.${ext}",
-    "executableName": "tayssir-pos",
+    "artifactName": "Mizan-POS-${version}-${os}-${arch}.${ext}",
+    "executableName": "mizan-pos",
     "extraMetadata": {
-      "name": "tayssir-pos"
+      "name": "mizan-pos"
     }
   },
   "devDependencies": {

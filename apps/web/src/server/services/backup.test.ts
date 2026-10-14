@@ -51,7 +51,19 @@ describe("backups", () => {
     restored.$client.close();
   });
 
-  it("refuses files that are not Tayssir databases", async () => {
+  it("keeps backups made before the rename, ordered by date", async () => {
+    const db = createDb(`file:${dbFile}`);
+    await runMigrations(db);
+    const fresh = await createBackup(db, "manual");
+    expect(fresh.name).toMatch(/^mizan-/);
+    const legacy = "tayssir-20200101-000000-auto.db";
+    writeFileSync(path.join(dir, "backups", legacy), "old");
+    expect(listBackups().map((b) => b.name)).toEqual([fresh.name, legacy]);
+    expect(backupFilePath(legacy)).toBe(path.join(dir, "backups", legacy));
+    db.$client.close();
+  });
+
+  it("refuses files that are not Mizan databases", async () => {
     const bogus = path.join(dir, "bogus.db");
     writeFileSync(bogus, "definitely not sqlite");
     await expect(stageRestore(bogus)).rejects.toMatchObject({ code: "RESTORE_INVALID" });

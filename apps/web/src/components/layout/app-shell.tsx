@@ -1,8 +1,9 @@
 "use client";
 
-import { Menu, Store } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { MizanMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,12 +51,12 @@ function Brand() {
   const { data: settings } = useSettings();
   return (
     <div className="flex items-center gap-2 px-3">
-      <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md">
-        <Store className="size-4" />
-      </div>
+      <MizanMark size={32} />
       <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-sm font-semibold">{settings?.name ?? "Tayssir POS"}</span>
-        <span className="text-muted-foreground text-xs">Tayssir POS</span>
+        <span className="truncate text-sm font-semibold">{settings?.name ?? "Mizan"}</span>
+        <span className="text-muted-foreground font-display text-xs">
+          Mizan · <span lang="ar">ميزان</span>
+        </span>
       </div>
     </div>
   );

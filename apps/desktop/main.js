@@ -1,4 +1,4 @@
-// Tayssir POS desktop shell.
+// Mizan POS desktop shell.
 //
 // Starts the bundled Next.js server (the same app that runs on the web) on
 // localhost with a local SQLite database, then opens it in a window. Works
@@ -21,9 +21,19 @@ let mainWindow = null;
 let serverUrl = null;
 let quitting = false;
 
-// Store data in a readable folder, e.g. %APPDATA%/Tayssir POS on Windows.
-app.setName("Tayssir POS");
-app.setPath("userData", path.join(app.getPath("appData"), "Tayssir POS"));
+// Store data in a readable folder, e.g. %APPDATA%/Mizan POS on Windows.
+// Installs from before the rename keep their "Tayssir POS" folder (and data).
+const APP_NAME = "Mizan POS";
+app.setName(APP_NAME);
+{
+  const legacyDir = path.join(app.getPath("appData"), "Tayssir POS");
+  app.setPath(
+    "userData",
+    fs.existsSync(legacyDir)
+      ? legacyDir
+      : path.join(app.getPath("appData"), APP_NAME),
+  );
+}
 
 const webDir = app.isPackaged
   ? path.join(process.resourcesPath, "web")
@@ -192,7 +202,7 @@ async function startServer(port) {
 }
 
 function fatal(err) {
-  dialog.showErrorBox("Tayssir POS", String(err?.message ?? err));
+  dialog.showErrorBox(APP_NAME, String(err?.message ?? err));
   app.quit();
 }
 
@@ -204,7 +214,7 @@ function createWindow(url) {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
-    title: "Tayssir POS",
+    title: APP_NAME,
     icon: path.join(
       webDir,
       "bundle",
@@ -259,7 +269,7 @@ function setupAutoUpdates() {
       buttons: ["Restart now", "Later"],
       defaultId: 0,
       cancelId: 1,
-      title: "Tayssir POS",
+      title: APP_NAME,
       message: `Version ${info.version} is ready to install.`,
       detail:
         "Your data is kept and backed up automatically before the update. " +

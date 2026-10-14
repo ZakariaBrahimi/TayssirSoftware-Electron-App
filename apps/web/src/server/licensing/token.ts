@@ -78,7 +78,7 @@ const KEY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export function generateLicenseKey() {
   const group = () =>
     Array.from({ length: 4 }, () => KEY_ALPHABET[randomInt(KEY_ALPHABET.length)]).join("");
-  return `TAYS-${group()}-${group()}-${group()}-${group()}`;
+  return `MIZN-${group()}-${group()}-${group()}-${group()}`;
 }
 
 export const hashSecret = (value: string) => createHash("sha256").update(value).digest("hex");

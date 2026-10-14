@@ -64,7 +64,7 @@ function BackupCodes({ codes }: { codes: string[] }) {
         <Button type="button" variant="outline" size="sm" asChild>
           <a
             href={`data:text/plain;charset=utf-8,${encodeURIComponent(text)}`}
-            download="tayssir-platform-backup-codes.txt"
+            download="mizan-platform-backup-codes.txt"
           >
             <Download />
             {t("download")}

@@ -1,14 +1,16 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { licenseActivateInput } from "@/lib/validators";
 import { makeDb, makeStore } from "@/test/helpers";
 import type { Database } from "../db/client";
-import { stores } from "../db/schema";
+import { licenses, stores } from "../db/schema";
 import { setMeta } from "../services/meta";
 import { getDeviceId, getEntitlement } from "./entitlements";
 import { activateLicense, createLicense } from "./server";
 import {
   generateLicenseKey,
   generateSigningKeys,
+  hashSecret,
   signEntitlement,
   verifyEntitlement,
 } from "./token";
@@ -44,7 +46,7 @@ describe("entitlement tokens", () => {
   });
 
   it("generates readable license keys", () => {
-    expect(generateLicenseKey()).toMatch(/^TAYS(-[A-HJ-NP-Z2-9]{4}){4}$/);
+    expect(generateLicenseKey()).toMatch(/^MIZN(-[A-HJ-NP-Z2-9]{4}){4}$/);
   });
 });
 
@@ -67,6 +69,15 @@ describe("license server", () => {
     await expect(
       activateLicense(db, { key: "TAYS-AAAA-BBBB-CCCC-DDDD", deviceId: "x" }, keys.privateKey),
     ).rejects.toMatchObject({ code: "LICENSE_INVALID" });
+  });
+
+  it("still accepts keys sold before the rename (TAYS-)", async () => {
+    const oldKey = "TAYS-ABCD-EFGH-JKLM-NPQR";
+    await db.insert(licenses).values({ keyHash: hashSecret(oldKey), keyHint: "NPQR", plan: "pro" });
+    expect(licenseActivateInput.parse({ key: oldKey.toLowerCase() }).key).toBe(oldKey);
+    expect(licenseActivateInput.safeParse({ key: "ABCD-ABCD-EFGH-JKLM-NPQR" }).success).toBe(false);
+    const { token } = await activateLicense(db, { key: oldKey, deviceId: "pc" }, keys.privateKey);
+    expect(verifyEntitlement(token, keys.publicKey)?.plan).toBe("pro");
   });
 
   it("refuses expired licenses", async () => {

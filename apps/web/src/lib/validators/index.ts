@@ -294,7 +294,8 @@ export const licenseKeySchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^TAYS(-[A-Z0-9]{4}){4}$/, "invalid_license_key");
+  // MIZN- keys; TAYS- keys were sold before the rename and stay valid.
+  .regex(/^(MIZN|TAYS)(-[A-Z0-9]{4}){4}$/, "invalid_license_key");
 
 export const licenseActivateInput = z.object({ key: licenseKeySchema });
 
