@@ -10,7 +10,14 @@ import type {
 } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database, Executor } from "../db/client";
-import { brands, categories, products, stockMovements, stores } from "../db/schema";
+import {
+  brands,
+  categories,
+  productFamilies,
+  products,
+  stockMovements,
+  stores,
+} from "../db/schema";
 import { AppError } from "../errors";
 import { isMeasured, round3 } from "@/lib/quantity";
 import { parseScaleBarcode } from "@/lib/scale-barcode";
@@ -27,6 +34,8 @@ const productColumns = {
   lowStockThreshold: products.lowStockThreshold,
   unit: products.unit,
   scaleCode: products.scaleCode,
+  familyId: products.familyId,
+  familyName: productFamilies.name,
   isActive: products.isActive,
   categoryId: products.categoryId,
   brandId: products.brandId,
@@ -41,7 +50,11 @@ function baseSelect(db: Executor) {
     .select(productColumns)
     .from(products)
     .leftJoin(categories, and(eq(products.categoryId, categories.id), isNull(categories.deletedAt)))
-    .leftJoin(brands, and(eq(products.brandId, brands.id), isNull(brands.deletedAt)));
+    .leftJoin(brands, and(eq(products.brandId, brands.id), isNull(brands.deletedAt)))
+    .leftJoin(
+      productFamilies,
+      and(eq(products.familyId, productFamilies.id), isNull(productFamilies.deletedAt)),
+    );
 }
 
 const live = (ctx: Ctx) => and(eq(products.storeId, ctx.storeId), isNull(products.deletedAt));

@@ -220,6 +220,24 @@ export const brands = sqliteTable(
   (t) => [index("brands_store_idx").on(t.storeId)],
 );
 
+/**
+ * A product sold in several versions (sizes, colours...). Each version is a
+ * product of its own (barcode, stock, price) pointing to its family.
+ */
+export const productFamilies = sqliteTable(
+  "product_families",
+  {
+    id: id(),
+    storeId: storeId(),
+    name: text("name").notNull(),
+    /** JSON: option names and values, e.g. [{"name":"Size","values":["40","41"]}]. */
+    options: text("options").notNull().default("[]"),
+    deletedAt: ms("deleted_at"),
+    ...timestamps,
+  },
+  (t) => [index("product_families_store_idx").on(t.storeId)],
+);
+
 export const products = sqliteTable(
   "products",
   {
@@ -237,6 +255,9 @@ export const products = sqliteTable(
     unit: text("unit").notNull().default("piece"),
     /** Item code programmed in a label scale (see stores.scaleBarcodes). */
     scaleCode: text("scale_code"),
+    /** Family of a variant, and its option values as a JSON array ("42", "Black"). */
+    familyId: text("family_id"),
+    variantValues: text("variant_values"),
     categoryId: text("category_id"),
     brandId: text("brand_id"),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
@@ -247,6 +268,7 @@ export const products = sqliteTable(
     index("products_store_barcode_idx").on(t.storeId, t.barcode),
     index("products_store_name_idx").on(t.storeId, t.name),
     index("products_category_idx").on(t.categoryId),
+    index("products_family_idx").on(t.familyId),
   ],
 );
 
@@ -759,6 +781,7 @@ export const SYNC_TABLES = {
   stores,
   categories,
   brands,
+  product_families: productFamilies,
   products,
   customers,
   suppliers,

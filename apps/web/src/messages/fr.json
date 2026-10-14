@@ -253,7 +253,8 @@
     "creditLimit": "Limite de crédit : {amount}",
     "inStockMeasured": "{amount} en stock",
     "weight": "Poids en {unit}",
-    "addToCart": "Ajouter au panier"
+    "addToCart": "Ajouter au panier",
+    "variantCount": "{count, plural, one {# variante} other {# variantes}}"
   },
   "sales": {
     "title": "Ventes",
@@ -1511,5 +1512,42 @@
     "localNotLinked": "Les résumés sont envoyés depuis la version en ligne : liez ce PC à un commerce en ligne pour les recevoir sur Telegram ou par email.",
     "linkPc": "Lier ce PC",
     "bellHint": "La cloche en haut de chaque écran montre déjà les produits à surveiller, même hors ligne."
+  },
+  "variants": {
+    "cta": "Tailles ou couleurs ? Utilisez les variantes",
+    "newShort": "Avec variantes",
+    "newTitle": "Nouveau produit avec variantes",
+    "newDescription": "Un produit en plusieurs tailles, couleurs ou modèles. Chaque variante garde son code-barres, son prix et son stock.",
+    "editTitle": "Produit avec variantes",
+    "namePlaceholder": "ex. Baskets Air Max",
+    "options": "Options",
+    "optionsHint": "Par exemple Taille (S, M, L) et Couleur (Noir, Blanc). Jusqu’à 3 options.",
+    "optionName": "Nom de l’option",
+    "optionValues": "valeurs",
+    "valuesPlaceholder": "Tapez une valeur puis Entrée (ou S, M, L)",
+    "addOption": "Ajouter une option",
+    "removeOption": "Retirer cette option",
+    "presetSize": "Taille",
+    "presetColour": "Couleur",
+    "variantsTitle": "{count, plural, =0 {Variantes} one {# variante} other {# variantes}}",
+    "variantsHint": "Désactivez les combinaisons que vous ne vendez pas. Laissez le code-barres vide pour en générer un.",
+    "noVariants": "Ajoutez des valeurs à chaque option pour lister les variantes.",
+    "applyAll": "Appliquer à toutes",
+    "openingStock": "Stock initial",
+    "alertAt": "Alerte à",
+    "variant": "Variante",
+    "barcodeAuto": "Automatique",
+    "sellVariant": "Vendre {name}",
+    "createCount": "{count, plural, =0 {Créer} one {Créer # variante} other {Créer # variantes}}",
+    "created": "{count, plural, one {Produit créé avec # variante} other {Produit créé avec # variantes}}",
+    "updated": "Variantes enregistrées",
+    "deleteConfirm": "Supprimer « {name} » et ses {count} variantes ? Les ventes passées gardent leur historique.",
+    "willRemove": "L’enregistrement supprime : {names}",
+    "barcodeTaken": "Le code-barres {barcode} est déjà utilisé par un autre produit.",
+    "errorName": "Saisissez le nom du produit.",
+    "errorOptions": "Donnez à chaque option un nom distinct et au moins une valeur.",
+    "errorNoVariant": "Activez au moins une variante.",
+    "errorRows": "Vérifiez les prix et quantités en rouge (prix de vente ≥ coût).",
+    "chooseVariant": "Choisir une variante"
   }
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { Loader2, Printer, ScanBarcode, ShoppingCart, Wallet } from "lucide-react";
+import { Layers, Loader2, Printer, ScanBarcode, ShoppingCart, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import { useCurrentShift } from "../shifts/api";
 import { CartPanel } from "./cart-panel";
 import { CheckoutDialog } from "./checkout-dialog";
 import { type CartProduct, useCart } from "./use-cart";
+import { VariantPicker } from "./variant-picker";
 import { WeightDialog } from "./weight-dialog";
 import {
   formatQuantity,
@@ -62,6 +63,53 @@ export function PosScreen() {
   const products = useProducts({ q: q || undefined, pageSize: 24, sort: "name" });
 
   const focusInput = () => setTimeout(() => inputRef.current?.focus(), 0);
+
+  // Variants of one product show as a single tile; tapping it asks which.
+  const [picking, setPicking] = useState<string | null>(null);
+  const tiles = useMemo(() => {
+    const rows = products.data?.rows ?? [];
+    const out: (
+      | { kind: "product"; product: (typeof rows)[number] }
+      | {
+          kind: "family";
+          id: string;
+          name: string;
+          count: number;
+          stock: number;
+          minPrice: number;
+          maxPrice: number;
+        }
+    )[] = [];
+    const families = new Map<string, Extract<(typeof out)[number], { kind: "family" }>>();
+    for (const p of rows) {
+      const one = p.familyId ? rows.filter((r) => r.familyId === p.familyId).length === 1 : true;
+      // A search that finds a single variant shows that variant itself.
+      if (!p.familyId || (one && q)) {
+        out.push({ kind: "product", product: p });
+        continue;
+      }
+      const tile = families.get(p.familyId);
+      if (tile) {
+        tile.count++;
+        tile.stock += Math.max(0, p.stock);
+        tile.minPrice = Math.min(tile.minPrice, p.salePrice);
+        tile.maxPrice = Math.max(tile.maxPrice, p.salePrice);
+        continue;
+      }
+      const fresh = {
+        kind: "family" as const,
+        id: p.familyId,
+        name: p.familyName ?? p.name,
+        count: 1,
+        stock: Math.max(0, p.stock),
+        minPrice: p.salePrice,
+        maxPrice: p.salePrice,
+      };
+      families.set(p.familyId, fresh);
+      out.push(fresh);
+    }
+    return out;
+  }, [products.data, q]);
 
   // Weighed products clicked or typed in: ask for the weight first.
   const [weighing, setWeighing] = useState<CartProduct | null>(null);
@@ -192,7 +240,40 @@ export function PosScreen() {
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-              {products.data?.rows.map((p) => {
+              {tiles.map((tile) => {
+                if (tile.kind === "family") {
+                  return (
+                    <button
+                      key={`f-${tile.id}`}
+                      type="button"
+                      disabled={tile.stock <= 0}
+                      onClick={() => setPicking(tile.id)}
+                      className="bg-card hover:border-primary hover:bg-accent focus-visible:ring-ring/50 flex h-full flex-col justify-between gap-2 rounded-lg border p-3 text-start shadow-xs transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <span className="flex flex-col gap-0.5">
+                        <span className="line-clamp-2 text-sm font-medium">{tile.name}</span>
+                        <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                          <Layers className="size-3" />
+                          {t("variantCount", { count: tile.count })}
+                        </span>
+                      </span>
+                      <span className="flex items-end justify-between gap-2">
+                        <span className="font-semibold tabular-nums">
+                          {money.format(tile.minPrice)}
+                          {tile.maxPrice > tile.minPrice && "+"}
+                        </span>
+                        {tile.stock <= 0 ? (
+                          <Badge variant="destructive">{t("outOfStock")}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs tabular-nums">
+                            {t("inStock", { count: tile.stock })}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                }
+                const p = tile.product;
                 const out = p.stock <= 0;
                 return (
                   <button
@@ -347,6 +428,18 @@ export function PosScreen() {
         </DialogContent>
       </Dialog>
       {printArea}
+      <VariantPicker
+        familyId={picking}
+        onClose={() => {
+          setPicking(null);
+          focusInput();
+        }}
+        onPick={(product) => {
+          addToCart(product);
+          setPicking(null);
+          focusInput();
+        }}
+      />
       <WeightDialog
         product={weighing}
         onClose={() => {

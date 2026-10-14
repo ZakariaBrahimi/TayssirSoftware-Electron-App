@@ -253,7 +253,8 @@
     "creditLimit": "Credit limit: {amount}",
     "inStockMeasured": "{amount} in stock",
     "weight": "Weight in {unit}",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "variantCount": "{count, plural, one {# variant} other {# variants}}"
   },
   "sales": {
     "title": "Sales",
@@ -1511,5 +1512,42 @@
     "localNotLinked": "Summaries are sent from the online version: link this PC to an online shop to receive them on Telegram or by email.",
     "linkPc": "Link this PC",
     "bellHint": "The bell at the top of every screen already shows the products that need attention, even offline."
+  },
+  "variants": {
+    "cta": "Sizes or colours? Use variants",
+    "newShort": "With variants",
+    "newTitle": "New product with variants",
+    "newDescription": "One product in several sizes, colours or models. Each variant keeps its own barcode, price and stock.",
+    "editTitle": "Product with variants",
+    "namePlaceholder": "e.g. Air Max sneakers",
+    "options": "Options",
+    "optionsHint": "For example Size (S, M, L) and Colour (Black, White). Up to 3 options.",
+    "optionName": "Option name",
+    "optionValues": "values",
+    "valuesPlaceholder": "Type a value and press Enter (or S, M, L)",
+    "addOption": "Add an option",
+    "removeOption": "Remove this option",
+    "presetSize": "Size",
+    "presetColour": "Colour",
+    "variantsTitle": "{count, plural, =0 {Variants} one {# variant} other {# variants}}",
+    "variantsHint": "Turn off the combinations you don't sell. Leave the barcode empty to generate one.",
+    "noVariants": "Add values to every option to list the variants.",
+    "applyAll": "Apply to all",
+    "openingStock": "Opening stock",
+    "alertAt": "Alert at",
+    "variant": "Variant",
+    "barcodeAuto": "Automatic",
+    "sellVariant": "Sell {name}",
+    "createCount": "{count, plural, =0 {Create} one {Create # variant} other {Create # variants}}",
+    "created": "{count, plural, one {Product created with # variant} other {Product created with # variants}}",
+    "updated": "Variants saved",
+    "deleteConfirm": "Delete “{name}” and its {count} variants? Past sales keep their history.",
+    "willRemove": "Saving removes: {names}",
+    "barcodeTaken": "Barcode {barcode} is already used by another product.",
+    "errorName": "Enter the product name.",
+    "errorOptions": "Give each option a distinct name and at least one value.",
+    "errorNoVariant": "Turn on at least one variant.",
+    "errorRows": "Check the highlighted prices and quantities (sale price ≥ cost).",
+    "chooseVariant": "Choose a variant"
   }
 }

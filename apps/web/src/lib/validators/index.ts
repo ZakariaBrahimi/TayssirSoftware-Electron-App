@@ -77,6 +77,102 @@ export type ProductCreateInput = z.input<typeof productCreateInput>;
 export const productUpdateInput = productBase.partial();
 export type ProductUpdateInput = z.infer<typeof productUpdateInput>;
 
+/* -------------------------------- Variants -------------------------------- */
+
+const optionText = z.string().trim().min(1).max(30);
+
+/** An option of a product family (Size, Colour...) and its values. */
+export const familyOptionInput = z.object({
+  name: optionText,
+  values: z.array(optionText).min(1).max(60),
+});
+export type FamilyOptionInput = z.infer<typeof familyOptionInput>;
+
+export const familyVariantInput = z.object({
+  /** Set for variants that already exist (updates). */
+  id: id.optional(),
+  /** One value per option, in the options' order. */
+  values: z.array(optionText).min(1).max(3),
+  /** Left empty: an internal barcode is generated. */
+  barcode: barcodeSchema.or(z.literal("")).nullish(),
+  costPrice: money,
+  salePrice: money,
+  /** Opening stock of new variants (existing ones use stock adjustments). */
+  stock: stockAmount(10_000_000).default(0),
+  lowStockThreshold: stockAmount(1_000_000).default(5),
+  isActive: z.boolean().default(true),
+});
+export type FamilyVariantInput = z.input<typeof familyVariantInput>;
+
+export const familyInput = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    description: optionalText(1000),
+    unit: z.enum(UNITS).default("piece"),
+    categoryId: id.nullish(),
+    brandId: id.nullish(),
+    options: z.array(familyOptionInput).min(1).max(3),
+    variants: z.array(familyVariantInput).min(1).max(300),
+  })
+  .superRefine((input, ctx) => {
+    const names = input.options.map((o) => o.name.toLowerCase());
+    if (new Set(names).size !== names.length) {
+      ctx.addIssue({ code: "custom", path: ["options"], message: "duplicate_option" });
+    }
+    input.options.forEach((o, i) => {
+      const values = o.values.map((v) => v.toLowerCase());
+      if (new Set(values).size !== values.length) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["options", i, "values"],
+          message: "duplicate_value",
+        });
+      }
+    });
+    const combos = new Set<string>();
+    const barcodes = new Set<string>();
+    input.variants.forEach((v, i) => {
+      const fits =
+        v.values.length === input.options.length &&
+        v.values.every((value, k) => input.options[k].values.includes(value));
+      if (!fits) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", i, "values"],
+          message: "invalid_variant",
+        });
+      }
+      const key = v.values.join("\u0000").toLowerCase();
+      if (combos.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", i, "values"],
+          message: "duplicate_variant",
+        });
+      }
+      combos.add(key);
+      if (v.barcode) {
+        if (barcodes.has(v.barcode)) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["variants", i, "barcode"],
+            message: "duplicate_barcode",
+          });
+        }
+        barcodes.add(v.barcode);
+      }
+      if (v.salePrice < v.costPrice) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", i, "salePrice"],
+          message: "price_below_cost",
+        });
+      }
+    });
+  });
+export type FamilyInput = z.input<typeof familyInput>;
+export type FamilyOutput = z.output<typeof familyInput>;
+
 export const stockAdjustmentInput = z.object({
   change: z
     .number()

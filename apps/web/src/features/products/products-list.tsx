@@ -6,6 +6,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   Boxes,
+  Layers,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -103,7 +104,15 @@ function RowActions({ product }: { product: Row }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => router.push(`/products/${product.id}`)}>
+          <DropdownMenuItem
+            onSelect={() =>
+              router.push(
+                product.familyId
+                  ? `/products/families/${product.familyId}`
+                  : `/products/${product.id}`,
+              )
+            }
+          >
             <Pencil />
             {tc("edit")}
           </DropdownMenuItem>
@@ -151,6 +160,7 @@ function RowActions({ product }: { product: Row }) {
 
 export function ProductsList() {
   const t = useTranslations("products");
+  const tv = useTranslations("variants");
   const money = useMoney();
   const router = useRouter();
   const { isAdmin } = useCurrentUser();
@@ -193,6 +203,12 @@ export function ProductsList() {
               <span className="flex items-center gap-2 font-medium">
                 {row.original.name}
                 {!row.original.isActive && <Badge variant="outline">{t("inactive")}</Badge>}
+                {row.original.familyId && (
+                  <Badge variant="secondary" className="gap-1 font-normal">
+                    <Layers className="size-3" />
+                    {tv("variant")}
+                  </Badge>
+                )}
               </span>
               <span className="text-muted-foreground font-mono text-xs" dir="ltr">
                 {row.original.barcode}
@@ -241,7 +257,7 @@ export function ProductsList() {
             ]
           : []),
       ]),
-    [t, money, sort, isAdmin],
+    [t, tv, money, sort, isAdmin],
   );
 
   const table = useTable({
@@ -258,12 +274,20 @@ export function ProductsList() {
         description={t("subtitle")}
         actions={
           isAdmin && (
-            <Button asChild>
-              <Link href="/products/new">
-                <Plus />
-                {t("new")}
-              </Link>
-            </Button>
+            <>
+              <Button asChild variant="outline">
+                <Link href="/products/families/new">
+                  <Layers />
+                  {tv("newShort")}
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/products/new">
+                  <Plus />
+                  {t("new")}
+                </Link>
+              </Button>
+            </>
           )
         }
       />
@@ -317,7 +341,14 @@ export function ProductsList() {
         table={table}
         isLoading={query.isPending}
         emptyMessage={!q && categoryId === "all" && stock === "all" ? t("empty") : undefined}
-        onRowClick={isAdmin ? (row) => router.push(`/products/${row.id}`) : undefined}
+        onRowClick={
+          isAdmin
+            ? (row) =>
+                router.push(
+                  row.familyId ? `/products/families/${row.familyId}` : `/products/${row.id}`,
+                )
+            : undefined
+        }
       />
       {query.data && (
         <Pagination

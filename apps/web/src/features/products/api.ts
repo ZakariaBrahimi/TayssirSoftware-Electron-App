@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { InferResponseType } from "hono/client";
 import { api, unwrap } from "@/lib/api-client";
 import type {
+  FamilyInput,
   ProductCreateInput,
   ProductListQuery,
   ProductUpdateInput,
@@ -90,6 +91,38 @@ export function useProductMutations() {
     adjustStock: useMutation({
       mutationFn: ({ id, json }: { id: string; json: StockAdjustmentInput }) =>
         unwrap(api.products[":id"].stock.$post({ param: { id }, json })),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+/* ------------------------- Families (variants) ------------------------- */
+
+export type Family = InferResponseType<(typeof api.families)[":id"]["$get"], 200>;
+
+export function useFamily(id: string | null | undefined) {
+  return useQuery({
+    queryKey: ["products", "family", id],
+    queryFn: () => unwrap(api.families[":id"].$get({ param: { id: id! } })),
+    enabled: !!id,
+  });
+}
+
+export function useFamilyMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: productKeys.all });
+  return {
+    create: useMutation({
+      mutationFn: (json: FamilyInput) => unwrap(api.families.$post({ json })),
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, json }: { id: string; json: FamilyInput }) =>
+        unwrap(api.families[":id"].$put({ param: { id }, json })),
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => unwrap(api.families[":id"].$delete({ param: { id } })),
       onSuccess: invalidate,
     }),
   };

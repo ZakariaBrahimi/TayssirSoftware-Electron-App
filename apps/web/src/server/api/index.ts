@@ -12,6 +12,7 @@ import { licenseRoutes, licenseServerRoutes } from "./routes/licensing";
 import { appInfoRoutes, setupRoutes, signupRoutes } from "./routes/onboarding";
 import { platformRoutes } from "./routes/platform";
 import { customersRoutes, suppliersRoutes } from "./routes/parties";
+import { familiesRoutes } from "./routes/families";
 import { productsRoutes } from "./routes/products";
 import { purchasesRoutes } from "./routes/purchases";
 import { reportsRoutes } from "./routes/reports";
@@ -25,6 +26,7 @@ const protectedRoutes = new Hono<AppEnv>()
   .use(requireAuth)
   .route("/me", meRoutes)
   .route("/products", productsRoutes)
+  .route("/families", familiesRoutes)
   .route("/categories", categoriesRoutes)
   .route("/brands", brandsRoutes)
   .route("/sales", salesRoutes)
