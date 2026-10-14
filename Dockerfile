@@ -30,9 +30,9 @@ COPY --from=build /repo/apps/web/.next/standalone ./
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /repo/apps/web/public ./apps/web/public
 COPY --from=build /repo/apps/web/drizzle ./apps/web/drizzle
+# /data holds the database: mount a volume there (docker run -v, Compose, Railway).
 RUN mkdir -p /data && chown -R node:node /data
 USER node
-VOLUME ["/data"]
 EXPOSE 3000
 WORKDIR /app/apps/web
 CMD ["node", "server.js"]
