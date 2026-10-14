@@ -13,6 +13,76 @@ and renews the HTTPS certificate on its own. Count about 30 minutes.
 | An SSH client                                         | Terminal (macOS/Linux) or Windows Terminal                   | free               |
 
 2 GB of RAM also works: the install script adds swap for the build.
+To pay nothing, use the free Oracle Cloud server described next, with a free
+DuckDNS address until you buy a domain.
+
+## Free option: an Oracle Cloud server
+
+Oracle Cloud's "Always Free" tier includes an ARM server (up to 4 CPUs,
+24 GB of memory, 200 GB of disk) that stays free with no time limit and may
+be used commercially. Mizan's image is tested on ARM, and `install.sh`
+handles Oracle's firewall. If you use it, follow these steps instead of
+"What you need", then continue at step 1 below.
+
+**Create the account**
+
+1. Sign up at <https://signup.cloud.oracle.com>. A card is asked for to check
+   your identity; Always Free resources are not charged. If one card is
+   refused, try another (an international Visa or Mastercard usually works).
+2. Choose the **home region** carefully: it cannot be changed, and the free
+   ARM server only exists there. Close to Algeria: _France South (Marseille)_,
+   _Spain Central (Madrid)_ or _Italy North (Milan)_.
+
+**Create the server**
+
+1. Menu → Compute → Instances → **Create instance**.
+2. Image: **Canonical Ubuntu 24.04**.
+3. Shape: **Change shape** → Ampere → **VM.Standard.A1.Flex**, 2 OCPUs and
+   12 GB of memory (enough for Mizan; the free tier allows up to 4 and 24).
+4. Networking: create a new virtual cloud network with a **public subnet**
+   and keep **Assign a public IPv4 address** on.
+5. SSH keys: **Save private key** (keep this file; it is the only way in).
+6. Boot volume: 100 GB is plenty. Create.
+
+"Out of capacity for shape VM.Standard.A1.Flex" means the free ARM servers in
+that zone are taken: pick another availability domain, try 1 OCPU / 6 GB, or
+retry later (early morning often works).
+
+**Open HTTP and HTTPS in Oracle's network**
+
+Oracle blocks everything but SSH at the network level too:
+
+1. Open the instance → its subnet → **Default Security List** → **Add Ingress Rules**.
+2. Source CIDR `0.0.0.0/0`, IP protocol **TCP**, destination port **80** → Add.
+3. Same again for TCP port **443**.
+
+(The firewall inside the server is opened by `install.sh`.)
+
+**Connect**
+
+```sh
+chmod 600 ~/Downloads/ssh-key-*.key
+ssh -i ~/Downloads/ssh-key-*.key ubuntu@PUBLIC_IP
+sudo -i        # the install commands below run as root
+```
+
+On Windows, use the same command in PowerShell.
+
+**Keep it from being reclaimed**
+
+Oracle may reclaim free servers that stay almost idle for a week. To avoid
+that, upgrade the account to **Pay As You Go** (Billing → Upgrade): Always Free
+resources stay free, and you can add a budget alert of $1 to be warned of any
+charge.
+
+**No domain yet? Use DuckDNS (free)**
+
+1. Sign in at <https://www.duckdns.org>, add a subdomain (e.g. `mizan`) and
+   set its IP to the server's public IP.
+2. Use `mizan.duckdns.org` as the domain in `install.sh`.
+
+Buy your real domain before you release the desktop app: installed desktops
+keep the server address they were built with (see "Changing servers" below).
 
 ## 1. Point the domain to the server
 
@@ -90,15 +160,38 @@ All commands run on the server from `/opt/mizan/deploy`.
 - The app snapshots its database every day inside the Docker volume (30 kept).
 - Every night at 03:30, `backup.sh` takes another snapshot and copies them to
   `/opt/mizan/deploy/backups` (30 kept), so they survive the loss of the volume.
-- For copies off the server (recommended), install rclone
-  (`apt install rclone`), run `rclone config` to add e.g. Backblaze B2 or
-  Google Drive, and set `RCLONE_REMOTE=remote:folder` in `deploy/.env`.
+- For copies off the server (recommended), use rclone with free storage.
+  With **Backblaze B2** (10 GB free):
+  1. Create an account at <https://www.backblaze.com/b2>, a private bucket
+     (e.g. `mizan-backups`) and an application key limited to that bucket.
+  2. On the server: `apt install -y rclone`, then `rclone config` →
+     `n` (new) → name `b2` → storage `b2` → paste the key ID and key → defaults.
+  3. In `deploy/.env`, set `RCLONE_REMOTE=b2:mizan-backups`, then run
+     `sudo ./backup.sh` once to check.
+
+  Google Drive, Oracle Object Storage or any S3-compatible storage work the
+  same way (`rclone config` lists them).
+
 - Also turn on your VPS provider's server snapshots if offered (about 20% of the server price).
 
 Restoring replaces the whole database (every shop) with the chosen copy; the
 replaced one is kept as a `pre-restore` backup.
 
-## Moving to another server
+## Changing servers
+
+You can move to another server or provider at any time. Three things must
+come with you:
+
+| Keep              | Why                                                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| The **domain**    | Web users and desktops reach the server by it; desktops have it built in.                                       |
+| **`deploy/.env`** | A new `LICENSE_PRIVATE_KEY` would invalidate every license sold; a new `BETTER_AUTH_SECRET` signs everyone out. |
+| The **database**  | Every shop's data: take it with `backup.sh`, put it back with `restore.sh`.                                     |
+
+Desktops keep selling offline during the move and sync again afterwards. A
+day before, lower the DNS record's TTL to 5 minutes so the switch is quick.
+
+### Moving to another server
 
 On the new server, run the install with the same domain, then before
 signing up anyone:
@@ -109,4 +202,4 @@ sudo ./deploy/install.sh                      # keeps the existing .env
 sudo ./deploy/restore.sh /path/to/latest.db   # a file from deploy/backups
 ```
 
-Then point the DNS record to the new IP.
+Then point the DNS record to the new IP, check the app, and only then shut the old server down.

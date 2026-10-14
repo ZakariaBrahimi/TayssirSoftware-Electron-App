@@ -27,6 +27,23 @@ if command -v ufw >/dev/null 2>&1; then
   ufw allow 80/tcp >/dev/null
   ufw allow 443 >/dev/null
   ufw --force enable >/dev/null
+elif command -v netfilter-persistent >/dev/null 2>&1; then
+  # Oracle Cloud images: saved iptables rules reject everything but SSH.
+  # Open HTTP and HTTPS above that reject rule (ufw is not used there).
+  say "Firewall: opening HTTP and HTTPS"
+  for rule in "-p tcp --dport 80" "-p tcp --dport 443" "-p udp --dport 443"; do
+    # shellcheck disable=SC2086
+    if ! iptables -C INPUT -m state --state NEW $rule -j ACCEPT 2>/dev/null; then
+      pos=$(iptables -L INPUT --line-numbers -n | awk '$2 == "REJECT" {print $1; exit}')
+      # shellcheck disable=SC2086
+      if [ -n "$pos" ]; then
+        iptables -I INPUT "$pos" -m state --state NEW $rule -j ACCEPT
+      else
+        iptables -A INPUT -m state --state NEW $rule -j ACCEPT
+      fi
+    fi
+  done
+  netfilter-persistent save >/dev/null
 fi
 
 first_install=false
