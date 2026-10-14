@@ -87,7 +87,8 @@
     "syncError": "Sync failed",
     "notSynced": "Not synced yet",
     "subscription": "Subscription",
-    "reorder": "Reorder"
+    "reorder": "Reorder",
+    "stockCount": "Stock count"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -1574,7 +1575,10 @@
     "openOnline": "Open the online settings",
     "localNotLinked": "Summaries are sent from the online version: link this PC to an online shop to receive them on Telegram or by email.",
     "linkPc": "Link this PC",
-    "bellHint": "The bell at the top of every screen already shows the products that need attention, even offline."
+    "bellHint": "The bell at the top of every screen already shows the products that need attention, even offline.",
+    "phones": "Phones (Mizan app)",
+    "phonesHint": "Owners and admins who sign in to the Android app get the summary as a notification.",
+    "phonesCount": "{count, plural, =0 {No phone yet: sign in to the Android app.} one {# phone receives notifications.} other {# phones receive notifications.}}"
   },
   "variants": {
     "cta": "Sizes or colours? Use variants",
@@ -1704,7 +1708,20 @@
     "returnPolicyPlaceholder": "e.g. Exchanges within 7 days with this receipt.",
     "qrUrl": "QR code link",
     "qrLabel": "Text under the QR code",
-    "qrLabelPlaceholder": "e.g. Follow us on Instagram"
+    "qrLabelPlaceholder": "e.g. Follow us on Instagram",
+    "noPhonePrinter": "Choose this phone's printer in Settings → Printing.",
+    "phonePrintFailed": "The printer didn't answer. Is it on and paired?",
+    "phonePrintOk": "Test receipt sent.",
+    "phonePrinterTitle": "This phone's receipt printer",
+    "phonePrinterDescription": "A Bluetooth printer paired with this phone, or the built-in printer of a Sunmi terminal (InnerPrinter).",
+    "phonePrinterCurrent": "Printing to",
+    "phonePrinterNone": "No printer chosen yet.",
+    "findPrinters": "Find printers",
+    "forgetPrinter": "Forget",
+    "noPairedPrinters": "No paired device. Pair the printer in Android's Bluetooth settings first.",
+    "printerChosen": "{name} chosen",
+    "bluetoothError": "Bluetooth is off or permission was refused.",
+    "phonePrinterHint": "Receipts use the design and paper set below (58 or 80 mm). Labels print from a computer."
   },
   "quickKeys": {
     "title": "Quick buttons",
@@ -1724,5 +1741,32 @@
     "moveBefore": "Move before",
     "moveAfter": "Move after",
     "removeButton": "Remove the button"
+  },
+  "scanner": {
+    "scan": "Scan with the camera",
+    "installing": "Installing the scanner (first time only)… try again in a few seconds.",
+    "failed": "The camera scanner couldn't start.",
+    "noCamera": "No camera available, or permission refused.",
+    "hint": "Point the camera at the barcode."
+  },
+  "stockCount": {
+    "title": "Stock count",
+    "description": "Scan the items on the shelves (or type the quantity), then apply: the stock becomes what you counted. Products you don't count keep their stock.",
+    "scanPlaceholder": "Scan a barcode…",
+    "searchPlaceholder": "Or search a product by name…",
+    "notFound": "No product with barcode {code}.",
+    "serviceNoStock": "{name} is a service: it has no stock.",
+    "empty": "Nothing counted yet. Scan a product to start.",
+    "expected": "In stock: {amount}",
+    "countedFor": "Counted quantity of {name}",
+    "countedProducts": "Products counted",
+    "withDifference": "With a difference",
+    "applyHint": "Each difference becomes a stock adjustment named \"Stock count\". The count in progress is kept on this device.",
+    "apply": "Apply the count",
+    "applyTitle": "Apply the stock count?",
+    "applyConfirm": "{count, plural, =0 {No difference: nothing will change.} one {# product will be adjusted to the counted quantity.} other {# products will be adjusted to the counted quantities.}}",
+    "applied": "{count, plural, =0 {Count applied: no difference.} one {# product adjusted ({value}).} other {# products adjusted ({value}).}}",
+    "clear": "Clear the count",
+    "clearConfirm": "Clear everything counted so far?"
   }
 }

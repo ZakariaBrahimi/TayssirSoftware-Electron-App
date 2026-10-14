@@ -78,6 +78,13 @@
       "when": 1791992999492,
       "tag": "0010_barcodes_quick_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1791995493359,
+      "tag": "0011_push_devices",
+      "breakpoints": true
     }
   ]
 }

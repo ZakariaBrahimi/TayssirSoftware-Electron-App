@@ -845,6 +845,21 @@ export const alertSettings = sqliteTable("alert_settings", {
   ...timestamps,
 });
 
+/** Phones running the Android app, for push notifications (cloud only). */
+export const pushDevices = sqliteTable(
+  "push_devices",
+  {
+    id: id(),
+    storeId: storeId(),
+    userId: text("user_id").notNull(),
+    /** Firebase Cloud Messaging registration token. */
+    token: text("token").notNull().unique(),
+    platform: text("platform").notNull().default("android"),
+    ...timestamps,
+  },
+  (t) => [index("push_devices_store_idx").on(t.storeId)],
+);
+
 export const ALERT_CHANNEL_KINDS = ["telegram", "email"] as const;
 export type AlertChannelKind = (typeof ALERT_CHANNEL_KINDS)[number];
 

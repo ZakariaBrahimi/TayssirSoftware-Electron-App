@@ -35,6 +35,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { LinkBarcodeDialog } from "./link-barcode-dialog";
 import { PriceDialog } from "./price-dialog";
 import { QuickKeysPanel } from "./quick-keys-panel";
+import { CameraScanButton } from "../scanner/camera-scanner";
 import { type CartProduct, isService, quantityInCart, useCart } from "./use-cart";
 import { VariantPicker } from "./variant-picker";
 import { WeightDialog } from "./weight-dialog";
@@ -148,8 +149,8 @@ export function PosScreen() {
   );
 
   // Barcode scanners type the code then press Enter.
-  const onEnter = async () => {
-    const code = search.trim();
+  const onEnter = async (scanned?: string) => {
+    const code = (scanned ?? search).trim();
     if (!code) return;
     setLooking(true);
     try {
@@ -250,11 +251,16 @@ export function PosScreen() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("scanPlaceholder")}
-            className="h-12 ps-11 text-base"
+            className="h-12 ps-11 pe-12 text-base"
             aria-label={t("scanPlaceholder")}
           />
-          {looking && (
+          {looking ? (
             <Loader2 className="text-muted-foreground absolute end-3 top-1/2 size-5 -translate-y-1/2 animate-spin" />
+          ) : (
+            <CameraScanButton
+              className="absolute end-1.5 top-1/2 -translate-y-1/2"
+              onScan={(scanned) => void onEnter(scanned)}
+            />
           )}
         </form>
 

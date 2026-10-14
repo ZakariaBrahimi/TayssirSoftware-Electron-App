@@ -291,7 +291,8 @@ export async function createProduct(
   assertPrices(input);
   if (await isBarcodeTaken(db, ctx, input.barcode)) throw new AppError("BARCODE_TAKEN");
   const extras = await checkExtraBarcodes(db, ctx, input.barcode, input.extraBarcodes ?? []);
-  const { stock: typedStock, extraBarcodes: _extras, ...fields } = input;
+  const { stock: typedStock, ...fields } = input;
+  delete fields.extraBarcodes;
   // Services have no stock.
   const stock = input.kind === "service" ? 0 : typedStock;
   const id = await db.transaction(async (tx) => {

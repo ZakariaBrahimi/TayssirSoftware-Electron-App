@@ -200,6 +200,16 @@ export const stockAdjustmentInput = z.object({
 });
 export type StockAdjustmentInput = z.infer<typeof stockAdjustmentInput>;
 
+/** Stock count: what was counted on the shelves becomes the stock. */
+export const stockCountInput = z.object({
+  items: z
+    .array(z.object({ productId: id, counted: stockAmount(10_000_000) }))
+    .min(1)
+    .max(2000),
+  note: z.string().trim().max(200).optional(),
+});
+export type StockCountInput = z.input<typeof stockCountInput>;
+
 export const PRODUCT_STOCK_FILTERS = ["all", "low", "out"] as const;
 export const PRODUCT_SORTS = [
   "name",

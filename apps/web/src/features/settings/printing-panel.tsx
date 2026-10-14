@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { type LabelItem, LabelPages, LabelView, labelPage } from "../printing/label";
 import type { Sale } from "../sales/api";
+import { PhonePrinterCard } from "../printing/phone-printer-card";
 import { Receipt, receiptPage } from "../sales/receipt";
 
 /* Settings → Printing: the shop's label and receipt designs, with previews. */
@@ -295,6 +296,7 @@ export function PrintingPanel({ settings }: { settings: StoreSettings }) {
 
   return (
     <div className="grid gap-6">
+      <PhonePrinterCard sample={sample} receipt={receipt} />
       {/* ------------------------------ Labels ------------------------------ */}
       <Card>
         <CardHeader>

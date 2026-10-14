@@ -1,11 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { and, eq, gt, isNotNull, isNull, ne, or } from "drizzle-orm";
 import type { Executor } from "../db/client";
-import { alertChannels, alertSettings, stores } from "../db/schema";
+import { alertChannels, alertSettings, pushDevices, stores } from "../db/schema";
 import { AppError } from "../errors";
 import { stockAlerts } from "../services/forecast";
 import { type DigestLocale, buildDigest } from "./digest";
 import { emailAvailable, sendEmail } from "./email";
+import { PushGoneError, pushAvailable, sendPush } from "./push";
 import { botUsername, escapeHtml, isChatGone, sendTelegram, telegramAvailable } from "./telegram";
 
 /*
@@ -74,10 +75,44 @@ export function listChannels(db: Executor, storeId: string) {
 }
 
 /** Everything the settings page shows. */
+/** Phones of the store with the Android app (push notifications). */
+export function listDevices(db: Executor, storeId: string) {
+  return db
+    .select({ id: pushDevices.id, token: pushDevices.token })
+    .from(pushDevices)
+    .where(eq(pushDevices.storeId, storeId));
+}
+
+/** Registers (or moves) a phone's push token for a store and user. */
+export async function registerDevice(
+  db: Executor,
+  input: { storeId: string; userId: string; token: string; platform: string },
+) {
+  await db
+    .insert(pushDevices)
+    .values(input)
+    .onConflictDoUpdate({
+      target: pushDevices.token,
+      set: {
+        storeId: input.storeId,
+        userId: input.userId,
+        platform: input.platform,
+        updatedAt: new Date(),
+      },
+    });
+  return { ok: true };
+}
+
+export async function unregisterDevice(db: Executor, token: string) {
+  await db.delete(pushDevices).where(eq(pushDevices.token, token));
+  return { ok: true };
+}
+
 export async function alertOverview(db: Executor, storeId: string) {
-  const [settings, channels] = await Promise.all([
+  const [settings, channels, devices] = await Promise.all([
     getAlertSettings(db, storeId),
     listChannels(db, storeId),
+    listDevices(db, storeId),
   ]);
   return {
     settings: {
@@ -94,6 +129,8 @@ export async function alertOverview(db: Executor, storeId: string) {
     })),
     telegram: telegramAvailable(),
     email: emailAvailable(),
+    push: pushAvailable(),
+    phones: devices.length,
   };
 }
 
@@ -213,8 +250,12 @@ export async function removeChannel(db: Executor, storeId: string, id: string) {
 export type Senders = {
   telegram: (chatId: string, html: string) => Promise<unknown>;
   email: (to: string, subject: string, html: string, text: string) => Promise<unknown>;
+  push?: (
+    token: string,
+    message: { title: string; body: string; url?: string },
+  ) => Promise<unknown>;
 };
-const defaultSenders: Senders = { telegram: sendTelegram, email: sendEmail };
+const defaultSenders: Senders = { telegram: sendTelegram, email: sendEmail, push: sendPush };
 
 const appUrl = () => process.env.BETTER_AUTH_URL?.replace(/\/$/, "") || null;
 
@@ -230,14 +271,16 @@ export async function sendDigest(
   const senders = opts.senders ?? defaultSenders;
   const [store] = await db.select({ name: stores.name }).from(stores).where(eq(stores.id, storeId));
   if (!store) throw new AppError("NOT_FOUND");
-  const [settings, channels] = await Promise.all([
+  const canPush = Boolean(senders.push) && (opts.senders ? true : pushAvailable());
+  const [settings, channels, devices] = await Promise.all([
     getAlertSettings(db, storeId),
     listChannels(db, storeId),
+    canPush ? listDevices(db, storeId) : Promise.resolve([]),
   ]);
-  if (!channels.length) return { sent: 0, channels: 0, alerts: 0 };
+  const targets = channels.length + devices.length;
+  if (!targets) return { sent: 0, channels: 0, alerts: 0 };
   const alerts = await stockAlerts(db, { storeId }, opts.now);
-  if (!alerts.summary.total && !opts.force)
-    return { sent: 0, channels: channels.length, alerts: 0 };
+  if (!alerts.summary.total && !opts.force) return { sent: 0, channels: targets, alerts: 0 };
 
   const locale = settings.locale as DigestLocale;
   const base = appUrl();
@@ -263,7 +306,24 @@ export async function sendDigest(
       }
     }
   }
-  return { sent, channels: channels.length, alerts: alerts.summary.total };
+  // Phones with the app: a short notification that opens the reorder page.
+  for (const device of devices) {
+    try {
+      await senders.push!(device.token, {
+        title: store.name,
+        body: digest.subject,
+        url: `/${locale}/reorder`,
+      });
+      sent++;
+    } catch (err) {
+      if (err instanceof PushGoneError) {
+        await db.delete(pushDevices).where(eq(pushDevices.id, device.id));
+      } else {
+        console.error(`[alerts] push summary failed for store ${storeId}:`, err);
+      }
+    }
+  }
+  return { sent, channels: targets, alerts: alerts.summary.total };
 }
 
 /**

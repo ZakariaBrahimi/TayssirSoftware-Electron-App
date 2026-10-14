@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { PRODUCT_KINDS, type ProductKind } from "@/lib/validators";
 import { CatalogSelect } from "../catalog/catalog-select";
 import { generateBarcode, isBarcodeAvailable, type Product, useProductMutations } from "./api";
+import { CameraScanButton } from "../scanner/camera-scanner";
 import { BarcodeTags } from "./barcode-tags";
 import { PrintLabelsDialog } from "./labels";
 import { StockAdjustDialog } from "./stock-dialog";
@@ -283,6 +284,15 @@ export function ProductForm({ product }: { product?: Product }) {
                           }}
                         />
                       </FormControl>
+                      <CameraScanButton
+                        className="border"
+                        onScan={(code) =>
+                          form.setValue("barcode", code, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                      />
                       <Button
                         type="button"
                         variant="outline"

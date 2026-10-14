@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  ClipboardCheck,
   Contact,
   Gem,
   LayoutDashboard,
@@ -21,6 +22,7 @@ export type NavKey =
   | "products"
   | "purchases"
   | "reorder"
+  | "stockCount"
   | "sales"
   | "customers"
   | "suppliers"
@@ -29,7 +31,7 @@ export type NavKey =
   | "settings";
 
 export type NavItem = {
-  href: `/${NavKey}`;
+  href: `/${string}`;
   key: NavKey;
   icon: LucideIcon;
   adminOnly?: boolean;
@@ -43,6 +45,7 @@ export const navItems: NavItem[] = [
   { href: "/customers", key: "customers", icon: Users },
   { href: "/products", key: "products", icon: Package },
   { href: "/reorder", key: "reorder", icon: PackageSearch, adminOnly: true },
+  { href: "/stock-count", key: "stockCount", icon: ClipboardCheck, adminOnly: true },
   { href: "/purchases", key: "purchases", icon: Truck, adminOnly: true },
   { href: "/suppliers", key: "suppliers", icon: Contact, adminOnly: true },
   { href: "/reports", key: "reports", icon: BarChart3, adminOnly: true },

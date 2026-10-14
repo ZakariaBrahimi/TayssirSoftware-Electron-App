@@ -87,7 +87,8 @@
     "syncError": "Échec de la synchronisation",
     "notSynced": "Pas encore synchronisé",
     "subscription": "Abonnement",
-    "reorder": "Réapprovisionner"
+    "reorder": "Réapprovisionner",
+    "stockCount": "Inventaire"
   },
   "auth": {
     "signInTitle": "Connexion",
@@ -1574,7 +1575,10 @@
     "openOnline": "Ouvrir les paramètres en ligne",
     "localNotLinked": "Les résumés sont envoyés depuis la version en ligne : liez ce PC à un commerce en ligne pour les recevoir sur Telegram ou par email.",
     "linkPc": "Lier ce PC",
-    "bellHint": "La cloche en haut de chaque écran montre déjà les produits à surveiller, même hors ligne."
+    "bellHint": "La cloche en haut de chaque écran montre déjà les produits à surveiller, même hors ligne.",
+    "phones": "Téléphones (app Mizan)",
+    "phonesHint": "Les gérants et admins connectés à l’application Android reçoivent le résumé en notification.",
+    "phonesCount": "{count, plural, =0 {Aucun téléphone : connectez-vous à l’application Android.} one {# téléphone reçoit les notifications.} other {# téléphones reçoivent les notifications.}}"
   },
   "variants": {
     "cta": "Tailles ou couleurs ? Utilisez les variantes",
@@ -1704,7 +1708,20 @@
     "returnPolicyPlaceholder": "ex. Échange sous 7 jours avec ce ticket.",
     "qrUrl": "Lien du QR code",
     "qrLabel": "Texte sous le QR code",
-    "qrLabelPlaceholder": "ex. Suivez-nous sur Instagram"
+    "qrLabelPlaceholder": "ex. Suivez-nous sur Instagram",
+    "noPhonePrinter": "Choisissez l’imprimante de ce téléphone dans Paramètres → Impression.",
+    "phonePrintFailed": "L’imprimante ne répond pas. Est-elle allumée et appairée ?",
+    "phonePrintOk": "Ticket de test envoyé.",
+    "phonePrinterTitle": "Imprimante de tickets de ce téléphone",
+    "phonePrinterDescription": "Une imprimante Bluetooth appairée à ce téléphone, ou l’imprimante intégrée d’un terminal Sunmi (InnerPrinter).",
+    "phonePrinterCurrent": "Impression vers",
+    "phonePrinterNone": "Aucune imprimante choisie.",
+    "findPrinters": "Chercher les imprimantes",
+    "forgetPrinter": "Oublier",
+    "noPairedPrinters": "Aucun appareil appairé. Appairez d’abord l’imprimante dans les réglages Bluetooth d’Android.",
+    "printerChosen": "{name} choisie",
+    "bluetoothError": "Bluetooth désactivé ou autorisation refusée.",
+    "phonePrinterHint": "Les tickets suivent le modèle et le papier réglés ci-dessous (58 ou 80 mm). Les étiquettes s’impriment depuis un ordinateur."
   },
   "quickKeys": {
     "title": "Boutons rapides",
@@ -1724,5 +1741,32 @@
     "moveBefore": "Déplacer avant",
     "moveAfter": "Déplacer après",
     "removeButton": "Retirer le bouton"
+  },
+  "scanner": {
+    "scan": "Scanner avec la caméra",
+    "installing": "Installation du scanner (première fois seulement)… réessayez dans quelques secondes.",
+    "failed": "Le scanner n’a pas pu démarrer.",
+    "noCamera": "Pas de caméra disponible, ou autorisation refusée.",
+    "hint": "Visez le code-barres avec la caméra."
+  },
+  "stockCount": {
+    "title": "Inventaire",
+    "description": "Scannez les articles en rayon (ou tapez la quantité), puis appliquez : le stock devient ce que vous avez compté. Les produits non comptés gardent leur stock.",
+    "scanPlaceholder": "Scannez un code-barres…",
+    "searchPlaceholder": "Ou cherchez un produit par nom…",
+    "notFound": "Aucun produit avec le code-barres {code}.",
+    "serviceNoStock": "{name} est un service : il n’a pas de stock.",
+    "empty": "Rien de compté pour l’instant. Scannez un produit pour commencer.",
+    "expected": "En stock : {amount}",
+    "countedFor": "Quantité comptée de {name}",
+    "countedProducts": "Produits comptés",
+    "withDifference": "Avec un écart",
+    "applyHint": "Chaque écart devient un ajustement de stock nommé « Stock count ». L’inventaire en cours est gardé sur cet appareil.",
+    "apply": "Appliquer l’inventaire",
+    "applyTitle": "Appliquer l’inventaire ?",
+    "applyConfirm": "{count, plural, =0 {Aucun écart : rien ne changera.} one {# produit sera ajusté à la quantité comptée.} other {# produits seront ajustés aux quantités comptées.}}",
+    "applied": "{count, plural, =0 {Inventaire appliqué : aucun écart.} one {# produit ajusté ({value}).} other {# produits ajustés ({value}).}}",
+    "clear": "Effacer l’inventaire",
+    "clearConfirm": "Effacer tout ce qui a été compté ?"
   }
 }

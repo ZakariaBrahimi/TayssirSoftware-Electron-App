@@ -16,6 +16,7 @@ import { StatusBanner } from "./status-banner";
 import { StockBell } from "./stock-bell";
 import { SyncIndicator } from "./sync-indicator";
 import { UserMenu } from "./user-menu";
+import { NativeSetup } from "@/components/native-setup";
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("nav");
@@ -124,6 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <StatusBanner />
         <main className="flex-1 p-4 md:p-6">{children}</main>
+        <NativeSetup />
       </div>
     </div>
   );

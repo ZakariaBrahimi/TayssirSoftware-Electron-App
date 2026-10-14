@@ -13,6 +13,7 @@ import { appInfoRoutes, setupRoutes, signupRoutes } from "./routes/onboarding";
 import { platformRoutes } from "./routes/platform";
 import { customersRoutes, suppliersRoutes } from "./routes/parties";
 import { familiesRoutes } from "./routes/families";
+import { pushRoutes } from "./routes/push";
 import { quickKeysRoutes } from "./routes/quick-keys";
 import { productsRoutes } from "./routes/products";
 import { purchasesRoutes } from "./routes/purchases";
@@ -38,6 +39,7 @@ const protectedRoutes = new Hono<AppEnv>()
   .route("/shifts", shiftsRoutes)
   .route("/stock", stockRoutes)
   .route("/alerts", alertsRoutes)
+  .route("/push", pushRoutes)
   .route("/reports", reportsRoutes)
   .route("/settings", settingsRoutes)
   .route("/users", usersRoutes)

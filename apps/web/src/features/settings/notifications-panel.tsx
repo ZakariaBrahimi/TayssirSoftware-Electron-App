@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Mail, RefreshCw, Send, Trash2 } from "lucide-react";
+import { Loader2, Mail, RefreshCw, Send, Smartphone, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -225,6 +225,25 @@ function CloudNotifications() {
               {waiting && <p className="text-muted-foreground text-xs">{t("telegramSteps")}</p>}
             </>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Smartphone className="size-4" />
+            {t("phones")}
+          </CardTitle>
+          <CardDescription>{t("phonesHint")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm">
+            {!data.push ? (
+              <span className="text-muted-foreground">{t("notConfigured")}</span>
+            ) : (
+              t("phonesCount", { count: data.phones })
+            )}
+          </p>
         </CardContent>
       </Card>
 
