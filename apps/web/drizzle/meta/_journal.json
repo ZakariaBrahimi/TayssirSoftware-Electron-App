@@ -64,6 +64,13 @@
       "when": 1791989465699,
       "tag": "0008_services",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1791990675835,
+      "tag": "0009_print_settings",
+      "breakpoints": true
     }
   ]
 }

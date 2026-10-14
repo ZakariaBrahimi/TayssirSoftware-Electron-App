@@ -4,6 +4,12 @@ import type { Executor } from "../db/client";
 import { categories, stores, user } from "../db/schema";
 import { AppError } from "../errors";
 import type { ScaleBarcodeMode } from "@/lib/validators";
+import type { z } from "zod";
+import {
+  parseLabelSettings,
+  parseReceiptSettings,
+  type printSettingsInput,
+} from "@/lib/print-settings";
 import { isShopType, type ShopType, starterCategories } from "@/lib/shop-types";
 
 export type Store = typeof stores.$inferSelect;
@@ -43,6 +49,25 @@ export async function updateStore(db: Executor, storeId: string, input: StoreSet
   return row;
 }
 
+/** Saves the label and receipt designs (and the receipt logo). */
+export async function updatePrintSettings(
+  db: Executor,
+  storeId: string,
+  input: z.output<typeof printSettingsInput>,
+) {
+  const [row] = await db
+    .update(stores)
+    .set({
+      labelSettings: JSON.stringify(input.labels),
+      receiptSettings: JSON.stringify(input.receipt),
+      ...(input.logo !== undefined ? { logo: input.logo } : {}),
+    })
+    .where(eq(stores.id, storeId))
+    .returning();
+  if (!row) throw new AppError("NOT_FOUND");
+  return row;
+}
+
 /** Local mode: true until the first store and administrator exist. */
 export async function needsSetup(db: Executor) {
   const [{ users }] = await db.select({ users: count() }).from(user).where(isNotNull(user.storeId));
@@ -72,5 +97,8 @@ export function publicStore(s: Store) {
     taxEnabled: s.taxEnabled,
     taxRate: s.taxRate,
     taxId: s.taxId,
+    labels: parseLabelSettings(s.labelSettings),
+    receipt: parseReceiptSettings(s.receiptSettings),
+    logo: s.logo,
   };
 }

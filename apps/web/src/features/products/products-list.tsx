@@ -187,6 +187,19 @@ export function ProductsList() {
       setPage(1);
     };
 
+  // Products ticked for printing labels (kept across pages).
+  const [picked, setPicked] = useState<Map<string, Row>>(new Map());
+  const [labelsOpen, setLabelsOpen] = useState(false);
+  const togglePick = (rows: Row[], on: boolean) =>
+    setPicked((prev) => {
+      const next = new Map(prev);
+      for (const r of rows) {
+        if (on) next.set(r.id, r);
+        else next.delete(r.id);
+      }
+      return next;
+    });
+
   const query = useProducts({
     q: q || undefined,
     categoryId: categoryId === "all" ? undefined : categoryId,
@@ -200,6 +213,32 @@ export function ProductsList() {
   const columns = useMemo(
     () =>
       helper.columns([
+        helper.display({
+          id: "pick",
+          header: () => {
+            const rows = query.data?.rows ?? [];
+            const all = rows.length > 0 && rows.every((r) => picked.has(r.id));
+            return (
+              <input
+                type="checkbox"
+                aria-label={t("selectAll")}
+                className="accent-primary size-4 align-middle"
+                checked={all}
+                onChange={(e) => togglePick(rows, e.target.checked)}
+              />
+            );
+          },
+          cell: ({ row }) => (
+            <input
+              type="checkbox"
+              aria-label={t("selectProduct", { name: row.original.name })}
+              className="accent-primary size-4 align-middle"
+              checked={picked.has(row.original.id)}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => togglePick([row.original], e.target.checked)}
+            />
+          ),
+        }),
         helper.accessor("name", {
           header: () => (
             <SortButton label={t("name")} column="name" sort={sort} onSort={resetPage(setSort)} />
@@ -274,7 +313,7 @@ export function ProductsList() {
             ]
           : []),
       ]),
-    [t, tv, money, sort, isAdmin],
+    [t, tv, money, sort, isAdmin, picked, query.data],
   );
 
   const table = useTable({
@@ -354,6 +393,23 @@ export function ProductsList() {
         )}
       </div>
 
+      {picked.size > 0 && (
+        <div className="bg-primary/5 border-primary/30 mb-3 flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+          <span className="font-medium">{t("selectedCount", { count: picked.size })}</span>
+          <Button size="sm" onClick={() => setLabelsOpen(true)}>
+            <Printer />
+            {t("printLabels")}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setPicked(new Map())}>
+            {t("clearSelection")}
+          </Button>
+        </div>
+      )}
+      <PrintLabelsDialog
+        open={labelsOpen}
+        onOpenChange={setLabelsOpen}
+        items={[...picked.values()].map((p) => ({ item: p, copies: 1 }))}
+      />
       <DataTable
         table={table}
         isLoading={query.isPending}

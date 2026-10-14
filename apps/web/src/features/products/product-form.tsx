@@ -607,7 +607,11 @@ export function ProductForm({ product }: { product?: Product }) {
                 product={{
                   name: String(name || ""),
                   barcode: String(barcode || ""),
-                  salePrice: money.toMinor(priceN),
+                  salePrice: money.toMinor(Number(price) || 0),
+                  unit,
+                  categoryName: product?.categoryName,
+                  brandName: product?.brandName,
+                  familyName: product?.familyName,
                 }}
                 trigger={
                   <Button type="button" variant="outline" disabled={!barcode}>

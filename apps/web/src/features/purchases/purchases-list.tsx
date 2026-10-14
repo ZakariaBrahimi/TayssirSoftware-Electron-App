@@ -1,7 +1,7 @@
 "use client";
 
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Plus, Printer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { AdminOnly } from "@/components/admin-only";
@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/table";
 import { useDateFormat, useMoney } from "@/hooks/use-settings";
 import { Link } from "@/i18n/navigation";
+import { isMeasured } from "@/lib/quantity";
+import { PrintLabelsDialog } from "../products/labels";
 import { type PurchasePage, usePurchase, usePurchases } from "./api";
 
 type Row = PurchasePage["rows"][number];
@@ -103,6 +105,27 @@ function PurchaseSheet({ id, onClose }: { id: string | null; onClose: () => void
             {data.note && (
               <p className="bg-muted text-muted-foreground rounded-md p-3">{data.note}</p>
             )}
+            <PrintLabelsDialog
+              items={data.items
+                .filter((i) => i.barcode)
+                .map((i) => ({
+                  item: {
+                    name: i.productName,
+                    barcode: i.barcode!,
+                    salePrice: i.salePrice ?? 0,
+                    unit: i.unit,
+                    familyName: i.familyName,
+                  },
+                  // One label per piece received; one per weighed product.
+                  copies: isMeasured(i.unit) ? 1 : Math.min(500, Math.ceil(i.quantity)),
+                }))}
+              trigger={
+                <Button variant="outline">
+                  <Printer />
+                  {t("printLabels")}
+                </Button>
+              }
+            />
           </div>
         )}
       </SheetContent>

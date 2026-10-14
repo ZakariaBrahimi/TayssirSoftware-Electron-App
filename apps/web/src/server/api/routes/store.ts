@@ -1,10 +1,11 @@
 import { Hono } from "hono";
+import { printSettingsInput } from "@/lib/print-settings";
 import { storeSettingsInput, userCreateInput, userUpdateInput } from "@/lib/validators";
 import { getMode } from "../../context";
 import { db } from "../../db";
 import { AppError } from "../../errors";
 import { getEntitlement } from "../../licensing/entitlements";
-import { getStore, publicStore, updateStore } from "../../services/stores";
+import { getStore, publicStore, updatePrintSettings, updateStore } from "../../services/stores";
 import * as users from "../../services/users";
 import { type AppEnv, requireAdmin, validate } from "../context";
 
@@ -30,6 +31,9 @@ export const settingsRoutes = new Hono<AppEnv>()
   .get("/", async (c) => c.json(publicStore(await getStore(db, c.get("ctx").storeId))))
   .put("/", requireAdmin, validate("json", storeSettingsInput), async (c) =>
     c.json(publicStore(await updateStore(db, c.get("ctx").storeId, c.req.valid("json")))),
+  )
+  .put("/printing", requireAdmin, validate("json", printSettingsInput), async (c) =>
+    c.json(publicStore(await updatePrintSettings(db, c.get("ctx").storeId, c.req.valid("json")))),
   );
 
 export const usersRoutes = new Hono<AppEnv>()

@@ -184,6 +184,10 @@ export const stores = sqliteTable("stores", {
   taxRate: integer("tax_rate").notNull().default(19),
   /** Tax identification number printed on receipts (NIF). */
   taxId: text("tax_id"),
+  /** Printing designs (JSON, see lib/print-settings) and the receipt logo. */
+  labelSettings: text("label_settings"),
+  receiptSettings: text("receipt_settings"),
+  logo: text("logo"),
   // Cloud subscription (managed by the platform, never accepted from a sync).
   plan: text("plan").notNull().default("trial"),
   subscriptionStatus: text("subscription_status", { enum: SUBSCRIPTION_STATUSES })

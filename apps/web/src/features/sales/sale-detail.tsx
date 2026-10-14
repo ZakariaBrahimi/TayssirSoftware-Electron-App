@@ -19,11 +19,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useErrorMessage } from "@/hooks/use-error-message";
-import { usePrint } from "@/hooks/use-print";
+
 import { useDateFormat, useMoney } from "@/hooks/use-settings";
 import { Link } from "@/i18n/navigation";
 import { useSale, useVoidSale } from "./api";
-import { Receipt } from "./receipt";
+import { usePrintReceipt } from "./use-print-receipt";
 import { ReturnDialog } from "./return-dialog";
 
 export function SaleDetailSheet({
@@ -42,7 +42,7 @@ export function SaleDetailSheet({
   const { isAdmin } = useCurrentUser();
   const { data: sale, isPending } = useSale(saleId);
   const voidSale = useVoidSale();
-  const { print, printArea } = usePrint();
+  const { printReceipt, printArea } = usePrintReceipt();
   const [returning, setReturning] = useState(false);
 
   const returnable = sale?.items.some((i) => i.quantity > i.returnedQuantity) ?? false;
@@ -153,11 +153,7 @@ export function SaleDetailSheet({
               )}
 
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => print(<Receipt sale={sale} />)}
-                >
+                <Button variant="outline" className="flex-1" onClick={() => printReceipt(sale)}>
                   <Printer />
                   {tp("printReceipt")}
                 </Button>

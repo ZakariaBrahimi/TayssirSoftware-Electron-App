@@ -3,6 +3,7 @@
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
 import { Download, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
@@ -37,13 +38,16 @@ export function SalesList() {
   const dates = useDateFormat();
   const { isAdmin } = useCurrentUser();
 
-  const initial = presetRange("last30");
+  // A scanned receipt (?receipt=KQM-42) opens that sale, whatever its date.
+  const receipt = useSearchParams().get("receipt")?.trim().toUpperCase() ?? "";
+  const initial = receipt ? { from: "", to: "" } : presetRange("last30");
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
   const [status, setStatus] = useState<"all" | "completed" | "voided">("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(receipt);
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [receiptClosed, setReceiptClosed] = useState(false);
   const q = useDebouncedValue(search.trim(), 300);
 
   const range = { from: from ? dayStartIso(from) : undefined, to: to ? dayEndIso(to) : undefined };
@@ -54,6 +58,13 @@ export function SalesList() {
     page,
     pageSize: 20,
   });
+  const scanned =
+    receipt && !receiptClosed ? query.data?.rows.find((r) => r.number === receipt) : undefined;
+  const selected = picked ?? scanned?.id ?? null;
+  const setSelected = (id: string | null) => {
+    if (!id) setReceiptClosed(true);
+    setPicked(id);
+  };
 
   const columns = useMemo(
     () =>

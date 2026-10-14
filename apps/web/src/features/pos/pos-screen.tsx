@@ -18,10 +18,11 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { useErrorMessage } from "@/hooks/use-error-message";
-import { usePrint } from "@/hooks/use-print";
 import { useMoney } from "@/hooks/use-settings";
 import { ApiError } from "@/lib/api-client";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { RECEIPT_NUMBER } from "@/lib/print-settings";
+import { usePrintReceipt } from "../sales/use-print-receipt";
 import { cn } from "@/lib/utils";
 import { CustomerPicker, type PickedCustomer } from "../customers/customer-picker";
 import { fetchProductByBarcode, useProducts } from "../products/api";
@@ -52,7 +53,8 @@ export function PosScreen() {
   const errorMessage = useErrorMessage();
   const cart = useCart();
   const createSale = useCreateSale();
-  const { print, printArea } = usePrint();
+  const { printReceipt, printArea, settings: receiptSettings } = usePrintReceipt();
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
@@ -154,6 +156,14 @@ export function PosScreen() {
       if (err instanceof ApiError && err.code === "NOT_FOUND" && only && q === code) {
         addToCart(only);
         setSearch("");
+      } else if (
+        err instanceof ApiError &&
+        err.code === "NOT_FOUND" &&
+        RECEIPT_NUMBER.test(code.toUpperCase())
+      ) {
+        // A receipt was scanned: open its sale (returns, reprint).
+        router.push(`/sales?receipt=${encodeURIComponent(code.toUpperCase())}`);
+        setSearch("");
       } else if (err instanceof ApiError && err.code === "NOT_FOUND") {
         toast.error(t("productNotFound", { code }));
       } else {
@@ -190,6 +200,7 @@ export function PosScreen() {
           setCheckoutOpen(false);
           setCartOpen(false);
           setCompleted(sale);
+          if (receiptSettings.autoPrint === "always") printReceipt(sale);
         },
         onError: (err) => toast.error(errorMessage(err)),
       },
@@ -421,16 +432,15 @@ export function PosScreen() {
                   </div>
                 </div>
               )}
-              <div className="max-h-72 overflow-y-auto rounded-md border bg-white">
-                <Receipt sale={completed} />
-              </div>
+              {receiptSettings.autoPrint !== "never" && (
+                <div className="max-h-72 overflow-y-auto rounded-md border bg-white">
+                  <Receipt sale={completed} />
+                </div>
+              )}
             </>
           )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => completed && print(<Receipt sale={completed} />)}
-            >
+            <Button variant="outline" onClick={() => completed && printReceipt(completed)}>
               <Printer />
               {t("printReceipt")}
             </Button>

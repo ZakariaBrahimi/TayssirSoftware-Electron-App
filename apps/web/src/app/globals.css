@@ -149,6 +149,10 @@
   body * {
     visibility: hidden;
   }
+  /* Dialogs and overlays are siblings of the print area: take them out. */
+  body > *:not(#print-root) {
+    display: none !important;
+  }
   #print-root,
   #print-root * {
     visibility: visible;

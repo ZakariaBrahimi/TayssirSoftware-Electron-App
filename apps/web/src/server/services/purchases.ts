@@ -3,7 +3,13 @@ import type { z } from "zod";
 import type { purchaseCreateInput, purchaseListQuery } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database, Executor } from "../db/client";
-import { products, purchaseItems, purchases, supplierPayments } from "../db/schema";
+import {
+  productFamilies,
+  products,
+  purchaseItems,
+  purchases,
+  supplierPayments,
+} from "../db/schema";
 import { col } from "../db/sql";
 import { AppError } from "../errors";
 import { isMeasured, lineAmount } from "@/lib/quantity";
@@ -115,7 +121,26 @@ export async function getPurchase(db: Executor, ctx: Ctx, id: string) {
     .from(purchases)
     .where(and(eq(purchases.id, id), eq(purchases.storeId, ctx.storeId)));
   if (!purchase) throw new AppError("NOT_FOUND");
-  const items = await db.select().from(purchaseItems).where(eq(purchaseItems.purchaseId, id));
+  // Current barcode and price of each product, for printing shelf labels.
+  const rows = await db
+    .select({
+      item: purchaseItems,
+      barcode: products.barcode,
+      salePrice: products.salePrice,
+      unit: products.unit,
+      familyName: productFamilies.name,
+    })
+    .from(purchaseItems)
+    .leftJoin(products, eq(products.id, purchaseItems.productId))
+    .leftJoin(productFamilies, eq(productFamilies.id, products.familyId))
+    .where(eq(purchaseItems.purchaseId, id));
+  const items = rows.map((r) => ({
+    ...r.item,
+    barcode: r.barcode,
+    salePrice: r.salePrice,
+    unit: r.unit,
+    familyName: r.familyName,
+  }));
   return { ...purchase, items };
 }
 

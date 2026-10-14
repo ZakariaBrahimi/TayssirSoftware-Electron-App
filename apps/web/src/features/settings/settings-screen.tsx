@@ -13,12 +13,14 @@ import { CatalogManager } from "./catalog-manager";
 import { DataPanel } from "./data-panel";
 import { LicensePanel } from "./license-panel";
 import { NotificationsPanel } from "./notifications-panel";
+import { PrintingPanel } from "./printing-panel";
 import { StoreSettingsForm } from "./store-settings-form";
 import { SyncPanel } from "./sync-panel";
 import { UsersManager } from "./users-manager";
 
 const TABS = [
   "store",
+  "printing",
   "categories",
   "brands",
   "users",
@@ -57,6 +59,13 @@ export function SettingsScreen() {
         <TabsContent value="store" className="mt-4">
           {settings.data ? (
             <StoreSettingsForm settings={settings.data} />
+          ) : (
+            <Skeleton className="h-80 w-full" />
+          )}
+        </TabsContent>
+        <TabsContent value="printing" className="mt-4">
+          {settings.data ? (
+            <PrintingPanel settings={settings.data} />
           ) : (
             <Skeleton className="h-80 w-full" />
           )}
