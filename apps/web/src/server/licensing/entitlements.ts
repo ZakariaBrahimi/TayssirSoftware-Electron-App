@@ -47,21 +47,45 @@ export async function getDeviceId(db: Executor) {
   return getOrInitMeta(db, "deviceId", () => crypto.randomUUID());
 }
 
-export async function getEntitlement(db: Executor, storeId: string, now = Date.now()): Promise<Entitlement> {
+export async function getEntitlement(
+  db: Executor,
+  storeId: string,
+  now = Date.now(),
+): Promise<Entitlement> {
   if (getMode() === "cloud") {
     const store = await getStore(db, storeId);
     if (store.subscriptionStatus === "active" || store.subscriptionStatus === "past_due") {
-      return fromExpiry("active", "subscription", store.plan, store.currentPeriodEnd?.getTime() ?? null, now);
+      return fromExpiry(
+        "active",
+        "subscription",
+        store.plan,
+        store.currentPeriodEnd?.getTime() ?? null,
+        now,
+      );
     }
     if (store.subscriptionStatus === "trialing") {
       return fromExpiry("trial", "trial", null, store.trialEndsAt?.getTime() ?? now, now);
     }
-    return { status: "expired", source: "subscription", plan: store.plan, expiresAt: null, daysLeft: 0, canWrite: false };
+    return {
+      status: "expired",
+      source: "subscription",
+      plan: store.plan,
+      expiresAt: null,
+      daysLeft: 0,
+      canWrite: false,
+    };
   }
 
   const publicKey = licensePublicKey();
   if (!publicKey) {
-    return { status: "unmanaged", source: "none", plan: null, expiresAt: null, daysLeft: null, canWrite: true };
+    return {
+      status: "unmanaged",
+      source: "none",
+      plan: null,
+      expiresAt: null,
+      daysLeft: null,
+      canWrite: true,
+    };
   }
 
   const deviceId = await getDeviceId(db);

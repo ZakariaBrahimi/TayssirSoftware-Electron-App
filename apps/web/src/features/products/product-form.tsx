@@ -60,8 +60,8 @@ const schema = z
       emptyToUndefined,
       z.coerce.number({ message: "required" }).int("invalid_type").min(0, "must_be_positive"),
     ),
-    categoryId: z.number().int().nullable(),
-    brandId: z.number().int().nullable(),
+    categoryId: z.string().nullable(),
+    brandId: z.string().nullable(),
     isActive: z.boolean(),
   })
   .refine((v) => v.salePrice >= v.costPrice, {

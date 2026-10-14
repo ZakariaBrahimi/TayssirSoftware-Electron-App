@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 
 export type CartProduct = {
-  id: number;
+  id: string;
   name: string;
   barcode: string;
   salePrice: number;
@@ -16,15 +16,15 @@ type State = { lines: CartLine[]; discount: number };
 
 type Action =
   | { type: "add"; product: CartProduct; quantity?: number }
-  | { type: "setQuantity"; productId: number; quantity: number }
-  | { type: "setLineDiscount"; productId: number; discount: number }
-  | { type: "remove"; productId: number }
+  | { type: "setQuantity"; productId: string; quantity: number }
+  | { type: "setLineDiscount"; productId: string; discount: number }
+  | { type: "remove"; productId: string }
   | { type: "setDiscount"; discount: number }
   | { type: "clear" }
   | { type: "hydrate"; state: State };
 
 const empty: State = { lines: [], discount: 0 };
-const STORAGE_KEY = "tayssir.pos.cart";
+const STORAGE_KEY = "tayssir.pos.cart.v2";
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -120,16 +120,16 @@ export function useCart() {
       [],
     ),
     setQuantity: useCallback(
-      (productId: number, quantity: number) =>
+      (productId: string, quantity: number) =>
         dispatch({ type: "setQuantity", productId, quantity }),
       [],
     ),
     setLineDiscount: useCallback(
-      (productId: number, discount: number) =>
+      (productId: string, discount: number) =>
         dispatch({ type: "setLineDiscount", productId, discount }),
       [],
     ),
-    remove: useCallback((productId: number) => dispatch({ type: "remove", productId }), []),
+    remove: useCallback((productId: string) => dispatch({ type: "remove", productId }), []),
     setDiscount: useCallback((discount: number) => dispatch({ type: "setDiscount", discount }), []),
     clear: useCallback(() => dispatch({ type: "clear" }), []),
   };

@@ -15,7 +15,10 @@ const sale = (input: unknown) => saleCreateInput.parse(input);
 const opts = { deviceCode: "ABC" };
 
 async function stockOf(id: string) {
-  const [row] = await db.select({ stock: products.stock }).from(products).where(eq(products.id, id));
+  const [row] = await db
+    .select({ stock: products.stock })
+    .from(products)
+    .where(eq(products.id, id));
   return row.stock;
 }
 
@@ -30,7 +33,11 @@ describe("createSale", () => {
     const result = await createSale(
       db,
       ctx,
-      sale({ items: [{ productId: p.id, quantity: 3, discount: 100 }], discount: 400, amountPaid: 5000 }),
+      sale({
+        items: [{ productId: p.id, quantity: 3, discount: 100 }],
+        discount: 400,
+        amountPaid: 5000,
+      }),
       opts,
     );
     expect(result.subtotal).toBe(2900);
@@ -48,7 +55,9 @@ describe("createSale", () => {
     const p = await makeProduct(db, ctx);
     const a = await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }] }), opts);
     const b = await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }] }), opts);
-    const c = await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }] }), { deviceCode: "W" });
+    const c = await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }] }), {
+      deviceCode: "W",
+    });
     expect([a.number, b.number, c.number]).toEqual(["ABC-1", "ABC-2", "W-1"]);
     const found = await listSales(db, ctx, { q: "ABC-2", page: 1, pageSize: 20 });
     expect(found.rows.map((r) => r.id)).toEqual([b.id]);
@@ -59,7 +68,12 @@ describe("createSale", () => {
     const result = await createSale(
       db,
       ctx,
-      sale({ items: [{ productId: p.id, quantity: 1 }, { productId: p.id, quantity: 2 }] }),
+      sale({
+        items: [
+          { productId: p.id, quantity: 1 },
+          { productId: p.id, quantity: 2 },
+        ],
+      }),
       opts,
     );
     expect(result.items).toHaveLength(1);
@@ -73,7 +87,12 @@ describe("createSale", () => {
       createSale(
         db,
         ctx,
-        sale({ items: [{ productId: a.id, quantity: 2 }, { productId: b.id, quantity: 2 }] }),
+        sale({
+          items: [
+            { productId: a.id, quantity: 2 },
+            { productId: b.id, quantity: 2 },
+          ],
+        }),
         opts,
       ),
     ).rejects.toMatchObject({ code: "INSUFFICIENT_STOCK" });
@@ -84,24 +103,47 @@ describe("createSale", () => {
   it("rejects underpayment without a customer and excessive discounts", async () => {
     const p = await makeProduct(db, ctx, { salePrice: 1000 });
     await expect(
-      createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }], amountPaid: 500 }), opts),
+      createSale(
+        db,
+        ctx,
+        sale({ items: [{ productId: p.id, quantity: 1 }], amountPaid: 500 }),
+        opts,
+      ),
     ).rejects.toMatchObject({ code: "INSUFFICIENT_PAYMENT" });
     await expect(
-      createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }], paymentMethod: "credit" }), opts),
+      createSale(
+        db,
+        ctx,
+        sale({ items: [{ productId: p.id, quantity: 1 }], paymentMethod: "credit" }),
+        opts,
+      ),
     ).rejects.toMatchObject({ code: "CUSTOMER_REQUIRED" });
     await expect(
-      createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }], discount: 2000 }), opts),
+      createSale(
+        db,
+        ctx,
+        sale({ items: [{ productId: p.id, quantity: 1 }], discount: 2000 }),
+        opts,
+      ),
     ).rejects.toMatchObject({ code: "INVALID_DISCOUNT" });
   });
 
   it("puts unpaid amounts on the customer's account within the credit limit", async () => {
     const p = await makeProduct(db, ctx, { salePrice: 1000, stock: 50 });
-    const customer = await createCustomer(db, ctx, customerInput.parse({ name: "Karim", creditLimit: 2500 }));
+    const customer = await createCustomer(
+      db,
+      ctx,
+      customerInput.parse({ name: "Karim", creditLimit: 2500 }),
+    );
 
     const credit = await createSale(
       db,
       ctx,
-      sale({ items: [{ productId: p.id, quantity: 2 }], customerId: customer.id, paymentMethod: "credit" }),
+      sale({
+        items: [{ productId: p.id, quantity: 2 }],
+        customerId: customer.id,
+        paymentMethod: "credit",
+      }),
       opts,
     );
     expect(credit.balanceDue).toBe(2000);
@@ -112,7 +154,11 @@ describe("createSale", () => {
       createSale(
         db,
         ctx,
-        sale({ items: [{ productId: p.id, quantity: 1 }], customerId: customer.id, amountPaid: 300 }),
+        sale({
+          items: [{ productId: p.id, quantity: 1 }],
+          customerId: customer.id,
+          amountPaid: 300,
+        }),
         opts,
       ),
     ).rejects.toMatchObject({ code: "CREDIT_LIMIT_EXCEEDED" });
@@ -143,7 +189,11 @@ describe("voidSale", () => {
     const s = await createSale(
       db,
       ctx,
-      sale({ items: [{ productId: p.id, quantity: 2 }], customerId: customer.id, paymentMethod: "credit" }),
+      sale({
+        items: [{ productId: p.id, quantity: 2 }],
+        customerId: customer.id,
+        paymentMethod: "credit",
+      }),
       opts,
     );
     expect(await stockOf(p.id)).toBe(3);
@@ -163,7 +213,9 @@ describe("store isolation", () => {
     const p = await makeProduct(db, ctx);
     const { ctx: other } = await makeStore(db, "Other shop");
     await expect(getProduct(db, other, p.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
-    expect((await listProducts(db, other, { stock: "all", sort: "name", page: 1, pageSize: 20 })).total).toBe(0);
+    expect(
+      (await listProducts(db, other, { stock: "all", sort: "name", page: 1, pageSize: 20 })).total,
+    ).toBe(0);
     await expect(
       createSale(db, other, sale({ items: [{ productId: p.id, quantity: 1 }] }), opts),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });

@@ -87,7 +87,11 @@ async function deviceEntitlementToken(db: Executor, storeId: string, deviceId: s
   );
 }
 
-export async function receivePush(db: Database, storeId: string, changes: { tbl: string; row: unknown }[]) {
+export async function receivePush(
+  db: Database,
+  storeId: string,
+  changes: { tbl: string; row: unknown }[],
+) {
   if (changes.length > 1000) throw new AppError("VALIDATION_ERROR", "Too many changes in one push");
   return applyChanges(db, storeId, changes, { suppressLog: false });
 }

@@ -1,16 +1,32 @@
 import {
   BarChart3,
+  Contact,
   LayoutDashboard,
   Package,
   Receipt,
   Settings,
   ShoppingCart,
+  Truck,
+  Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
+export type NavKey =
+  | "dashboard"
+  | "pos"
+  | "shifts"
+  | "products"
+  | "purchases"
+  | "sales"
+  | "customers"
+  | "suppliers"
+  | "reports"
+  | "settings";
+
 export type NavItem = {
-  href: "/dashboard" | "/pos" | "/products" | "/sales" | "/reports" | "/settings";
-  key: "dashboard" | "pos" | "products" | "sales" | "reports" | "settings";
+  href: `/${NavKey}`;
+  key: NavKey;
   icon: LucideIcon;
   adminOnly?: boolean;
 };
@@ -18,8 +34,12 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { href: "/dashboard", key: "dashboard", icon: LayoutDashboard, adminOnly: true },
   { href: "/pos", key: "pos", icon: ShoppingCart },
-  { href: "/products", key: "products", icon: Package },
+  { href: "/shifts", key: "shifts", icon: Wallet },
   { href: "/sales", key: "sales", icon: Receipt },
+  { href: "/customers", key: "customers", icon: Users },
+  { href: "/products", key: "products", icon: Package },
+  { href: "/purchases", key: "purchases", icon: Truck, adminOnly: true },
+  { href: "/suppliers", key: "suppliers", icon: Contact, adminOnly: true },
   { href: "/reports", key: "reports", icon: BarChart3, adminOnly: true },
   { href: "/settings", key: "settings", icon: Settings, adminOnly: true },
 ];

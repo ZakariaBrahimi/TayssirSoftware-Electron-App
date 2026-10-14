@@ -3,7 +3,15 @@ import type { z } from "zod";
 import type { saleCreateInput, saleListQuery } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database, Executor } from "../db/client";
-import { customers, products, returnItems, saleItems, saleReturns, sales, stores } from "../db/schema";
+import {
+  customers,
+  products,
+  returnItems,
+  saleItems,
+  saleReturns,
+  sales,
+  stores,
+} from "../db/schema";
 import { col } from "../db/sql";
 import { AppError } from "../errors";
 import { getCustomer } from "./customers";
@@ -147,7 +155,11 @@ export async function createSale(
       })
       .from(products)
       .where(
-        and(inArray(products.id, ids), eq(products.storeId, ctx.storeId), isNull(products.deletedAt)),
+        and(
+          inArray(products.id, ids),
+          eq(products.storeId, ctx.storeId),
+          isNull(products.deletedAt),
+        ),
       );
 
     const priced = priceSale(input, new Map(rows.map((r) => [r.id, r])));

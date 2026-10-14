@@ -43,12 +43,18 @@ export async function activateLicense(
     .from(licenses)
     .where(eq(licenses.keyHash, hashSecret(input.key.trim().toUpperCase())));
   if (!license || license.revokedAt) throw new AppError("LICENSE_INVALID");
-  if (license.expiresAt && license.expiresAt.getTime() <= now) throw new AppError("LICENSE_EXPIRED");
+  if (license.expiresAt && license.expiresAt.getTime() <= now)
+    throw new AppError("LICENSE_EXPIRED");
 
   const [existing] = await db
     .select()
     .from(licenseActivations)
-    .where(and(eq(licenseActivations.licenseId, license.id), eq(licenseActivations.deviceId, input.deviceId)));
+    .where(
+      and(
+        eq(licenseActivations.licenseId, license.id),
+        eq(licenseActivations.deviceId, input.deviceId),
+      ),
+    );
   if (existing) {
     await db
       .update(licenseActivations)

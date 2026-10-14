@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing";
 
 const intl = createIntlMiddleware(routing);
 
-const PUBLIC_PAGES = ["/login", "/setup"];
+const PUBLIC_PAGES = ["/login", "/setup", "/signup"];
 
 /**
  * Locale routing + an optimistic auth redirect. Real authorization happens

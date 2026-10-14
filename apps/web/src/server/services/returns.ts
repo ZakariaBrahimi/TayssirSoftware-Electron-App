@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { z } from "zod";
+import { lineRefund } from "@/lib/refunds";
 import type { returnCreateInput } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Database } from "../db/client";
@@ -9,24 +10,7 @@ import { getSale } from "./sales";
 import { findOpenShift } from "./shifts";
 import { moveStock } from "./stock";
 
-/**
- * Refund owed for returning `quantity` more units of a sale line, given how
- * many were already returned. The ticket discount is spread over the lines
- * pro rata, and refunds are computed cumulatively so that returning every
- * unit refunds exactly what was paid for the line (no rounding drift).
- */
-export function lineRefund(
-  line: { lineTotal: number; quantity: number },
-  sale: { subtotal: number; discount: number },
-  alreadyReturned: number,
-  quantity: number,
-) {
-  const discountShare =
-    sale.subtotal > 0 ? Math.round((sale.discount * line.lineTotal) / sale.subtotal) : 0;
-  const lineNet = line.lineTotal - discountShare;
-  const upTo = (q: number) => Math.round((lineNet * q) / line.quantity);
-  return upTo(alreadyReturned + quantity) - upTo(alreadyReturned);
-}
+export { lineRefund };
 
 export async function createReturn(
   db: Database,
@@ -49,7 +33,10 @@ export async function createReturn(
 
     const lines = await tx.select().from(saleItems).where(eq(saleItems.saleId, saleId));
     const returned = await tx
-      .select({ saleItemId: returnItems.saleItemId, quantity: sql<number>`sum(${returnItems.quantity})` })
+      .select({
+        saleItemId: returnItems.saleItemId,
+        quantity: sql<number>`sum(${returnItems.quantity})`,
+      })
       .from(returnItems)
       .innerJoin(saleReturns, eq(saleReturns.id, returnItems.returnId))
       .where(eq(saleReturns.saleId, saleId))

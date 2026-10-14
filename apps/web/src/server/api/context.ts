@@ -60,7 +60,9 @@ const buckets = new Map<string, { count: number; resetAt: number }>();
 export const rateLimit = (name: string, limit: number, windowMs: number) =>
   createMiddleware(async (c, next) => {
     const ip =
-      c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || c.req.header("x-real-ip") || "local";
+      c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+      c.req.header("x-real-ip") ||
+      "local";
     const key = `${name}:${ip}`;
     const now = Date.now();
     const bucket = buckets.get(key);

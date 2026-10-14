@@ -17,10 +17,8 @@ export const productsRoutes = new Hono<AppEnv>()
   .get("/", validate("query", productListQuery), async (c) =>
     c.json(await products.listProducts(db, c.get("ctx"), c.req.valid("query"))),
   )
-  .get(
-    "/by-barcode/:barcode",
-    validate("param", z.object({ barcode: barcodeSchema })),
-    async (c) => c.json(await products.findByBarcode(db, c.get("ctx"), c.req.valid("param").barcode)),
+  .get("/by-barcode/:barcode", validate("param", z.object({ barcode: barcodeSchema })), async (c) =>
+    c.json(await products.findByBarcode(db, c.get("ctx"), c.req.valid("param").barcode)),
   )
   .get(
     "/barcode-available",
@@ -47,7 +45,12 @@ export const productsRoutes = new Hono<AppEnv>()
     validate("json", productUpdateInput),
     async (c) =>
       c.json(
-        await products.updateProduct(db, c.get("ctx"), c.req.valid("param").id, c.req.valid("json")),
+        await products.updateProduct(
+          db,
+          c.get("ctx"),
+          c.req.valid("param").id,
+          c.req.valid("json"),
+        ),
       ),
   )
   .delete("/:id", requireAdmin, validate("param", idParam), async (c) =>

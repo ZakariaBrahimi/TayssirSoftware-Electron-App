@@ -1,6 +1,16 @@
 "use client";
 
-import { Banknote, Percent, Receipt, ShoppingBag, Tag, TrendingUp, Wallet } from "lucide-react";
+import {
+  Banknote,
+  BookUser,
+  Percent,
+  Receipt,
+  ShoppingBag,
+  Tag,
+  TrendingUp,
+  Undo2,
+  Wallet,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -74,7 +84,7 @@ export function ReportsScreen() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           title={t("revenue")}
           icon={Banknote}
@@ -122,6 +132,22 @@ export function ReportsScreen() {
           icon={Tag}
           isLoading={isPending}
           value={s && money.format(s.discounts)}
+        />
+        <StatCard
+          title={t("refunds")}
+          icon={Undo2}
+          isLoading={isPending}
+          value={s && money.format(s.refunds)}
+          hint={
+            s && s.refunds > 0 ? `${t("grossSales")}: ${money.format(s.grossSales)}` : undefined
+          }
+        />
+        <StatCard
+          title={t("soldOnCredit")}
+          icon={BookUser}
+          isLoading={isPending}
+          value={s && money.format(s.soldOnCredit)}
+          hint={s && `${t("paymentsReceived")}: ${money.format(s.paymentsReceived)}`}
         />
       </div>
 

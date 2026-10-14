@@ -137,11 +137,7 @@ export async function currentShift(db: Executor, ctx: Ctx) {
   return shift ? getShiftSummary(db, ctx, shift.id) : null;
 }
 
-export async function closeShift(
-  db: Database,
-  ctx: Ctx,
-  input: z.output<typeof shiftCloseInput>,
-) {
+export async function closeShift(db: Database, ctx: Ctx, input: z.output<typeof shiftCloseInput>) {
   const shift = await findOpenShift(db, ctx);
   if (!shift) throw new AppError("NO_OPEN_SHIFT");
   const summary = await getShiftSummary(db, ctx, shift.id);

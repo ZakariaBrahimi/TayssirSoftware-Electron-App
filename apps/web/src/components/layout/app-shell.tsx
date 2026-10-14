@@ -11,6 +11,8 @@ import { useSettings } from "@/hooks/use-settings";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
+import { StatusBanner } from "./status-banner";
+import { SyncIndicator } from "./sync-indicator";
 import { UserMenu } from "./user-menu";
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -52,9 +54,7 @@ function Brand() {
         <Store className="size-4" />
       </div>
       <div className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate text-sm font-semibold">
-          {settings?.storeName ?? "Tayssir POS"}
-        </span>
+        <span className="truncate text-sm font-semibold">{settings?.name ?? "Tayssir POS"}</span>
         <span className="text-muted-foreground text-xs">Tayssir POS</span>
       </div>
     </div>
@@ -110,10 +110,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="lg:hidden">
             <Brand />
           </div>
-          <div className="ms-auto">
+          <div className="ms-auto flex items-center gap-1">
+            <SyncIndicator />
             <UserMenu />
           </div>
         </header>
+        <StatusBanner />
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>

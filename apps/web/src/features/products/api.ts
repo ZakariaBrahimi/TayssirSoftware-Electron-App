@@ -24,8 +24,8 @@ function toQuery(q: ProductListQuery) {
 export const productKeys = {
   all: ["products"] as const,
   list: (q: ProductListQuery) => ["products", "list", q] as const,
-  detail: (id: number) => ["products", "detail", id] as const,
-  movements: (id: number) => ["products", "movements", id] as const,
+  detail: (id: string) => ["products", "detail", id] as const,
+  movements: (id: string) => ["products", "movements", id] as const,
 };
 
 export function useProducts(query: ProductListQuery, enabled = true) {
@@ -37,18 +37,18 @@ export function useProducts(query: ProductListQuery, enabled = true) {
   });
 }
 
-export function useProduct(id: number) {
+export function useProduct(id: string) {
   return useQuery({
     queryKey: productKeys.detail(id),
-    queryFn: () => unwrap(api.products[":id"].$get({ param: { id: String(id) } })),
-    enabled: Number.isFinite(id) && id > 0,
+    queryFn: () => unwrap(api.products[":id"].$get({ param: { id } })),
+    enabled: !!id,
   });
 }
 
-export function useStockMovements(id: number) {
+export function useStockMovements(id: string) {
   return useQuery({
     queryKey: productKeys.movements(id),
-    queryFn: () => unwrap(api.products[":id"].movements.$get({ param: { id: String(id) } })),
+    queryFn: () => unwrap(api.products[":id"].movements.$get({ param: { id } })),
   });
 }
 
@@ -60,10 +60,10 @@ export async function generateBarcode() {
   return (await unwrap(api.products["generate-barcode"].$post())).barcode;
 }
 
-export async function isBarcodeAvailable(barcode: string, exceptId?: number) {
+export async function isBarcodeAvailable(barcode: string, exceptId?: string) {
   const res = await unwrap(
     api.products["barcode-available"].$get({
-      query: { barcode, ...(exceptId ? { exceptId: String(exceptId) } : {}) },
+      query: { barcode, ...(exceptId ? { exceptId } : {}) },
     }),
   );
   return res.available;
@@ -79,18 +79,17 @@ export function useProductMutations() {
       onSuccess: invalidate,
     }),
     update: useMutation({
-      mutationFn: ({ id, json }: { id: number; json: ProductUpdateInput }) =>
-        unwrap(api.products[":id"].$patch({ param: { id: String(id) }, json })),
+      mutationFn: ({ id, json }: { id: string; json: ProductUpdateInput }) =>
+        unwrap(api.products[":id"].$patch({ param: { id }, json })),
       onSuccess: invalidate,
     }),
     remove: useMutation({
-      mutationFn: (id: number) =>
-        unwrap(api.products[":id"].$delete({ param: { id: String(id) } })),
+      mutationFn: (id: string) => unwrap(api.products[":id"].$delete({ param: { id } })),
       onSuccess: invalidate,
     }),
     adjustStock: useMutation({
-      mutationFn: ({ id, json }: { id: number; json: StockAdjustmentInput }) =>
-        unwrap(api.products[":id"].stock.$post({ param: { id: String(id) }, json })),
+      mutationFn: ({ id, json }: { id: string; json: StockAdjustmentInput }) =>
+        unwrap(api.products[":id"].stock.$post({ param: { id }, json })),
       onSuccess: invalidate,
     }),
   };

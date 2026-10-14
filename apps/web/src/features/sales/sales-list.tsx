@@ -1,13 +1,14 @@
 "use client";
 
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -31,7 +32,6 @@ const emptyRows: Row[] = [];
 
 export function SalesList() {
   const t = useTranslations("sales");
-  const tp = useTranslations("pos");
   const tc = useTranslations("common");
   const money = useMoney();
   const dates = useDateFormat();
@@ -43,14 +43,14 @@ export function SalesList() {
   const [status, setStatus] = useState<"all" | "completed" | "voided">("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const q = useDebouncedValue(search.trim(), 300);
 
+  const range = { from: from ? dayStartIso(from) : undefined, to: to ? dayEndIso(to) : undefined };
   const query = useSales({
-    from: from ? dayStartIso(from) : undefined,
-    to: to ? dayEndIso(to) : undefined,
+    ...range,
     status: status === "all" ? undefined : status,
-    q: /^\d+$/.test(q) ? Number(q) : undefined,
+    q: q || undefined,
     page,
     pageSize: 20,
   });
@@ -58,9 +58,9 @@ export function SalesList() {
   const columns = useMemo(
     () =>
       helper.columns([
-        helper.accessor("id", {
+        helper.accessor("number", {
           header: t("number"),
-          cell: ({ getValue }) => <span className="font-mono">#{getValue()}</span>,
+          cell: ({ getValue }) => <span className="font-mono">{getValue()}</span>,
         }),
         helper.accessor("createdAt", {
           header: t("date"),
@@ -70,18 +70,38 @@ export function SalesList() {
           header: t("cashier"),
           cell: ({ getValue }) => getValue() ?? "—",
         }),
+        helper.accessor("customerName", {
+          header: t("customer"),
+          cell: ({ row }) => (
+            <span>
+              {row.original.customerName ?? "—"}
+              {row.original.balanceDue > 0 && (
+                <span className="text-destructive ms-2 text-xs tabular-nums">
+                  {money.format(row.original.balanceDue)}
+                </span>
+              )}
+            </span>
+          ),
+        }),
         helper.accessor("itemCount", {
           header: t("items"),
           cell: ({ getValue }) => <span className="tabular-nums">{getValue()}</span>,
         }),
         helper.accessor("paymentMethod", {
           header: t("payment"),
-          cell: ({ getValue }) => tp(getValue()),
+          cell: ({ getValue }) => tc(getValue()),
         }),
         helper.accessor("total", {
           header: t("total"),
-          cell: ({ getValue }) => (
-            <span className="font-medium tabular-nums">{money.format(getValue())}</span>
+          cell: ({ row }) => (
+            <span className="font-medium tabular-nums">
+              {money.format(row.original.total)}
+              {row.original.refunded > 0 && (
+                <span className="text-muted-foreground ms-1 text-xs font-normal">
+                  (−{money.format(row.original.refunded)})
+                </span>
+              )}
+            </span>
           ),
         }),
         ...(isAdmin
@@ -93,7 +113,9 @@ export function SalesList() {
                   <span className="text-muted-foreground tabular-nums">
                     {row.original.status === "voided"
                       ? "—"
-                      : money.format(row.original.total - row.original.totalCost)}
+                      : money.format(
+                          row.original.total - row.original.totalCost - row.original.refunded,
+                        )}
                   </span>
                 ),
               }),
@@ -108,14 +130,14 @@ export function SalesList() {
           ),
         }),
       ]),
-    [t, tp, money, dates, isAdmin],
+    [t, tc, money, dates, isAdmin],
   );
 
   const table = useTable({
     features,
     columns,
     data: query.data?.rows ?? emptyRows,
-    getRowId: (row) => String(row.id),
+    getRowId: (row) => row.id,
   });
 
   const onFilter =
@@ -125,9 +147,26 @@ export function SalesList() {
       setPage(1);
     };
 
+  const exportHref = `/api/data/export/sales?${new URLSearchParams(
+    Object.entries(range).filter(([, v]) => v) as [string, string][],
+  )}`;
+
   return (
     <>
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        actions={
+          isAdmin && (
+            <Button variant="outline" asChild>
+              <a href={exportHref} download>
+                <Download />
+                {tc("export")}
+              </a>
+            </Button>
+          )
+        }
+      />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="grid gap-1.5">
           <Label htmlFor="from">{t("from")}</Label>
@@ -168,7 +207,6 @@ export function SalesList() {
         <div className="relative min-w-44 flex-1">
           <Search className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
-            inputMode="numeric"
             value={search}
             onChange={(e) => onFilter(setSearch)(e.target.value)}
             placeholder={t("searchPlaceholder")}

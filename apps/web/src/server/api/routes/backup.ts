@@ -11,7 +11,10 @@ export const RESTART_EXIT_CODE = 75;
 export const backupRoutes = new Hono<AppEnv>()
   .use(onlyMode("local"), requireAdmin)
   .get("/", async (c) =>
-    c.json({ available: backup.backupsAvailable(), backups: backup.backupsAvailable() ? backup.listBackups() : [] }),
+    c.json({
+      available: backup.backupsAvailable(),
+      backups: backup.backupsAvailable() ? backup.listBackups() : [],
+    }),
   )
   .post("/", async (c) => c.json(await backup.createBackup(db, "manual"), 201))
   .get("/:name", async (c) => {

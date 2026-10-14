@@ -14,7 +14,8 @@
     "db:seed": "tsx src/server/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "admin": "tsx src/server/cli/admin.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.1",

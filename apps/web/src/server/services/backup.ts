@@ -21,7 +21,8 @@ const stamp = (d = new Date()) =>
 
 function requireLocal() {
   const dbPath = localDatabasePath();
-  if (!dbPath) throw new AppError("NOT_AVAILABLE", "Backups are only available for local databases");
+  if (!dbPath)
+    throw new AppError("NOT_AVAILABLE", "Backups are only available for local databases");
   const dir = backupsDir(dbPath);
   mkdirSync(dir, { recursive: true });
   return { dbPath, dir };

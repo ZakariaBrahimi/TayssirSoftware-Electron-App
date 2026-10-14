@@ -173,7 +173,7 @@ export function ProductsList() {
 
   const query = useProducts({
     q: q || undefined,
-    categoryId: categoryId === "all" ? undefined : Number(categoryId),
+    categoryId: categoryId === "all" ? undefined : categoryId,
     stock,
     includeInactive: includeInactive ? "true" : undefined,
     sort,
@@ -285,7 +285,7 @@ export function ProductsList() {
           <SelectContent>
             <SelectItem value="all">{t("allCategories")}</SelectItem>
             {categories.data?.map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>
+              <SelectItem key={c.id} value={c.id}>
                 {c.name}
               </SelectItem>
             ))}

@@ -41,11 +41,12 @@ const id = () =>
 const storeId = () => text("store_id").notNull();
 
 /** Who did it, snapshotted so the record stays meaningful on other devices. */
+const textColumn = (name: string) => text(name);
 function actor<P extends string>(prefix: P, column: string) {
   return {
-    [`${prefix}Id`]: text(`${column}_id`),
-    [`${prefix}Name`]: text(`${column}_name`),
-  } as Record<`${P}Id` | `${P}Name`, ReturnType<typeof text>>;
+    [`${prefix}Id`]: textColumn(`${column}_id`),
+    [`${prefix}Name`]: textColumn(`${column}_name`),
+  } as Record<`${P}Id` | `${P}Name`, ReturnType<typeof textColumn>>;
 }
 
 /* -------------------------------------------------------------------------- */

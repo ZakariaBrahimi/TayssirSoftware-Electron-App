@@ -3,7 +3,15 @@ import type { z } from "zod";
 import type { reportQuery } from "@/lib/validators";
 import type { Ctx } from "../context";
 import type { Executor } from "../db/client";
-import { categories, customerPayments, products, returnItems, saleItems, saleReturns, sales } from "../db/schema";
+import {
+  categories,
+  customerPayments,
+  products,
+  returnItems,
+  saleItems,
+  saleReturns,
+  sales,
+} from "../db/schema";
 import { col } from "../db/sql";
 import { customerBalanceSql } from "./customers";
 import { customers } from "../db/schema";

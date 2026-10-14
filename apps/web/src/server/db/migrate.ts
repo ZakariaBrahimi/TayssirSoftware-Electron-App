@@ -4,8 +4,7 @@ import { createClient } from "@libsql/client";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { createDb, type Database } from "./client";
 
-export const MIGRATIONS_FOLDER =
-  process.env.MIGRATIONS_DIR ?? path.join(process.cwd(), "drizzle");
+export const MIGRATIONS_FOLDER = process.env.MIGRATIONS_DIR ?? path.join(process.cwd(), "drizzle");
 
 export async function runMigrations(db: Database) {
   await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });

@@ -8,10 +8,12 @@
   "scripts": {
     "prepare:web": "npm run build -w @tayssir/web && node scripts/prepare-web.mjs",
     "start": "npm run prepare:web && electron .",
+    "pack": "npm run prepare:web && electron-builder --dir",
     "dist": "npm run prepare:web && electron-builder",
     "dist:win": "npm run prepare:web && electron-builder --win",
     "dist:mac": "npm run prepare:web && electron-builder --mac",
-    "dist:linux": "npm run prepare:web && electron-builder --linux"
+    "dist:linux": "npm run prepare:web && electron-builder --linux",
+    "release": "npm run prepare:web && electron-builder --publish always"
   },
   "build": {
     "appId": "com.tayssir.pos",
@@ -37,16 +39,37 @@
       "allowToChangeInstallationDirectory": true
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.business"
     },
     "linux": {
-      "target": "AppImage",
+      "target": [
+        "AppImage"
+      ],
       "category": "Office"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ZakariaBrahimi",
+        "repo": "TayssirSoftware-Electron-App",
+        "releaseType": "release"
+      }
+    ],
+    "artifactName": "Tayssir-POS-${version}-${os}-${arch}.${ext}"
   },
   "devDependencies": {
     "electron": "^44.7.1",
     "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App.git"
   }
 }

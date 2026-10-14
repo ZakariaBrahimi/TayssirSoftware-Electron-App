@@ -35,7 +35,7 @@ export function EditProductEditor() {
   const tc = useTranslations("common");
   const { id } = useParams<{ id: string }>();
   const settings = useSettings();
-  const product = useProduct(Number(id));
+  const product = useProduct(id);
 
   if (product.isError) {
     return (

@@ -19,13 +19,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorMessage } from "@/hooks/use-error-message";
-import type { StoreSettings } from "@/server/services/settings";
+import type { StoreSettings } from "@/hooks/use-settings";
 import { api, unwrap } from "@/lib/api-client";
 
 const schema = z.object({
-  storeName: z.string().trim().min(1, "required").max(120),
+  name: z.string().trim().min(1, "required").max(120),
   address: z.string().trim().max(300),
   phone: z.string().trim().max(40),
   currency: z
@@ -33,11 +34,12 @@ const schema = z.object({
     .trim()
     .regex(/^[A-Za-z]{3}$/, "invalid_currency"),
   receiptFooter: z.string().trim().max(300),
+  requireShift: z.boolean(),
 });
 
 type Values = z.infer<typeof schema>;
 
-export function StoreSettingsForm({ settings }: { settings: Pick<StoreSettings, keyof Values> }) {
+export function StoreSettingsForm({ settings }: { settings: StoreSettings }) {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
@@ -46,11 +48,12 @@ export function StoreSettingsForm({ settings }: { settings: Pick<StoreSettings, 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      storeName: settings.storeName,
+      name: settings.name,
       address: settings.address ?? "",
       phone: settings.phone ?? "",
       currency: settings.currency,
       receiptFooter: settings.receiptFooter ?? "",
+      requireShift: settings.requireShift,
     },
   });
 
@@ -59,20 +62,43 @@ export function StoreSettingsForm({ settings }: { settings: Pick<StoreSettings, 
       unwrap(
         api.settings.$put({
           json: {
-            storeName: v.storeName,
+            name: v.name,
             currency: v.currency.toUpperCase(),
             address: v.address || null,
             phone: v.phone || null,
             receiptFooter: v.receiptFooter || null,
+            requireShift: v.requireShift,
           },
         }),
       ),
     onSuccess: (data) => {
       qc.setQueryData(["settings"], data);
+      qc.invalidateQueries({ queryKey: ["me"] });
+      form.reset(form.getValues());
       toast.success(tc("saved"));
     },
     onError: (err) => toast.error(errorMessage(err)),
   });
+
+  const text = (
+    name: "name" | "address" | "phone",
+    label: string,
+    props: React.ComponentProps<"input"> = {},
+  ) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input {...props} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 
   return (
     <Card>
@@ -87,19 +113,7 @@ export function StoreSettingsForm({ settings }: { settings: Pick<StoreSettings, 
             className="grid max-w-2xl gap-4"
           >
             <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
-              <FormField
-                control={form.control}
-                name="storeName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("storeName")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {text("name", t("storeName"))}
               <FormField
                 control={form.control}
                 name="currency"
@@ -116,32 +130,8 @@ export function StoreSettingsForm({ settings }: { settings: Pick<StoreSettings, 
             </div>
             <FormDescription className="-mt-2">{t("currencyHint")}</FormDescription>
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("address")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("phone")}</FormLabel>
-                    <FormControl>
-                      <Input type="tel" dir="ltr" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {text("address", t("address"))}
+              {text("phone", t("phone"), { type: "tel", dir: "ltr" })}
             </div>
             <FormField
               control={form.control}
@@ -153,6 +143,21 @@ export function StoreSettingsForm({ settings }: { settings: Pick<StoreSettings, 
                     <Textarea rows={2} {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="requireShift"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel>{t("requireShift")}</FormLabel>
+                    <FormDescription>{t("requireShiftHint")}</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
                 </FormItem>
               )}
             />

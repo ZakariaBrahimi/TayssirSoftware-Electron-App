@@ -27,8 +27,8 @@ export function CatalogSelect({
   id,
 }: {
   kind: CatalogKind;
-  value: number | null | undefined;
-  onChange: (value: number | null) => void;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
   id?: string;
 }) {
   const t = useTranslations("products");
@@ -55,10 +55,7 @@ export function CatalogSelect({
 
   return (
     <div className="flex gap-2">
-      <Select
-        value={value ? String(value) : NONE}
-        onValueChange={(v) => onChange(v === NONE ? null : Number(v))}
-      >
+      <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : v)}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue />
         </SelectTrigger>
@@ -67,7 +64,7 @@ export function CatalogSelect({
             {kind === "categories" ? t("noCategory") : t("noBrand")}
           </SelectItem>
           {list.data?.map((item) => (
-            <SelectItem key={item.id} value={String(item.id)}>
+            <SelectItem key={item.id} value={item.id}>
               {item.name}
             </SelectItem>
           ))}

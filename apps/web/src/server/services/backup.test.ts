@@ -5,7 +5,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDb } from "../db/client";
 import { runMigrations } from "../db/migrate";
 import { stores } from "../db/schema";
-import { applyStagedRestore, backupFilePath, createBackup, listBackups, stageRestore } from "./backup";
+import {
+  applyStagedRestore,
+  backupFilePath,
+  createBackup,
+  listBackups,
+  stageRestore,
+} from "./backup";
 import { createStore } from "./stores";
 
 describe("backups", () => {
@@ -39,7 +45,9 @@ describe("backups", () => {
     const restored = createDb(`file:${dbFile}`);
     expect((await restored.select().from(stores)).map((s) => s.name)).toEqual(["Before backup"]);
     // The replaced database was kept.
-    expect(readdirSync(path.join(dir, "backups")).some((f) => f.endsWith("-pre-restore.db"))).toBe(true);
+    expect(readdirSync(path.join(dir, "backups")).some((f) => f.endsWith("-pre-restore.db"))).toBe(
+      true,
+    );
     restored.$client.close();
   });
 

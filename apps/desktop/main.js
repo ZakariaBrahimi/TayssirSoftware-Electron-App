@@ -3,16 +3,23 @@
 // Starts the bundled Next.js server (the same app that runs on the web) on
 // localhost with a local SQLite database, then opens it in a window. Works
 // fully offline. The renderer is a normal sandboxed web page: no Node.js
-// APIs are exposed to it.
+// APIs are exposed to it. Updates are downloaded from GitHub Releases.
 const { app, BrowserWindow, shell, dialog } = require("electron");
-const { spawn } = require("node:child_process");
+const { autoUpdater } = require("electron-updater");
+const { execSync, spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const net = require("node:net");
+const os = require("node:os");
 const path = require("node:path");
+
+/** Exit code the server uses to ask for a restart (after a backup restore). */
+const RESTART_EXIT_CODE = 75;
 
 let server = null;
 let mainWindow = null;
+let serverUrl = null;
+let quitting = false;
 
 // Store data in a readable folder, e.g. %APPDATA%/Tayssir POS on Windows.
 app.setName("Tayssir POS");
@@ -21,6 +28,15 @@ app.setPath("userData", path.join(app.getPath("appData"), "Tayssir POS"));
 const webDir = app.isPackaged
   ? path.join(process.resourcesPath, "web")
   : path.join(__dirname, "web-dist");
+
+/** Build-time settings written by scripts/prepare-web.mjs. */
+function readAppConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(webDir, "app-config.json"), "utf8"));
+  } catch {
+    return {};
+  }
+}
 
 function findServerEntry() {
   // Standalone output mirrors the monorepo layout: <root>/apps/web/server.js
@@ -49,7 +65,38 @@ function getSecret(dataDir) {
   return fs.readFileSync(file, "utf8").trim();
 }
 
-async function waitForServer(url, timeoutMs = 30_000) {
+/**
+ * Stable identifier of this computer, used to bind a license to it.
+ * Hashed so the raw hardware id never leaves the machine.
+ */
+function getMachineId(dataDir) {
+  let raw = null;
+  try {
+    if (process.platform === "win32") {
+      const out = execSync("reg query HKLM\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid", { encoding: "utf8" });
+      raw = /MachineGuid\s+REG_SZ\s+(\S+)/.exec(out)?.[1] ?? null;
+    } else if (process.platform === "darwin") {
+      const out = execSync("ioreg -rd1 -c IOPlatformExpertDevice", { encoding: "utf8" });
+      raw = /"IOPlatformUUID" = "([^"]+)"/.exec(out)?.[1] ?? null;
+    } else {
+      for (const file of ["/etc/machine-id", "/var/lib/dbus/machine-id"]) {
+        if (fs.existsSync(file)) raw = fs.readFileSync(file, "utf8").trim();
+        if (raw) break;
+      }
+    }
+  } catch {
+    raw = null;
+  }
+  if (!raw) {
+    // Fallback: random id kept with the data.
+    const file = path.join(dataDir, "device-id");
+    if (!fs.existsSync(file)) fs.writeFileSync(file, crypto.randomUUID());
+    raw = fs.readFileSync(file, "utf8").trim();
+  }
+  return crypto.createHash("sha256").update(`tayssir:${raw}`).digest("hex").slice(0, 32);
+}
+
+async function waitForServer(url, timeoutMs = 60_000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     try {
@@ -63,13 +110,13 @@ async function waitForServer(url, timeoutMs = 30_000) {
   throw new Error("The local server did not start in time.");
 }
 
-async function startServer() {
+async function startServer(port) {
   const entry = findServerEntry();
   if (!entry) throw new Error(`Web build not found in ${webDir}. Run "npm run prepare:web".`);
 
   const dataDir = app.getPath("userData");
   fs.mkdirSync(dataDir, { recursive: true });
-  const port = Number(process.env.TAYSSIR_PORT) || (await getFreePort());
+  const config = readAppConfig();
   // Set TAYSSIR_HOST=0.0.0.0 to let other devices on the shop network
   // (tablets, phones) use this computer as the store server.
   const host = process.env.TAYSSIR_HOST || "127.0.0.1";
@@ -83,10 +130,15 @@ async function startServer() {
       NODE_ENV: "production",
       PORT: String(port),
       HOSTNAME: host,
+      TAYSSIR_MODE: "local",
       DATABASE_URL: `file:${path.join(dataDir, "tayssir.db")}`,
       MIGRATIONS_DIR: path.join(path.dirname(entry), "drizzle"),
       BETTER_AUTH_SECRET: getSecret(dataDir),
       BETTER_AUTH_URL: url,
+      TAYSSIR_DEVICE_ID: getMachineId(dataDir),
+      TAYSSIR_DEVICE_NAME: os.hostname(),
+      ...(config.licensePublicKey ? { LICENSE_PUBLIC_KEY: config.licensePublicKey } : {}),
+      ...(config.licenseServerUrl ? { LICENSE_SERVER_URL: config.licenseServerUrl } : {}),
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -94,14 +146,24 @@ async function startServer() {
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   server.on("exit", (code) => {
-    if (code && !app.isQuitting) {
-      dialog.showErrorBox("Tayssir POS", `The local server stopped (code ${code}). See server.log in ${dataDir}.`);
-      app.quit();
+    if (quitting) return;
+    if (code === RESTART_EXIT_CODE) {
+      // A backup was restored: start again on the same port and reload.
+      startServer(port)
+        .then(() => mainWindow?.reload())
+        .catch((err) => fatal(err));
+    } else if (code) {
+      fatal(new Error(`The local server stopped (code ${code}). See server.log in ${dataDir}.`));
     }
   });
 
   await waitForServer(url);
   return url;
+}
+
+function fatal(err) {
+  dialog.showErrorBox("Tayssir POS", String(err?.message ?? err));
+  app.quit();
 }
 
 function createWindow(url) {
@@ -128,7 +190,44 @@ function createWindow(url) {
       shell.openExternal(target);
     }
   });
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
   mainWindow.loadURL(url);
+}
+
+/** Checks GitHub Releases for updates; installs on the user's approval. */
+function setupAutoUpdates() {
+  if (!app.isPackaged || process.env.TAYSSIR_DISABLE_UPDATES === "1") return;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.logger = {
+    info: () => {},
+    warn: () => {},
+    error: (e) => fs.appendFileSync(path.join(app.getPath("userData"), "updater.log"), `${new Date().toISOString()} ${e}\n`),
+    debug: () => {},
+  };
+  autoUpdater.on("update-downloaded", async (info) => {
+    const { response } = await dialog.showMessageBox(mainWindow ?? undefined, {
+      type: "info",
+      buttons: ["Restart now", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+      title: "Tayssir POS",
+      message: `Version ${info.version} is ready to install.`,
+      detail:
+        "Your data is kept and backed up automatically before the update. " +
+        "If you choose Later, the update installs the next time you close the app.",
+    });
+    if (response === 0) {
+      quitting = true;
+      server?.kill();
+      setImmediate(() => autoUpdater.quitAndInstall());
+    }
+  });
+  const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  check();
+  setInterval(check, 6 * 3_600_000).unref();
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -143,19 +242,20 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(async () => {
     try {
-      const url = await startServer();
-      createWindow(url);
+      const port = Number(process.env.TAYSSIR_PORT) || (await getFreePort());
+      serverUrl = await startServer(port);
+      createWindow(serverUrl);
+      setupAutoUpdates();
       app.on("activate", () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow(url);
+        if (BrowserWindow.getAllWindows().length === 0) createWindow(serverUrl);
       });
     } catch (err) {
-      dialog.showErrorBox("Tayssir POS", String(err?.message ?? err));
-      app.quit();
+      fatal(err);
     }
   });
 
   app.on("before-quit", () => {
-    app.isQuitting = true;
+    quitting = true;
     server?.kill();
   });
   app.on("window-all-closed", () => {

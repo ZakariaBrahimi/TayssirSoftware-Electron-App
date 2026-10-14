@@ -238,7 +238,13 @@ export async function customerStatement(db: Executor, ctx: Ctx, customerId: stri
 export async function listCustomerOptions(db: Executor, ctx: Ctx, q?: string) {
   const term = q ? `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   return db
-    .select({ id: customers.id, name: customers.name, phone: customers.phone, balance: customerBalanceSql })
+    .select({
+      id: customers.id,
+      name: customers.name,
+      phone: customers.phone,
+      creditLimit: customers.creditLimit,
+      balance: customerBalanceSql,
+    })
     .from(customers)
     .where(
       and(

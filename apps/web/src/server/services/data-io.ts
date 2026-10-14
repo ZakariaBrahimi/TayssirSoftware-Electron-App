@@ -92,7 +92,22 @@ export async function exportSales(
     .orderBy(desc(sales.createdAt));
   const m = (v: number) => toMajor(v, currency);
   return toCsv([
-    ["sale", "date", "status", "cashier", "customer", "payment", "product", "barcode", "quantity", "unit_price", "line_discount", "line_total", "sale_discount", "sale_total"],
+    [
+      "sale",
+      "date",
+      "status",
+      "cashier",
+      "customer",
+      "payment",
+      "product",
+      "barcode",
+      "quantity",
+      "unit_price",
+      "line_discount",
+      "line_total",
+      "sale_discount",
+      "sale_total",
+    ],
     ...rows.map((r) => [
       r.number,
       r.date.toISOString(),
@@ -235,7 +250,8 @@ export async function importProducts(
     if (!Number.isFinite(sale) || sale < 0) return fail("invalid_sale_price");
     if (!Number.isFinite(cost) || cost < 0) return fail("invalid_cost_price");
     if (stock !== null && (!Number.isInteger(stock) || stock < 0)) return fail("invalid_stock");
-    if (low !== null && (!Number.isInteger(low) || low < 0)) return fail("invalid_low_stock_threshold");
+    if (low !== null && (!Number.isInteger(low) || low < 0))
+      return fail("invalid_low_stock_threshold");
     seen.add(barcode);
     parsed.push({
       line,
@@ -267,7 +283,9 @@ export async function importProducts(
 
   await db.transaction(async (tx) => {
     for (const p of parsed) {
-      const categoryId = p.category ? await categoryService.findOrCreate(tx, ctx, p.category) : null;
+      const categoryId = p.category
+        ? await categoryService.findOrCreate(tx, ctx, p.category)
+        : null;
       const brandId = p.brand ? await brandService.findOrCreate(tx, ctx, p.brand) : null;
       const fields = {
         name: p.name,

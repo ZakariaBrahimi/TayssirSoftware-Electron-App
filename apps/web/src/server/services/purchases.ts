@@ -34,7 +34,11 @@ export async function createPurchase(
       .select()
       .from(products)
       .where(
-        and(inArray(products.id, ids), eq(products.storeId, ctx.storeId), isNull(products.deletedAt)),
+        and(
+          inArray(products.id, ids),
+          eq(products.storeId, ctx.storeId),
+          isNull(products.deletedAt),
+        ),
       );
     const byId = new Map(rows.map((r) => [r.id, r]));
 
@@ -160,7 +164,9 @@ export async function supplierStatement(db: Executor, ctx: Ctx, supplierId: stri
   const paymentRows = await db
     .select()
     .from(supplierPayments)
-    .where(and(eq(supplierPayments.supplierId, supplierId), eq(supplierPayments.storeId, ctx.storeId)));
+    .where(
+      and(eq(supplierPayments.supplierId, supplierId), eq(supplierPayments.storeId, ctx.storeId)),
+    );
 
   const entries = [
     ...purchaseRows.map((p) => ({

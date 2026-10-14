@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Printer, ScanBarcode, ShoppingCart } from "lucide-react";
+import { Loader2, Printer, ScanBarcode, ShoppingCart, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -21,17 +21,23 @@ import { useErrorMessage } from "@/hooks/use-error-message";
 import { usePrint } from "@/hooks/use-print";
 import { useMoney } from "@/hooks/use-settings";
 import { ApiError } from "@/lib/api-client";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { CustomerPicker, type PickedCustomer } from "../customers/customer-picker";
 import { fetchProductByBarcode, useProducts } from "../products/api";
 import { type Sale, useCreateSale } from "../sales/api";
 import { Receipt } from "../sales/receipt";
+import { useCurrentShift } from "../shifts/api";
 import { CartPanel } from "./cart-panel";
 import { CheckoutDialog } from "./checkout-dialog";
 import { type CartProduct, useCart } from "./use-cart";
 
 export function PosScreen() {
   const t = useTranslations("pos");
+  const tb = useTranslations("banner");
   const money = useMoney();
+  const shift = useCurrentShift();
+  const [customer, setCustomer] = useState<PickedCustomer | null>(null);
   const errorMessage = useErrorMessage();
   const cart = useCart();
   const createSale = useCreateSale();
@@ -86,7 +92,7 @@ export function PosScreen() {
   };
 
   const completeSale = (payment: {
-    paymentMethod: "cash" | "card" | "other";
+    paymentMethod: "cash" | "card" | "other" | "credit";
     amountPaid: number;
     note?: string;
   }) => {
@@ -98,12 +104,14 @@ export function PosScreen() {
           discount: l.discount,
         })),
         discount: cart.discount,
+        customerId: customer?.id ?? null,
         ...payment,
       },
       {
         onSuccess: (sale) => {
-          toast.success(t("saleCompleted", { id: sale.id }));
+          toast.success(t("saleCompleted", { id: sale.number }));
           cart.clear();
+          setCustomer(null);
           setCheckoutOpen(false);
           setCartOpen(false);
           setCompleted(sale);
@@ -122,6 +130,15 @@ export function PosScreen() {
     <div className="-m-4 flex h-[calc(100dvh-3.5rem)] md:-m-6">
       {/* Product search & grid */}
       <section className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
+        {shift.isSuccess && !shift.data && (
+          <div className="border-warning/40 bg-warning/10 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+            <Wallet className="size-4" />
+            <span className="flex-1">{tb("openShift")}</span>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/shifts">{tb("openShiftAction")}</Link>
+            </Button>
+          </div>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -200,7 +217,12 @@ export function PosScreen() {
 
       {/* Cart: side panel on desktop */}
       <aside className="bg-card hidden w-96 shrink-0 border-s lg:flex">
-        <CartPanel cart={cart} onCheckout={openCheckout} className="w-full" />
+        <CartPanel
+          cart={cart}
+          onCheckout={openCheckout}
+          className="w-full"
+          top={<CustomerPicker value={customer} onChange={setCustomer} />}
+        />
       </aside>
 
       {/* Cart: bottom bar + sheet on mobile/tablet */}
@@ -225,6 +247,7 @@ export function PosScreen() {
             onCheckout={openCheckout}
             className="h-full"
             headerClassName="pe-12"
+            top={<CustomerPicker value={customer} onChange={setCustomer} />}
           />
         </SheetContent>
       </Sheet>
@@ -233,6 +256,7 @@ export function PosScreen() {
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
         total={cart.total}
+        customer={customer}
         isPending={createSale.isPending}
         onConfirm={completeSale}
       />
@@ -248,10 +272,19 @@ export function PosScreen() {
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{completed && t("saleCompleted", { id: completed.id })}</DialogTitle>
+            <DialogTitle>{completed && t("saleCompleted", { id: completed.number })}</DialogTitle>
           </DialogHeader>
           {completed && (
             <>
+              {completed.balanceDue > 0 && (
+                <div className="bg-warning/10 rounded-lg p-3 text-center text-sm">
+                  {t("onAccount")}:{" "}
+                  <span className="font-semibold tabular-nums">
+                    {money.format(completed.balanceDue)}
+                  </span>
+                  {completed.customerName ? ` · ${completed.customerName}` : ""}
+                </div>
+              )}
               {completed.changeDue > 0 && (
                 <div className="bg-success/10 rounded-lg p-4 text-center">
                   <div className="text-muted-foreground text-sm">{t("change")}</div>

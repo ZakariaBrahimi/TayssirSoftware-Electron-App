@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertTriangle, Banknote, Boxes, Receipt, ShoppingCart, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  Banknote,
+  Boxes,
+  Receipt,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -19,12 +27,13 @@ import { SaleDetailSheet } from "../sales/sale-detail";
 
 export function DashboardScreen() {
   const t = useTranslations("dashboard");
-  const tp = useTranslations("pos");
+  const tc = useTranslations("common");
+  const tn = useTranslations("nav");
   const money = useMoney();
   const dates = useDateFormat();
   const today = useMemo(() => presetRange("today"), []);
   const month = useMemo(() => presetRange("last30"), []);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const todayReport = useSalesReport(today);
   const monthReport = useSalesReport(month);
@@ -47,7 +56,7 @@ export function DashboardScreen() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
         <StatCard
           title={t("todayRevenue")}
           icon={Banknote}
@@ -73,6 +82,18 @@ export function DashboardScreen() {
           value={inventory.data && money.format(inventory.data.stockValueCost)}
           hint={inventory.data && t("productsCount", { count: inventory.data.productCount })}
         />
+        {!!inventory.data?.receivables && (
+          <StatCard
+            title={t("receivables")}
+            icon={Users}
+            value={money.format(inventory.data.receivables)}
+            hint={
+              <Link href="/customers" className="underline-offset-2 hover:underline">
+                {tn("customers")}
+              </Link>
+            }
+          />
+        )}
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
@@ -155,7 +176,7 @@ export function DashboardScreen() {
                   >
                     <span className="flex flex-col">
                       <span className="font-medium">
-                        #{sale.id} · {tp(sale.paymentMethod)}
+                        {sale.number} · {tc(sale.paymentMethod)}
                       </span>
                       <span className="text-muted-foreground text-xs">
                         {dates.dateTime(sale.createdAt)}

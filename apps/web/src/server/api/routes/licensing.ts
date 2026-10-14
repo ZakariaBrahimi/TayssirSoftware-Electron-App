@@ -30,9 +30,10 @@ export const licenseRoutes = new Hono<AppEnv>()
     } catch {
       throw new AppError("SYNC_FAILED", "Cannot reach the license server");
     }
-    const body = (await res.json().catch(() => null)) as
-      | { token?: string; error?: { code?: string } }
-      | null;
+    const body = (await res.json().catch(() => null)) as {
+      token?: string;
+      error?: { code?: string };
+    } | null;
     if (!res.ok || !body?.token) {
       const code = body?.error?.code;
       throw new AppError(

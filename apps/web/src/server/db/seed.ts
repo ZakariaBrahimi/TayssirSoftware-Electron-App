@@ -5,7 +5,15 @@
 import { generateInternalEan13 } from "../../lib/barcode";
 import { createDb } from "./client";
 import { runMigrations } from "./migrate";
-import { brands, categories, customers, products, stockMovements, stores, suppliers } from "./schema";
+import {
+  brands,
+  categories,
+  customers,
+  products,
+  stockMovements,
+  stores,
+  suppliers,
+} from "./schema";
 
 const db = createDb(
   process.env.DATABASE_URL ?? "file:./data/tayssir.db",
@@ -62,7 +70,9 @@ async function main() {
     { storeId, name: "Karim Benali", phone: "0550 12 34 56", creditLimit: 2_000_000 },
     { storeId, name: "Amina Haddad", phone: "0661 98 76 54" },
   ]);
-  await db.insert(suppliers).values([{ storeId, name: "Grossiste El Baraka", phone: "021 45 67 89" }]);
+  await db
+    .insert(suppliers)
+    .values([{ storeId, name: "Grossiste El Baraka", phone: "021 45 67 89" }]);
   console.log(`✔ Seeded ${demo.length} products, 2 customers and 1 supplier into "${store.name}"`);
 }
 

@@ -1,4 +1,12 @@
-import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomInt, sign, verify } from "node:crypto";
+import {
+  createHash,
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPairSync,
+  randomInt,
+  sign,
+  verify,
+} from "node:crypto";
 
 /**
  * Signed entitlement tokens (Ed25519). Only the vendor's license server
@@ -25,7 +33,9 @@ const b64url = (buf: Buffer) => buf.toString("base64url");
 
 /** Accepts PEM, or base64 of the PEM (handy for single-line env vars). */
 function readKey(material: string) {
-  const pem = material.includes("BEGIN") ? material : Buffer.from(material, "base64").toString("utf8");
+  const pem = material.includes("BEGIN")
+    ? material
+    : Buffer.from(material, "base64").toString("utf8");
   return pem;
 }
 
@@ -40,7 +50,12 @@ export function verifyEntitlement(token: string, publicKey: string): Entitlement
   if (!body || !sig) return null;
   try {
     const data = Buffer.from(body, "base64url");
-    const ok = verify(null, data, createPublicKey(readKey(publicKey)), Buffer.from(sig, "base64url"));
+    const ok = verify(
+      null,
+      data,
+      createPublicKey(readKey(publicKey)),
+      Buffer.from(sig, "base64url"),
+    );
     if (!ok) return null;
     const payload = JSON.parse(data.toString("utf8")) as EntitlementPayload;
     return payload.v === 1 ? payload : null;
@@ -61,7 +76,8 @@ export function generateSigningKeys() {
 const KEY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 export function generateLicenseKey() {
-  const group = () => Array.from({ length: 4 }, () => KEY_ALPHABET[randomInt(KEY_ALPHABET.length)]).join("");
+  const group = () =>
+    Array.from({ length: 4 }, () => KEY_ALPHABET[randomInt(KEY_ALPHABET.length)]).join("");
   return `TAYS-${group()}-${group()}-${group()}-${group()}`;
 }
 

@@ -27,7 +27,9 @@ export const salesRoutes = new Hono<AppEnv>()
   })
   .post("/", validate("json", saleCreateInput), async (c) =>
     c.json(
-      await sales.createSale(db, c.get("ctx"), c.req.valid("json"), { deviceCode: await deviceCode() }),
+      await sales.createSale(db, c.get("ctx"), c.req.valid("json"), {
+        deviceCode: await deviceCode(),
+      }),
       201,
     ),
   )
@@ -40,5 +42,8 @@ export const salesRoutes = new Hono<AppEnv>()
     validate("param", idParam),
     validate("json", returnCreateInput),
     async (c) =>
-      c.json(await createReturn(db, c.get("ctx"), c.req.valid("param").id, c.req.valid("json")), 201),
+      c.json(
+        await createReturn(db, c.get("ctx"), c.req.valid("param").id, c.req.valid("json")),
+        201,
+      ),
   );

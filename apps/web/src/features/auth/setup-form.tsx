@@ -20,11 +20,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useErrorMessage } from "@/hooks/use-error-message";
-import { useRouter } from "@/i18n/navigation";
+import { useAppInfo } from "@/hooks/use-me";
+import { Link, useRouter } from "@/i18n/navigation";
 import { api, unwrap } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
 import { usernameSchema } from "@/lib/validators";
-import { useSetupStatus } from "./api";
 
 const schema = z
   .object({
@@ -43,15 +43,17 @@ const schema = z
     path: ["confirmPassword"],
   });
 
-export function SetupForm() {
+export function SetupForm({ mode = "setup" }: { mode?: "setup" | "signup" }) {
   const t = useTranslations("auth");
   const router = useRouter();
   const errorMessage = useErrorMessage();
-  const setup = useSetupStatus();
+  const info = useAppInfo();
 
   useEffect(() => {
-    if (setup.data && !setup.data.needsSetup) router.replace("/login");
-  }, [setup.data, router]);
+    if (!info.data) return;
+    if (mode === "setup" && !info.data.needsSetup) router.replace("/login");
+    if (mode === "signup" && !info.data.signupEnabled) router.replace("/login");
+  }, [info.data, mode, router]);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -67,11 +69,8 @@ export function SetupForm() {
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof schema>) => {
-      await unwrap(
-        api.setup.$post({
-          json: { ...values, currency: values.currency.toUpperCase() },
-        }),
-      );
+      const json = { ...values, currency: values.currency.toUpperCase() };
+      await unwrap(mode === "signup" ? api.signup.$post({ json }) : api.setup.$post({ json }));
       // Sign the new administrator in straight away.
       await authClient.signIn.username({ username: values.username, password: values.password });
     },
@@ -105,8 +104,12 @@ export function SetupForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{t("setupTitle")}</CardTitle>
-        <CardDescription>{t("setupDescription")}</CardDescription>
+        <CardTitle className="text-xl">
+          {mode === "signup" ? t("signupTitle") : t("setupTitle")}
+        </CardTitle>
+        <CardDescription>
+          {mode === "signup" ? t("signupDescription") : t("setupDescription")}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -126,10 +129,18 @@ export function SetupForm() {
             </div>
             <Button type="submit" size="lg" disabled={mutation.isPending}>
               {mutation.isPending && <Loader2 className="animate-spin" />}
-              {t("createAccount")}
+              {mode === "signup" ? t("signupAction") : t("createAccount")}
             </Button>
           </form>
         </Form>
+        {mode === "signup" && (
+          <p className="text-muted-foreground mt-4 text-center text-sm">
+            {t("haveAccount")}{" "}
+            <Link href="/login" className="text-primary font-medium hover:underline">
+              {t("signInLink")}
+            </Link>
+          </p>
+        )}
       </CardContent>
     </Card>
   );

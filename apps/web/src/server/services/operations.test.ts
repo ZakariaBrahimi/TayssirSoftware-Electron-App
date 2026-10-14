@@ -26,7 +26,10 @@ const opts = { deviceCode: "T" };
 const sale = (input: unknown) => saleCreateInput.parse(input);
 
 async function stockOf(id: string) {
-  const [row] = await db.select({ stock: products.stock }).from(products).where(eq(products.id, id));
+  const [row] = await db
+    .select({ stock: products.stock })
+    .from(products)
+    .where(eq(products.id, id));
   return row.stock;
 }
 
@@ -49,7 +52,12 @@ describe("returns", () => {
     const s = await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 4 }] }), opts);
     const itemId = s.items[0].id;
 
-    const after = await createReturn(db, ctx, s.id, returnCreateInput.parse({ items: [{ saleItemId: itemId, quantity: 1 }] }));
+    const after = await createReturn(
+      db,
+      ctx,
+      s.id,
+      returnCreateInput.parse({ items: [{ saleItemId: itemId, quantity: 1 }] }),
+    );
     expect(after.refundedAmount).toBe(1000);
     expect(after.items[0].returnedQuantity).toBe(1);
     expect(await stockOf(p.id)).toBe(7);
@@ -64,7 +72,12 @@ describe("returns", () => {
     expect(await stockOf(p.id)).toBe(7);
 
     await expect(
-      createReturn(db, ctx, s.id, returnCreateInput.parse({ items: [{ saleItemId: itemId, quantity: 3 }] })),
+      createReturn(
+        db,
+        ctx,
+        s.id,
+        returnCreateInput.parse({ items: [{ saleItemId: itemId, quantity: 3 }] }),
+      ),
     ).rejects.toMatchObject({ code: "RETURN_EXCEEDS_SALE" });
     await expect(voidSale(db, ctx, s.id)).rejects.toMatchObject({ code: "SALE_HAS_RETURNS" });
 
@@ -88,14 +101,21 @@ describe("returns", () => {
     const s = await createSale(
       db,
       ctx,
-      sale({ items: [{ productId: p.id, quantity: 2 }], customerId: c.id, paymentMethod: "credit" }),
+      sale({
+        items: [{ productId: p.id, quantity: 2 }],
+        customerId: c.id,
+        paymentMethod: "credit",
+      }),
       opts,
     );
     await createReturn(
       db,
       ctx,
       s.id,
-      returnCreateInput.parse({ items: [{ saleItemId: s.items[0].id, quantity: 1 }], refundMethod: "account" }),
+      returnCreateInput.parse({
+        items: [{ saleItemId: s.items[0].id, quantity: 1 }],
+        refundMethod: "account",
+      }),
     );
     expect((await getCustomer(db, ctx, c.id)).balance).toBe(1000);
   });
@@ -108,7 +128,11 @@ describe("customer accounts", () => {
     await createSale(
       db,
       ctx,
-      sale({ items: [{ productId: p.id, quantity: 2 }], customerId: c.id, paymentMethod: "credit" }),
+      sale({
+        items: [{ productId: p.id, quantity: 2 }],
+        customerId: c.id,
+        paymentMethod: "credit",
+      }),
       opts,
     );
     await recordCustomerPayment(db, ctx, c.id, paymentInput.parse({ amount: 1000 }));
@@ -153,7 +177,11 @@ describe("purchasing", () => {
   it("needs a supplier for unpaid purchases", async () => {
     const p = await makeProduct(db, ctx);
     await expect(
-      createPurchase(db, ctx, purchaseCreateInput.parse({ items: [{ productId: p.id, quantity: 1, unitCost: 100 }] })),
+      createPurchase(
+        db,
+        ctx,
+        purchaseCreateInput.parse({ items: [{ productId: p.id, quantity: 1, unitCost: 100 }] }),
+      ),
     ).rejects.toMatchObject({ code: "CUSTOMER_REQUIRED" });
   });
 });
@@ -163,12 +191,24 @@ describe("cash register shifts", () => {
     const p = await makeProduct(db, ctx, { salePrice: 1000, stock: 50 });
     const c = await createCustomer(db, ctx, customerInput.parse({ name: "Client" }));
     await openShift(db, ctx, { openingCash: 5000 });
-    await expect(openShift(db, ctx, { openingCash: 0 })).rejects.toMatchObject({ code: "SHIFT_ALREADY_OPEN" });
+    await expect(openShift(db, ctx, { openingCash: 0 })).rejects.toMatchObject({
+      code: "SHIFT_ALREADY_OPEN",
+    });
 
     // Cash sale: 2000 total, 5000 handed over, 3000 change → +2000.
-    const s1 = await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 2 }], amountPaid: 5000 }), opts);
+    const s1 = await createSale(
+      db,
+      ctx,
+      sale({ items: [{ productId: p.id, quantity: 2 }], amountPaid: 5000 }),
+      opts,
+    );
     // Card sale: no cash.
-    await createSale(db, ctx, sale({ items: [{ productId: p.id, quantity: 1 }], paymentMethod: "card" }), opts);
+    await createSale(
+      db,
+      ctx,
+      sale({ items: [{ productId: p.id, quantity: 1 }], paymentMethod: "card" }),
+      opts,
+    );
     // Partial credit: 1000 total, 400 cash → +400.
     await createSale(
       db,
@@ -179,7 +219,12 @@ describe("cash register shifts", () => {
     // Customer pays 300 in cash → +300.
     await recordCustomerPayment(db, ctx, c.id, paymentInput.parse({ amount: 300 }));
     // Cash refund of one unit → −1000.
-    await createReturn(db, ctx, s1.id, returnCreateInput.parse({ items: [{ saleItemId: s1.items[0].id, quantity: 1 }] }));
+    await createReturn(
+      db,
+      ctx,
+      s1.id,
+      returnCreateInput.parse({ items: [{ saleItemId: s1.items[0].id, quantity: 1 }] }),
+    );
     // Paid the delivery guy from the drawer → −250.
     await addCashMovement(db, ctx, { type: "out", amount: 250, reason: "Delivery" });
 

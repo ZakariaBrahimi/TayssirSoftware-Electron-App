@@ -18,10 +18,14 @@ export const customersRoutes = new Hono<AppEnv>()
   .get("/", validate("query", partyListQuery), async (c) =>
     c.json(await customers.listCustomers(db, c.get("ctx"), c.req.valid("query"))),
   )
-  .get("/options", validate("query", z.object({ q: z.string().max(120).optional() })), async (c) => {
-    const rows = await customers.listCustomerOptions(db, c.get("ctx"), c.req.valid("query").q);
-    return c.json(rows.map((r) => ({ ...r, balance: Number(r.balance) })));
-  })
+  .get(
+    "/options",
+    validate("query", z.object({ q: z.string().max(120).optional() })),
+    async (c) => {
+      const rows = await customers.listCustomerOptions(db, c.get("ctx"), c.req.valid("query").q);
+      return c.json(rows.map((r) => ({ ...r, balance: Number(r.balance) })));
+    },
+  )
   .get("/:id", validate("param", idParam), async (c) =>
     c.json(await customers.getCustomer(db, c.get("ctx"), c.req.valid("param").id)),
   )
@@ -32,10 +36,20 @@ export const customersRoutes = new Hono<AppEnv>()
   .post("/", validate("json", customerInput), async (c) =>
     c.json(await customers.createCustomer(db, c.get("ctx"), c.req.valid("json")), 201),
   )
-  .patch("/:id", requireAdmin, validate("param", idParam), validate("json", customerInput), async (c) =>
-    c.json(
-      await customers.updateCustomer(db, c.get("ctx"), c.req.valid("param").id, c.req.valid("json")),
-    ),
+  .patch(
+    "/:id",
+    requireAdmin,
+    validate("param", idParam),
+    validate("json", customerInput),
+    async (c) =>
+      c.json(
+        await customers.updateCustomer(
+          db,
+          c.get("ctx"),
+          c.req.valid("param").id,
+          c.req.valid("json"),
+        ),
+      ),
   )
   .delete("/:id", requireAdmin, validate("param", idParam), async (c) =>
     c.json(await customers.deleteCustomer(db, c.get("ctx"), c.req.valid("param").id)),
@@ -68,7 +82,12 @@ export const suppliersRoutes = new Hono<AppEnv>()
   )
   .patch("/:id", validate("param", idParam), validate("json", supplierInput), async (c) =>
     c.json(
-      await suppliers.updateSupplier(db, c.get("ctx"), c.req.valid("param").id, c.req.valid("json")),
+      await suppliers.updateSupplier(
+        db,
+        c.get("ctx"),
+        c.req.valid("param").id,
+        c.req.valid("json"),
+      ),
     ),
   )
   .delete("/:id", validate("param", idParam), async (c) =>

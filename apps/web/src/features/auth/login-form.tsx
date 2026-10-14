@@ -18,9 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
-import { useSetupStatus } from "./api";
+import { useAppInfo } from "@/hooks/use-me";
+import { Link, useRouter } from "@/i18n/navigation";
 
 const schema = z.object({
   username: z.string().trim().min(1, "required"),
@@ -31,7 +31,7 @@ export function LoginForm() {
   const t = useTranslations("auth");
   const router = useRouter();
   const params = useSearchParams();
-  const setup = useSetupStatus();
+  const info = useAppInfo();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof schema>>({
@@ -40,8 +40,8 @@ export function LoginForm() {
   });
 
   useEffect(() => {
-    if (setup.data?.needsSetup) router.replace("/setup");
-  }, [setup.data, router]);
+    if (info.data?.needsSetup) router.replace("/setup");
+  }, [info.data, router]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
@@ -105,6 +105,14 @@ export function LoginForm() {
             </Button>
           </form>
         </Form>
+        {info.data?.signupEnabled && (
+          <p className="text-muted-foreground mt-4 text-center text-sm">
+            {t("noAccount")}{" "}
+            <Link href="/signup" className="text-primary font-medium hover:underline">
+              {t("signupLink")}
+            </Link>
+          </p>
+        )}
       </CardContent>
     </Card>
   );

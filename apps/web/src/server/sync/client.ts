@@ -21,7 +21,9 @@ async function call<T>(fetcher: Fetch, url: string, init: RequestInit): Promise<
   } catch (err) {
     throw new AppError("SYNC_FAILED", `Cannot reach the cloud: ${(err as Error).message}`);
   }
-  const body = (await res.json().catch(() => null)) as { error?: { code?: string; message?: string } } | null;
+  const body = (await res.json().catch(() => null)) as {
+    error?: { code?: string; message?: string };
+  } | null;
   if (!res.ok) {
     const code = body?.error?.code;
     if (code === "UNAUTHORIZED" || code === "FORBIDDEN") throw new AppError(code);
@@ -158,14 +160,19 @@ async function runSync(db: Database, fetcher: Fetch) {
         cursor: number;
         hasMore: boolean;
         entitlementToken: string | null;
-      }>(fetcher, `${cloudUrl}/api/sync/pull?cursor=${pullCursor}&deviceId=${encodeURIComponent(deviceId)}`, {
-        method: "GET",
-        headers,
-      });
+      }>(
+        fetcher,
+        `${cloudUrl}/api/sync/pull?cursor=${pullCursor}&deviceId=${encodeURIComponent(deviceId)}`,
+        {
+          method: "GET",
+          headers,
+        },
+      );
       if (batch.changes.length) {
         await applyChanges(db, store.id, batch.changes, { suppressLog: true });
       }
-      if (batch.entitlementToken) await setMeta(db, "sync.entitlementToken", batch.entitlementToken);
+      if (batch.entitlementToken)
+        await setMeta(db, "sync.entitlementToken", batch.entitlementToken);
       pullCursor = batch.cursor;
       await setMeta(db, "sync.pullCursor", String(pullCursor));
       if (!batch.hasMore) break;

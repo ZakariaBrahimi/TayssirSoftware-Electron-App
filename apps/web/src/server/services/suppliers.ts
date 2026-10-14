@@ -129,6 +129,8 @@ export async function listSupplierPayments(db: Executor, ctx: Ctx, supplierId: s
   return db
     .select()
     .from(supplierPayments)
-    .where(and(eq(supplierPayments.supplierId, supplierId), eq(supplierPayments.storeId, ctx.storeId)))
+    .where(
+      and(eq(supplierPayments.supplierId, supplierId), eq(supplierPayments.storeId, ctx.storeId)),
+    )
     .orderBy(sql`${supplierPayments.createdAt} desc`);
 }

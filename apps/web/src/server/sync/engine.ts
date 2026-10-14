@@ -62,7 +62,9 @@ export async function collectChanges(
   // Keep each row once, at its last position (latest version wins anyway).
   const lastIndex = new Map<string, number>();
   page.forEach((c, i) => lastIndex.set(`${c.tbl}:${c.rowId}`, i));
-  const ordered = page.filter((c, i) => lastIndex.get(`${c.tbl}:${c.rowId}`) === i && isSyncTable(c.tbl));
+  const ordered = page.filter(
+    (c, i) => lastIndex.get(`${c.tbl}:${c.rowId}`) === i && isSyncTable(c.tbl),
+  );
 
   // Load current row versions, one query per table.
   const idsByTable = new Map<SyncTableName, string[]>();
@@ -115,12 +117,17 @@ async function upsert(db: Executor, tbl: SyncTableName, row: SyncRow) {
   const cols = Object.keys(row).filter((c) => !ignored.has(c));
   const updatable = cols.filter((c) => c !== "id");
   const t = sql.identifier(tbl);
-  const ownerCheck =
-    tbl === "stores" ? sql`` : sql` and ${t}.store_id = excluded.store_id`;
+  const ownerCheck = tbl === "stores" ? sql`` : sql` and ${t}.store_id = excluded.store_id`;
 
   await db.run(sql`
-    insert into ${t} (${sql.join(cols.map((c) => sql.identifier(c)), sql`, `)})
-    values (${sql.join(cols.map((c) => sql`${row[c]}`), sql`, `)})
+    insert into ${t} (${sql.join(
+      cols.map((c) => sql.identifier(c)),
+      sql`, `,
+    )})
+    values (${sql.join(
+      cols.map((c) => sql`${row[c]}`),
+      sql`, `,
+    )})
     on conflict(id) do update set ${sql.join(
       updatable.map((c) => sql`${sql.identifier(c)} = excluded.${sql.identifier(c)}`),
       sql`, `,
@@ -146,7 +153,8 @@ export async function applyChanges(
   });
 
   await db.transaction(async (tx) => {
-    if (opts.suppressLog) await tx.update(syncState).set({ applying: 1 }).where(eq(syncState.id, 1));
+    if (opts.suppressLog)
+      await tx.update(syncState).set({ applying: 1 }).where(eq(syncState.id, 1));
     const touchedProducts = new Set<string>();
     for (const change of valid) {
       await upsert(tx, change.tbl, change.row);
@@ -155,7 +163,8 @@ export async function applyChanges(
     }
     // Stock is derived: rebuild the cache from the merged movement ledger.
     await recomputeStock(tx, [...touchedProducts]);
-    if (opts.suppressLog) await tx.update(syncState).set({ applying: 0 }).where(eq(syncState.id, 1));
+    if (opts.suppressLog)
+      await tx.update(syncState).set({ applying: 0 }).where(eq(syncState.id, 1));
   });
 
   return { applied: valid.length };
@@ -179,7 +188,9 @@ export async function rehomeStore(db: Database, fromId: string, toId: string) {
     await tx.update(syncState).set({ applying: 1 }).where(eq(syncState.id, 1));
     for (const tbl of Object.keys(SYNC_TABLES) as SyncTableName[]) {
       if (tbl === "stores") continue;
-      await tx.run(sql`update ${sql.identifier(tbl)} set store_id = ${toId} where store_id = ${fromId}`);
+      await tx.run(
+        sql`update ${sql.identifier(tbl)} set store_id = ${toId} where store_id = ${fromId}`,
+      );
     }
     // updated_at = 0: the cloud's store settings win over the local ones.
     await tx.run(sql`update stores set id = ${toId}, updated_at = 0 where id = ${fromId}`);

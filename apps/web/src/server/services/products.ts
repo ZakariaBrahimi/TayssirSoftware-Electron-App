@@ -113,7 +113,11 @@ export async function isBarcodeTaken(db: Executor, ctx: Ctx, barcode: string, ex
     .select({ id: products.id })
     .from(products)
     .where(
-      and(live(ctx), eq(products.barcode, barcode), exceptId ? ne(products.id, exceptId) : undefined),
+      and(
+        live(ctx),
+        eq(products.barcode, barcode),
+        exceptId ? ne(products.id, exceptId) : undefined,
+      ),
     )
     .limit(1);
   return Boolean(row);
@@ -165,12 +169,7 @@ export async function createProduct(
 /** Convenience overload for callers holding the raw (input) shape. */
 export type CreateProductInput = ProductCreateInput;
 
-export async function updateProduct(
-  db: Database,
-  ctx: Ctx,
-  id: string,
-  input: ProductUpdateInput,
-) {
+export async function updateProduct(db: Database, ctx: Ctx, id: string, input: ProductUpdateInput) {
   const current = await getProduct(db, ctx, id);
   assertPrices({
     costPrice: input.costPrice ?? current.costPrice,
@@ -179,7 +178,10 @@ export async function updateProduct(
   if (input.barcode && (await isBarcodeTaken(db, ctx, input.barcode, id))) {
     throw new AppError("BARCODE_TAKEN");
   }
-  await db.update(products).set(input).where(and(eq(products.id, id), live(ctx)));
+  await db
+    .update(products)
+    .set(input)
+    .where(and(eq(products.id, id), live(ctx)));
   return getProduct(db, ctx, id);
 }
 
@@ -194,12 +196,7 @@ export async function deleteProduct(db: Executor, ctx: Ctx, id: string) {
   return row;
 }
 
-export async function adjustStock(
-  db: Database,
-  ctx: Ctx,
-  id: string,
-  input: StockAdjustmentInput,
-) {
+export async function adjustStock(db: Database, ctx: Ctx, id: string, input: StockAdjustmentInput) {
   await getProduct(db, ctx, id);
   await db.transaction(async (tx) => {
     const moved = await moveStock(tx, ctx, {

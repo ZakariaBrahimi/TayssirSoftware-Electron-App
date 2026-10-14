@@ -25,12 +25,12 @@ export function useCatalogMutations(kind: CatalogKind) {
       onSuccess: invalidate,
     }),
     update: useMutation({
-      mutationFn: ({ id, name }: { id: number; name: string }) =>
-        unwrap(api[kind][":id"].$patch({ param: { id: String(id) }, json: { name } })),
+      mutationFn: ({ id, name }: { id: string; name: string }) =>
+        unwrap(api[kind][":id"].$patch({ param: { id }, json: { name } })),
       onSuccess: invalidate,
     }),
     remove: useMutation({
-      mutationFn: (id: number) => unwrap(api[kind][":id"].$delete({ param: { id: String(id) } })),
+      mutationFn: (id: string) => unwrap(api[kind][":id"].$delete({ param: { id } })),
       onSuccess: invalidate,
     }),
   };

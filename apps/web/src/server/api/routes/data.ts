@@ -2,7 +2,12 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "../../db";
 import { AppError } from "../../errors";
-import { exportCustomers, exportProducts, exportSales, importProducts } from "../../services/data-io";
+import {
+  exportCustomers,
+  exportProducts,
+  exportSales,
+  importProducts,
+} from "../../services/data-io";
 import { getStore } from "../../services/stores";
 import { type AppEnv, requireAdmin, requireEntitlement, validate } from "../context";
 
@@ -28,11 +33,19 @@ export const dataRoutes = new Hono<AppEnv>()
   })
   .get(
     "/export/sales",
-    validate("query", z.object({ from: z.iso.datetime({ offset: true }).optional(), to: z.iso.datetime({ offset: true }).optional() })),
+    validate(
+      "query",
+      z.object({
+        from: z.iso.datetime({ offset: true }).optional(),
+        to: z.iso.datetime({ offset: true }).optional(),
+      }),
+    ),
     async (c) => {
       const store = await getStore(db, c.get("ctx").storeId);
+      const { from, to } = c.req.valid("query");
+      const range = { from: from ?? new Date(Date.now() - 365 * 86_400_000).toISOString(), to };
       return csv(
-        await exportSales(db, c.get("ctx"), store.currency, c.req.valid("query")),
+        await exportSales(db, c.get("ctx"), store.currency, range),
         `sales-${today()}.csv`,
       );
     },

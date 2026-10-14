@@ -1,0 +1,41 @@
+name: Release desktop app
+
+# Push a tag like `desktop-v2.1.0` to build the installers and publish them
+# as a GitHub Release. Installed apps update themselves from these releases.
+on:
+  push:
+    tags: ["desktop-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Set version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#desktop-v}"
+          npm version "$VERSION" --no-git-tag-version --workspace @tayssir/desktop
+      - name: Build and publish
+        run: npm run release -w @tayssir/desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Public key used by installs to verify licenses (see README).
+          LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
+          LICENSE_SERVER_URL: ${{ vars.LICENSE_SERVER_URL }}
+          # Optional code signing (strongly recommended for Windows/macOS).
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}

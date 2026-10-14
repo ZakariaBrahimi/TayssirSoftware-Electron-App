@@ -36,10 +36,7 @@ export async function updateStore(db: Executor, storeId: string, input: StoreSet
 
 /** Local mode: true until the first store and administrator exist. */
 export async function needsSetup(db: Executor) {
-  const [{ users }] = await db
-    .select({ users: count() })
-    .from(user)
-    .where(isNotNull(user.storeId));
+  const [{ users }] = await db.select({ users: count() }).from(user).where(isNotNull(user.storeId));
   return users === 0;
 }
 

@@ -19,7 +19,8 @@ type Node = { db: Database; ctx: Ctx; push: number; pull: number };
 async function push(node: Node, cloud: Database, storeId: string) {
   for (;;) {
     const batch = await collectChanges(node.db, { since: node.push, limit: 50 });
-    if (batch.changes.length) await applyChanges(cloud, storeId, batch.changes, { suppressLog: false });
+    if (batch.changes.length)
+      await applyChanges(cloud, storeId, batch.changes, { suppressLog: false });
     node.push = batch.cursor;
     if (!batch.hasMore) break;
   }
@@ -28,7 +29,8 @@ async function push(node: Node, cloud: Database, storeId: string) {
 async function pull(node: Node, cloud: Database, storeId: string) {
   for (;;) {
     const batch = await collectChanges(cloud, { since: node.pull, storeId, limit: 50 });
-    if (batch.changes.length) await applyChanges(node.db, storeId, batch.changes, { suppressLog: true });
+    if (batch.changes.length)
+      await applyChanges(node.db, storeId, batch.changes, { suppressLog: true });
     node.pull = batch.cursor;
     if (!batch.hasMore) break;
   }
@@ -47,7 +49,10 @@ let a: Node;
 let b: Node;
 
 async function stockOn(db: Database, id: string) {
-  const [row] = await db.select({ stock: products.stock }).from(products).where(eq(products.id, id));
+  const [row] = await db
+    .select({ stock: products.stock })
+    .from(products)
+    .where(eq(products.id, id));
   return row?.stock;
 }
 
@@ -87,8 +92,12 @@ describe("sync", () => {
     await sync(b, cloud, cloudCtx.storeId);
 
     // Both tills sell while offline.
-    await createSale(a.db, a.ctx, sale({ items: [{ productId: product.id, quantity: 3 }] }), { deviceCode: "D1" });
-    await createSale(b.db, b.ctx, sale({ items: [{ productId: product.id, quantity: 2 }] }), { deviceCode: "D2" });
+    await createSale(a.db, a.ctx, sale({ items: [{ productId: product.id, quantity: 3 }] }), {
+      deviceCode: "D1",
+    });
+    await createSale(b.db, b.ctx, sale({ items: [{ productId: product.id, quantity: 2 }] }), {
+      deviceCode: "D2",
+    });
     expect(await stockOn(a.db, product.id)).toBe(7);
     expect(await stockOn(b.db, product.id)).toBe(8);
 
@@ -98,7 +107,9 @@ describe("sync", () => {
     expect(await stockOn(cloud, product.id)).toBe(5);
     expect(await stockOn(a.db, product.id)).toBe(5);
     expect(await stockOn(b.db, product.id)).toBe(5);
-    const numbers = (await a.db.select({ d: sales.deviceCode, s: sales.seq }).from(sales)).map((r) => `${r.d}-${r.s}`);
+    const numbers = (await a.db.select({ d: sales.deviceCode, s: sales.seq }).from(sales)).map(
+      (r) => `${r.d}-${r.s}`,
+    );
     expect(numbers.sort()).toEqual(["D1-1", "D2-1"]);
   });
 
@@ -109,7 +120,9 @@ describe("sync", () => {
 
     // B renames the product; A only sells it afterwards (a stock change).
     await updateProduct(b.db, b.ctx, product.id, { name: "New name" });
-    await createSale(a.db, a.ctx, sale({ items: [{ productId: product.id, quantity: 1 }] }), { deviceCode: "D1" });
+    await createSale(a.db, a.ctx, sale({ items: [{ productId: product.id, quantity: 1 }] }), {
+      deviceCode: "D1",
+    });
     for (const node of [b, a, b]) await sync(node, cloud, cloudCtx.storeId);
 
     expect((await getProduct(a.db, a.ctx, product.id)).name).toBe("New name");
@@ -125,7 +138,11 @@ describe("sync", () => {
     await createSale(
       b.db,
       b.ctx,
-      sale({ items: [{ productId: product.id, quantity: 2 }], customerId: customer.id, paymentMethod: "credit" }),
+      sale({
+        items: [{ productId: product.id, quantity: 2 }],
+        customerId: customer.id,
+        paymentMethod: "credit",
+      }),
       { deviceCode: "D2" },
     );
     await sync(b, cloud, cloudCtx.storeId);
@@ -140,28 +157,56 @@ describe("sync", () => {
   it("rejects rows of another store and ignores protected columns", async () => {
     const { ctx: other } = await makeStore(cloud, "Someone else");
     const foreign = await makeProduct(cloud, other, { name: "Not yours" });
-    const row = { ...(await cloud.all<Record<string, unknown>>(sql`select * from products where id = ${foreign.id}`))[0] };
+    const row = {
+      ...(
+        await cloud.all<Record<string, unknown>>(
+          sql`select * from products where id = ${foreign.id}`,
+        )
+      )[0],
+    };
 
     await expect(
-      applyChanges(cloud, cloudCtx.storeId, [{ tbl: "products", row: { ...row, name: "Hacked", updated_at: Date.now() + 1e6 } }], {
-        suppressLog: false,
-      }),
+      applyChanges(
+        cloud,
+        cloudCtx.storeId,
+        [{ tbl: "products", row: { ...row, name: "Hacked", updated_at: Date.now() + 1e6 } }],
+        {
+          suppressLog: false,
+        },
+      ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     // Even claiming to be our store, an existing row of another store is untouched.
     await applyChanges(
       cloud,
       cloudCtx.storeId,
-      [{ tbl: "products", row: { ...row, store_id: cloudCtx.storeId, name: "Hacked", updated_at: Date.now() + 1e6 } }],
+      [
+        {
+          tbl: "products",
+          row: { ...row, store_id: cloudCtx.storeId, name: "Hacked", updated_at: Date.now() + 1e6 },
+        },
+      ],
       { suppressLog: false },
     );
     expect((await getProduct(cloud, other, foreign.id)).name).toBe("Not yours");
 
     // A desktop cannot grant itself a subscription.
-    const [storeRow] = await cloud.all<Record<string, unknown>>(sql`select * from stores where id = ${cloudCtx.storeId}`);
+    const [storeRow] = await cloud.all<Record<string, unknown>>(
+      sql`select * from stores where id = ${cloudCtx.storeId}`,
+    );
     await applyChanges(
       cloud,
       cloudCtx.storeId,
-      [{ tbl: "stores", row: { ...storeRow, subscription_status: "active", name: "Renamed", updated_at: Date.now() + 1e6 } }],
+      [
+        {
+          tbl: "stores",
+          row: {
+            ...storeRow,
+            subscription_status: "active",
+            name: "Renamed",
+            updated_at: Date.now() + 1e6,
+          },
+        },
+      ],
       { suppressLog: false },
     );
     const [after] = await cloud.select().from(stores).where(eq(stores.id, cloudCtx.storeId));
@@ -169,15 +214,21 @@ describe("sync", () => {
     expect(after.subscriptionStatus).toBe("trialing");
 
     await expect(
-      applyChanges(cloud, cloudCtx.storeId, [{ tbl: "user", row: { id: "x", updated_at: 1 } }], { suppressLog: false }),
+      applyChanges(cloud, cloudCtx.storeId, [{ tbl: "user", row: { id: "x", updated_at: 1 } }], {
+        suppressLog: false,
+      }),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
   it("has change-log triggers on every synced table", async () => {
-    const triggers = await cloud.all<{ name: string }>(sql`select name from sqlite_master where type = 'trigger'`);
+    const triggers = await cloud.all<{ name: string }>(
+      sql`select name from sqlite_master where type = 'trigger'`,
+    );
     const { SYNC_TABLES } = await import("../db/schema");
     for (const tbl of Object.keys(SYNC_TABLES)) {
-      expect(triggers.map((t) => t.name)).toEqual(expect.arrayContaining([`sync_${tbl}_ins`, `sync_${tbl}_upd`]));
+      expect(triggers.map((t) => t.name)).toEqual(
+        expect.arrayContaining([`sync_${tbl}_ins`, `sync_${tbl}_upd`]),
+      );
     }
   });
 });

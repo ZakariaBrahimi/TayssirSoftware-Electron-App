@@ -71,7 +71,10 @@ export async function updateUser(db: Executor, ctx: Ctx, id: string, input: User
   if (input.name || input.role) {
     await db
       .update(user)
-      .set({ ...(input.name ? { name: input.name } : {}), ...(input.role ? { role: input.role } : {}) })
+      .set({
+        ...(input.name ? { name: input.name } : {}),
+        ...(input.role ? { role: input.role } : {}),
+      })
       .where(eq(user.id, id));
   }
   if (input.password) {
@@ -93,7 +96,13 @@ export async function deleteUser(db: Executor, ctx: Ctx, id: string) {
 /** Checks a username/password pair without creating a session. */
 export async function verifyCredentials(db: Executor, username: string, password: string) {
   const [row] = await db
-    .select({ id: user.id, name: user.name, role: user.role, storeId: user.storeId, hash: account.password })
+    .select({
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      storeId: user.storeId,
+      hash: account.password,
+    })
     .from(user)
     .innerJoin(account, and(eq(account.userId, user.id), eq(account.providerId, "credential")))
     .where(eq(user.username, username.trim().toLowerCase()));

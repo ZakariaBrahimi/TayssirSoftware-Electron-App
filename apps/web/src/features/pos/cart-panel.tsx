@@ -14,11 +14,14 @@ export function CartPanel({
   onCheckout,
   className,
   headerClassName,
+  top,
 }: {
   cart: Cart;
   onCheckout: () => void;
   className?: string;
   headerClassName?: string;
+  /** Rendered under the header (customer selector). */
+  top?: React.ReactNode;
 }) {
   const t = useTranslations("pos");
   const money = useMoney();
@@ -41,6 +44,7 @@ export function CartPanel({
         )}
       </div>
       <Separator />
+      {top && <div className="border-b p-3">{top}</div>}
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {cart.lines.length === 0 ? (

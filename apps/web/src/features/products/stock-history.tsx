@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDateFormat } from "@/hooks/use-settings";
 import { useStockMovements } from "./api";
 
-export function StockHistory({ productId }: { productId: number }) {
+export function StockHistory({ productId }: { productId: string }) {
   const t = useTranslations("products");
   const dates = useDateFormat();
   const { data, isPending } = useStockMovements(productId);
@@ -27,21 +27,16 @@ export function StockHistory({ productId }: { productId: number }) {
             {data.map((m) => (
               <li key={m.id} className="flex items-center justify-between gap-3 py-2">
                 <div className="flex flex-col">
-                  <span>
-                    {t(`reason_${m.reason}`)}
-                    {m.saleId ? ` · #${m.saleId}` : ""}
-                  </span>
+                  <span>{t(`reason_${m.reason}`)}</span>
                   <span className="text-muted-foreground text-xs">
                     {dates.dateTime(m.createdAt)}
+                    {m.userName ? ` · ${m.userName}` : ""}
                     {m.note ? ` · ${m.note}` : ""}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 tabular-nums">
-                  <Badge variant={m.change > 0 ? "success" : "destructive"}>
-                    {m.change > 0 ? `+${m.change}` : m.change}
-                  </Badge>
-                  <span className="text-muted-foreground w-10 text-end">{m.stockAfter}</span>
-                </div>
+                <Badge variant={m.change > 0 ? "success" : "destructive"} className="tabular-nums">
+                  {m.change > 0 ? `+${m.change}` : m.change}
+                </Badge>
               </li>
             ))}
           </ul>

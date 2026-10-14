@@ -22,7 +22,7 @@ export function StockAdjustDialog({
   open,
   onOpenChange,
 }: {
-  product: { id: number; name: string; stock: number };
+  product: { id: string; name: string; stock: number };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {

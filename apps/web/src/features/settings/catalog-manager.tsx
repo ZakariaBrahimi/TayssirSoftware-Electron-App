@@ -19,7 +19,7 @@ export function CatalogManager({ kind }: { kind: CatalogKind }) {
   const list = useCatalogList(kind);
   const { create, update, remove } = useCatalogMutations(kind);
   const [name, setName] = useState("");
-  const [editing, setEditing] = useState<{ id: number; name: string } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const onError = (err: unknown) => toast.error(errorMessage(err));
 
   const add = (e: React.FormEvent) => {
