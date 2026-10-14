@@ -6,12 +6,18 @@ import { TRIAL_DAYS } from "../services/stores";
 import type { Actor } from "./access";
 import { recordAudit } from "./audit";
 
+/** Every desktop build (Windows, macOS, Linux), newest first. */
+export const DESKTOP_RELEASES_URL =
+  "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App/releases";
+
 /** What the landing page and sign-up show, editable in the platform console. */
 export type PlatformSettings = z.output<typeof platformSettingsInput>;
 
 export const DEFAULT_SETTINGS: PlatformSettings = {
   trialDays: TRIAL_DAYS,
-  downloadUrl: "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App/releases/latest",
+  // The Windows installer of the latest release, downloaded directly.
+  downloadUrl:
+    "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App/releases/latest/download/Mizan-POS-Setup.exe",
   contactPhone: "",
   contactWhatsapp: "",
   contactEmail: "",

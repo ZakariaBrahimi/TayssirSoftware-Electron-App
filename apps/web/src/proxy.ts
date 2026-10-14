@@ -6,7 +6,7 @@ import { getMode } from "./server/context";
 
 const intl = createIntlMiddleware(routing);
 
-const PUBLIC_PAGES = ["/login", "/setup", "/signup"];
+const PUBLIC_PAGES = ["/login", "/setup", "/signup", "/download"];
 
 /**
  * Locale routing + an optimistic auth redirect. Real authorization happens

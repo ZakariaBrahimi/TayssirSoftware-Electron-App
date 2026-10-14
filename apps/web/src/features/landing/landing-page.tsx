@@ -154,7 +154,7 @@ export async function LandingPage({
   catalog: PublicCatalog;
 }) {
   const t = await getTranslations({ locale, namespace: "landing" });
-  const { downloadUrl, trialDays: days } = settings;
+  const { trialDays: days } = settings;
   const plans = catalog.plans;
   const contact = {
     phone: settings.contactPhone,
@@ -215,10 +215,10 @@ export async function LandingPage({
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <a href={downloadUrl} rel="noopener">
+                <Link href="/download">
                   <Download />
                   {t("hero.secondary")}
-                </a>
+                </Link>
               </Button>
             </div>
             <p className="text-muted-foreground text-sm">{t("hero.note")}</p>
@@ -399,10 +399,10 @@ export async function LandingPage({
               <p className="text-muted-foreground text-sm">{t("pricing.desktopBody")}</p>
             </div>
             <Button asChild variant="outline">
-              <a href={downloadUrl} rel="noopener">
+              <Link href="/download">
                 <Download />
                 {t("pricing.desktopCta")}
-              </a>
+              </Link>
             </Button>
           </div>
           <p className="text-muted-foreground text-sm">{t("pricing.payment")}</p>

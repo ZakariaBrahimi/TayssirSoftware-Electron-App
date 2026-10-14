@@ -36,7 +36,11 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Mizan-POS-Setup.${ext}",
+      "shortcutName": "Mizan POS",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "mac": {
       "target": [
@@ -59,7 +63,7 @@
         "releaseType": "release"
       }
     ],
-    "artifactName": "Mizan-POS-${version}-${os}-${arch}.${ext}",
+    "artifactName": "Mizan-POS-${os}-${arch}.${ext}",
     "executableName": "mizan-pos",
     "extraMetadata": {
       "name": "mizan-pos"

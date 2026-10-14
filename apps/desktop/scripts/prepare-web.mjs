@@ -1,6 +1,12 @@
 // Copies the Next.js standalone build (plus static assets, public files and
 // database migrations) into ./web-dist so Electron can bundle and run it.
-import { cpSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -41,12 +47,18 @@ for (const f of [".env", ".env.local", ".env.production"])
 
 // Build-time settings read by main.js: the license public key (installs
 // can verify licenses but never create them) and the license server URL.
+// Environment variables win; release-config.json holds the defaults.
+const defaults = JSON.parse(
+  readFileSync(path.resolve(here, "../release-config.json"), "utf8"),
+);
 writeFileSync(
   path.join(out, "app-config.json"),
   JSON.stringify(
     {
-      licensePublicKey: process.env.LICENSE_PUBLIC_KEY || null,
-      licenseServerUrl: process.env.LICENSE_SERVER_URL || null,
+      licensePublicKey:
+        process.env.LICENSE_PUBLIC_KEY || defaults.licensePublicKey || null,
+      licenseServerUrl:
+        process.env.LICENSE_SERVER_URL || defaults.licenseServerUrl || null,
     },
     null,
     2,
