@@ -1494,7 +1494,10 @@
     "onlineCta": "Start online for free",
     "otherTitle": "macOS, Linux and older versions",
     "otherBody": "Installers for other systems and every previous version are on the releases page.",
-    "otherCta": "All downloads"
+    "otherCta": "All downloads",
+    "androidTitle": "Android app",
+    "androidBody": "For phones, tablets and Sunmi terminals: the till with the camera as a scanner, Bluetooth receipt printers and stock notifications. Uses your online account.",
+    "androidCta": "Download for Android (APK)"
   },
   "stock": {
     "title": "Reorder",

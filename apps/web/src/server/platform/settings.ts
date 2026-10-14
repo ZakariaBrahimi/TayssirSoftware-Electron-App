@@ -10,6 +10,9 @@ import { recordAudit } from "./audit";
 export const DESKTOP_RELEASES_URL =
   "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App/releases";
 
+/** The Android app (built by the release-android workflow). */
+export const ANDROID_APK_URL = `https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App/releases/download/android/Mizan-POS.apk`;
+
 /** What the landing page and sign-up show, editable in the platform console. */
 export type PlatformSettings = z.output<typeof platformSettingsInput>;
 

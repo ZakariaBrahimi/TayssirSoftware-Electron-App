@@ -1,0 +1,18 @@
+{
+  "appId": "app.mizan.pos",
+  "appName": "Mizan POS",
+  "webDir": "www",
+  "server": {
+    "url": "https://mizan-app-production-4542.up.railway.app/pos",
+    "androidScheme": "https",
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "backgroundColor": "#0f766e"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

@@ -1494,7 +1494,10 @@
     "onlineCta": "Commencer en ligne gratuitement",
     "otherTitle": "macOS, Linux et anciennes versions",
     "otherBody": "Les installateurs pour les autres systèmes et toutes les versions précédentes sont sur la page des versions.",
-    "otherCta": "Tous les téléchargements"
+    "otherCta": "Tous les téléchargements",
+    "androidTitle": "Application Android",
+    "androidBody": "Pour téléphones, tablettes et terminaux Sunmi : la caisse avec la caméra comme scanner, les imprimantes Bluetooth et les notifications de stock. Utilise votre compte en ligne.",
+    "androidCta": "Télécharger pour Android (APK)"
   },
   "stock": {
     "title": "Réapprovisionner",

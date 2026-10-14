@@ -4,6 +4,7 @@ import {
   CloudOff,
   Download,
   Globe,
+  Smartphone,
   MonitorDown,
   RefreshCw,
   ShieldAlert,
@@ -15,7 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { DESKTOP_RELEASES_URL, type PlatformSettings } from "@/server/platform/settings";
+import {
+  ANDROID_APK_URL,
+  DESKTOP_RELEASES_URL,
+  type PlatformSettings,
+} from "@/server/platform/settings";
 
 const container = "mx-auto w-full max-w-5xl px-4 sm:px-6";
 
@@ -149,7 +154,19 @@ export async function DownloadPage({
         </section>
 
         {/* Alternatives and help */}
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid gap-4 md:grid-cols-3">
+          <div className="grid content-start gap-3 rounded-xl border p-5">
+            <div className="flex items-center gap-3">
+              <Smartphone className="text-primary size-5" />
+              <h3 className="font-medium">{t("androidTitle")}</h3>
+            </div>
+            <p className="text-muted-foreground text-sm">{t("androidBody")}</p>
+            <Button asChild variant="outline" className="justify-self-start">
+              <a href={ANDROID_APK_URL} rel="noopener">
+                {t("androidCta")}
+              </a>
+            </Button>
+          </div>
           <div className="grid content-start gap-3 rounded-xl border p-5">
             <div className="flex items-center gap-3">
               <Globe className="text-primary size-5" />
