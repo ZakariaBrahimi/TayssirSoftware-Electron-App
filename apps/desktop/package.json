@@ -60,7 +60,7 @@
         "provider": "github",
         "owner": "ZakariaBrahimi",
         "repo": "TayssirSoftware-Electron-App",
-        "releaseType": "release"
+        "releaseType": "draft"
       }
     ],
     "artifactName": "Mizan-POS-${os}-${arch}.${ext}",

@@ -235,13 +235,13 @@ npm run dist:win -w @tayssir/desktop    # or dist:mac / dist:linux
 
 The installer bundles the web app and starts it on `localhost` with a local SQLite database stored in the user's app-data folder (`%APPDATA%/Mizan POS` on Windows; installs from before the rename keep using `Tayssir POS`). Nothing needs to be installed or configured. To let tablets or phones on the shop's network use the same data, start it with `TAYSSIR_HOST=0.0.0.0` and `TAYSSIR_PORT=3000`.
 
-**Releases and auto-update.** Push a tag such as `desktop-v2.1.0` (matching `version` in `apps/desktop/package.json`). The `Release desktop` workflow builds Windows, macOS and Linux installers and publishes them to GitHub Releases. Installed apps check for updates at launch and every 6 hours, download in the background and offer to restart. Configure in the repository settings:
+**Releases and auto-update.** Change `version` in `apps/desktop/package.json` and push it to `main` (or push a tag such as `desktop-v2.1.0`). The `Release desktop` workflow builds the Windows, macOS and Linux installers, uploads them to a draft release `v<version>` and publishes it once the Windows installer is there; a version already published is skipped. The Windows installer is always named `Mizan-POS-Setup.exe`, so `/releases/latest/download/Mizan-POS-Setup.exe` (the default download link of the website's `/download` page) serves the newest one. Installed apps check for updates at launch and every 6 hours, download in the background and offer to restart. Configure in the repository settings:
 
-| Name                           | Kind               | Purpose                                                          |
-| ------------------------------ | ------------------ | ---------------------------------------------------------------- |
-| `LICENSE_PUBLIC_KEY`           | Secret             | Built into the app to verify licenses                            |
-| `LICENSE_SERVER_URL`           | Variable           | Your cloud URL, for activation and sync                          |
-| `CSC_LINK`, `CSC_KEY_PASSWORD` | Secrets (optional) | Code signing certificate (base64 `.p12`/`.pfx`) and its password |
+| Name                           | Kind                | Purpose                                                          |
+| ------------------------------ | ------------------- | ---------------------------------------------------------------- |
+| `LICENSE_PUBLIC_KEY`           | Secret (optional)   | Overrides the key in `apps/desktop/release-config.json`          |
+| `LICENSE_SERVER_URL`           | Variable (optional) | Overrides the server URL in `apps/desktop/release-config.json`   |
+| `CSC_LINK`, `CSC_KEY_PASSWORD` | Secrets (optional)  | Code signing certificate (base64 `.p12`/`.pfx`) and its password |
 
 Unsigned builds work, but Windows SmartScreen warns on first install, and macOS auto-update needs a signed (and notarized) app.
 
