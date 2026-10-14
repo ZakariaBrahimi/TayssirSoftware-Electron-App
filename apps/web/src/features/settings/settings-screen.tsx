@@ -14,12 +14,14 @@ import { DataPanel } from "./data-panel";
 import { LicensePanel } from "./license-panel";
 import { NotificationsPanel } from "./notifications-panel";
 import { PrintingPanel } from "./printing-panel";
+import { QuickKeysEditor } from "./quick-keys-editor";
 import { StoreSettingsForm } from "./store-settings-form";
 import { SyncPanel } from "./sync-panel";
 import { UsersManager } from "./users-manager";
 
 const TABS = [
   "store",
+  "quick",
   "printing",
   "categories",
   "brands",
@@ -62,6 +64,9 @@ export function SettingsScreen() {
           ) : (
             <Skeleton className="h-80 w-full" />
           )}
+        </TabsContent>
+        <TabsContent value="quick" className="mt-4">
+          <QuickKeysEditor />
         </TabsContent>
         <TabsContent value="printing" className="mt-4">
           {settings.data ? (

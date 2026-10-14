@@ -66,6 +66,21 @@ export const productsRoutes = new Hono<AppEnv>()
         await products.adjustStock(db, c.get("ctx"), c.req.valid("param").id, c.req.valid("json")),
       ),
   )
+  .post(
+    "/:id/barcodes",
+    requireAdmin,
+    validate("param", idParam),
+    validate("json", z.object({ barcode: barcodeSchema })),
+    async (c) =>
+      c.json(
+        await products.addBarcode(
+          db,
+          c.get("ctx"),
+          c.req.valid("param").id,
+          c.req.valid("json").barcode,
+        ),
+      ),
+  )
   .get("/:id/movements", requireAdmin, validate("param", idParam), async (c) =>
     c.json(await products.listStockMovements(db, c.get("ctx"), c.req.valid("param").id)),
   );

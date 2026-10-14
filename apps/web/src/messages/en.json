@@ -221,7 +221,12 @@
     "selectAll": "Select all on this page",
     "selectProduct": "Select {name}",
     "selectedCount": "{count, plural, one {# product selected} other {# products selected}}",
-    "clearSelection": "Clear selection"
+    "clearSelection": "Clear selection",
+    "otherBarcodes": "Other barcodes",
+    "otherBarcodesHint": "Barcodes the same product may carry: another supplier, an import sticker… All of them scan to this product.",
+    "otherBarcodesPlaceholder": "Scan or type a barcode, then Enter",
+    "removeBarcode": "Remove {code}",
+    "otherBarcodeTaken": "{code} is already used by another product."
   },
   "pos": {
     "title": "Point of sale",
@@ -275,7 +280,14 @@
     "priceAtTill": "Price at till",
     "service": "Service",
     "typePrice": "Type the price for this sale.",
-    "price": "Price"
+    "price": "Price",
+    "quickKeys": "Quick buttons",
+    "editQuickKeys": "Edit buttons",
+    "linkBarcode": "Link to a product",
+    "linkBarcodeTitle": "Unknown barcode",
+    "linkBarcodeDescription": "Barcode {code} isn't in your products. Choose the product it belongs to: it will scan from now on.",
+    "linkBarcodeSearch": "Search the product…",
+    "barcodeLinked": "{code} now scans as {name}"
   },
   "sales": {
     "title": "Sales",
@@ -452,7 +464,7 @@
     "exportCustomers": "Customers",
     "exportSales": "Sales (last 12 months)",
     "importTitle": "Import products",
-    "importDescription": "CSV columns: name, barcode, category, brand, cost_price, sale_price, stock, low_stock_threshold, unit (piece, kg, g, l, m), vat_rate. For sizes/colours, give the rows of one product the same family and fill option_1/value_1 (up to 3 options). Products are matched by barcode; prices are in {currency}.",
+    "importDescription": "CSV columns: name, barcode, other_barcodes (separated by |), category, brand, cost_price, sale_price, stock, low_stock_threshold, unit (piece, kg, g, l, m), vat_rate. For sizes/colours, give the rows of one product the same family and fill option_1/value_1 (up to 3 options). Products are matched by barcode; prices are in {currency}.",
     "chooseFile": "Choose a CSV file",
     "preview": "{created} new, {updated} updated",
     "importNow": "Import",
@@ -503,7 +515,8 @@
     "taxRate": "Default rate",
     "taxId": "Tax ID (NIF)",
     "taxIdHint": "Printed on receipts. Optional.",
-    "printing": "Printing"
+    "printing": "Printing",
+    "quick": "Quick buttons"
   },
   "validation": {
     "invalid": "Invalid value",
@@ -727,7 +740,8 @@
     "invalid_variant": "variant: fill family, option and value columns (max 30 characters)",
     "inconsistent_options": "options differ from the other rows of this family",
     "duplicate_variant": "this variant appears twice in the family",
-    "invalid_type": "type must be product or service"
+    "invalid_type": "type must be product or service",
+    "barcode_in_use": "another barcode is already used by another product"
   },
   "platform": {
     "title": "Platform console",
@@ -1691,5 +1705,24 @@
     "qrUrl": "QR code link",
     "qrLabel": "Text under the QR code",
     "qrLabelPlaceholder": "e.g. Follow us on Instagram"
+  },
+  "quickKeys": {
+    "title": "Quick buttons",
+    "description": "Big buttons on the till for what you sell most, especially items without a barcode (bread, bags, photocopies, top-ups). They show when the search box is empty.",
+    "defaultPage": "Favourites",
+    "untitled": "Untitled",
+    "newPage": "Page {n}",
+    "addPage": "Add a page",
+    "pageName": "Page name",
+    "deletePage": "Delete this page",
+    "addButton": "Add a button",
+    "searchProduct": "Search a product or service…",
+    "empty": "No buttons on this page yet: search a product above to add one.",
+    "product": "Product",
+    "label": "Text on the button",
+    "color": "Colour",
+    "moveBefore": "Move before",
+    "moveAfter": "Move after",
+    "removeButton": "Remove the button"
   }
 }

@@ -155,7 +155,7 @@ export function PurchaseForm() {
             <CardTitle>{t("items")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <ProductPicker onPick={add} placeholder={t("addProduct")} />
+            <ProductPicker stockedOnly onPick={add} placeholder={t("addProduct")} />
             {lines.length > 0 && (
               <Table>
                 <TableHeader>

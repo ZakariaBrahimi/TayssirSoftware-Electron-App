@@ -188,6 +188,8 @@ export const stores = sqliteTable("stores", {
   labelSettings: text("label_settings"),
   receiptSettings: text("receipt_settings"),
   logo: text("logo"),
+  /** Quick buttons of the till (JSON, see lib/quick-keys). */
+  quickKeys: text("quick_keys"),
   // Cloud subscription (managed by the platform, never accepted from a sync).
   plan: text("plan").notNull().default("trial"),
   subscriptionStatus: text("subscription_status", { enum: SUBSCRIPTION_STATUSES })
@@ -257,6 +259,8 @@ export const products = sqliteTable(
     storeId: storeId(),
     name: text("name").notNull(),
     barcode: text("barcode").notNull(),
+    /** Other barcodes of the same product (JSON array): suppliers, imports... */
+    extraBarcodes: text("extra_barcodes"),
     description: text("description"),
     costPrice: integer("cost_price").notNull().default(0),
     salePrice: integer("sale_price").notNull().default(0),

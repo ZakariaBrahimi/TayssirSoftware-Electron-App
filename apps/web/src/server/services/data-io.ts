@@ -15,6 +15,7 @@ import {
 } from "../db/schema";
 import { brandService, categoryService } from "./catalog";
 import { customerBalanceSql } from "./customers";
+import { isBarcodeTaken, parseBarcodes } from "./products";
 import { parseOptions, parseValues, variantName } from "./families";
 import { moveStock } from "./stock";
 import { hasAtMost3Decimals, isMeasured, round3, type Unit } from "@/lib/quantity";
@@ -62,6 +63,7 @@ const YES = ["yes", "oui", "true", "1", "نعم"];
 export const PRODUCT_COLUMNS = [
   "name",
   "barcode",
+  "other_barcodes",
   "category",
   "brand",
   "cost_price",
@@ -94,6 +96,7 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
     .select({
       name: products.name,
       barcode: products.barcode,
+      extraBarcodes: products.extraBarcodes,
       category: categories.name,
       brand: brands.name,
       costPrice: products.costPrice,
@@ -123,6 +126,7 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
     ...rows.map((r) => [
       r.name,
       r.barcode,
+      parseBarcodes(r.extraBarcodes).join(" | "),
       r.category,
       r.brand,
       toMajor(r.costPrice, currency),
@@ -266,6 +270,9 @@ const HEADER_ALIASES: Record<string, Column> = {
   nom: "name",
   barcode: "barcode",
   "code-barres": "barcode",
+  other_barcodes: "other_barcodes",
+  autres_codes: "other_barcodes",
+  "autres_codes-barres": "other_barcodes",
   code_barres: "barcode",
   category: "category",
   categorie: "category",
@@ -351,6 +358,8 @@ export async function importProducts(
     lowStockThreshold: number | null;
     unit: Unit | null;
     isActive: boolean;
+    /** null: leave the other barcodes as they are. */
+    extraBarcodes: string[] | null;
     kind: "product" | "service" | null;
     openPrice: boolean | null;
     /** undefined: leave as is; null: the store's rate. */
@@ -406,6 +415,16 @@ export async function importProducts(
     ) {
       return fail("invalid_vat_rate");
     }
+    const extrasRaw = get(row, "other_barcodes");
+    const extraBarcodes =
+      index.has("other_barcodes") && extrasRaw !== ""
+        ? [...new Set(extrasRaw.split(/[|,;\s]+/).filter((b) => b && b !== barcode))]
+        : index.has("other_barcodes")
+          ? []
+          : null;
+    if (extraBarcodes?.some((b) => !barcodeSchema.safeParse(b).success)) {
+      return fail("invalid_barcode");
+    }
     const kindRaw = get(row, "type").toLowerCase();
     const kind = kindRaw === "" ? null : (KIND_ALIASES[kindRaw] ?? undefined);
     if (kind === undefined) return fail("invalid_type");
@@ -443,6 +462,7 @@ export async function importProducts(
       unit,
       isActive: !["no", "non", "false", "0", "لا"].includes(activeRaw),
       taxRate: vat,
+      extraBarcodes,
       kind,
       openPrice,
       family,
@@ -502,6 +522,22 @@ export async function importProducts(
     if (existing.has(p.barcode)) report.updated++;
     else report.created++;
   }
+  // Other barcodes must belong to one product only.
+  const mainBarcodes = new Set(parsed.map((p) => p.barcode));
+  const extraOwner = new Map<string, string>();
+  for (const p of parsed) {
+    for (const b of p.extraBarcodes ?? []) {
+      const clash =
+        mainBarcodes.has(b) ||
+        (extraOwner.has(b) && extraOwner.get(b) !== p.barcode) ||
+        (await isBarcodeTaken(db, ctx, b, existing.get(p.barcode)?.id));
+      if (clash) {
+        report.errors.push({ line: p.line, message: "barcode_in_use" });
+        break;
+      }
+      extraOwner.set(b, p.barcode);
+    }
+  }
   if (opts.dryRun || report.errors.length) return report;
 
   await db.transaction(async (tx) => {
@@ -552,6 +588,9 @@ export async function importProducts(
           : {}),
         ...(p.taxRate !== undefined ? { taxRate: p.taxRate } : {}),
         ...(p.kind !== null ? { kind: p.kind } : {}),
+        ...(p.extraBarcodes !== null
+          ? { extraBarcodes: p.extraBarcodes.length ? JSON.stringify(p.extraBarcodes) : null }
+          : {}),
         ...(p.openPrice !== null ? { openPrice: p.openPrice } : {}),
         costPrice: p.costPrice,
         salePrice: p.salePrice,

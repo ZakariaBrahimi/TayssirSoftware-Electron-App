@@ -60,6 +60,8 @@ export type ProductKind = (typeof PRODUCT_KINDS)[number];
 export const productBase = z.object({
   name: z.string().trim().min(1).max(120),
   barcode: barcodeSchema,
+  /** Other barcodes the product may carry (another supplier, an import sticker). */
+  extraBarcodes: z.array(barcodeSchema).max(20).optional(),
   description: optionalText(1000),
   costPrice: money,
   salePrice: money,
@@ -216,6 +218,8 @@ export const productListQuery = z.object({
   brandId: id.optional(),
   stock: z.enum(PRODUCT_STOCK_FILTERS).default("all"),
   kind: z.enum(PRODUCT_KINDS).optional(),
+  /** Only these products (server-side use: quick buttons). */
+  ids: z.array(id).max(500).optional(),
   includeInactive: booleanQuery,
   sort: z.enum(PRODUCT_SORTS).default("name"),
   ...pagination,

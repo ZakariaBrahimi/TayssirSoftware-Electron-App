@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { PRODUCT_KINDS, type ProductKind } from "@/lib/validators";
 import { CatalogSelect } from "../catalog/catalog-select";
 import { generateBarcode, isBarcodeAvailable, type Product, useProductMutations } from "./api";
+import { BarcodeTags } from "./barcode-tags";
 import { PrintLabelsDialog } from "./labels";
 import { StockAdjustDialog } from "./stock-dialog";
 import { StockHistory } from "./stock-history";
@@ -66,6 +67,7 @@ const schema = z
       .min(1, "required")
       .max(64)
       .regex(/^[A-Za-z0-9\-_.]+$/, "invalid_barcode"),
+    extraBarcodes: z.array(z.string()),
     description: z.string().trim().max(1000).optional(),
     costPrice: amount,
     salePrice: amount,
@@ -126,6 +128,7 @@ export function ProductForm({ product }: { product?: Product }) {
     defaultValues: {
       name: product?.name ?? "",
       barcode: product?.barcode ?? "",
+      extraBarcodes: product?.extraBarcodes ?? [],
       description: product?.description ?? "",
       costPrice: product ? money.toMajor(product.costPrice) : "",
       salePrice: product ? money.toMajor(product.salePrice) : "",
@@ -194,6 +197,7 @@ export function ProductForm({ product }: { product?: Product }) {
     const payload = {
       name: values.name,
       barcode: values.barcode,
+      extraBarcodes: values.extraBarcodes,
       description: values.description || null,
       costPrice: money.toMinor(values.costPrice),
       salePrice: money.toMinor(values.salePrice),
@@ -220,7 +224,11 @@ export function ProductForm({ product }: { product?: Product }) {
       }
       router.push("/products");
     } catch (err) {
-      if (err instanceof ApiError && err.code === "BARCODE_TAKEN") {
+      if (err instanceof ApiError && err.code === "BARCODE_TAKEN" && err.details?.barcode) {
+        form.setError("extraBarcodes", {
+          message: t("otherBarcodeTaken", { code: String(err.details.barcode) }),
+        });
+      } else if (err instanceof ApiError && err.code === "BARCODE_TAKEN") {
         form.setError("barcode", { message: "barcodeTaken" });
       } else if (err instanceof ApiError && err.details?.reason === "price_below_cost") {
         form.setError("salePrice", { message: "price_below_cost" });
@@ -292,6 +300,32 @@ export function ProductForm({ product }: { product?: Product }) {
                         <FormDescription>{t("barcodeHint")}</FormDescription>
                         <FormMessage />
                       </>
+                    )}
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="extraBarcodes"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("otherBarcodes")}{" "}
+                      <span className="text-muted-foreground font-normal">({tc("optional")})</span>
+                    </FormLabel>
+                    <BarcodeTags
+                      id="extra-barcodes"
+                      value={field.value}
+                      main={String(barcode || "")}
+                      onChange={(v) => {
+                        field.onChange(v);
+                        form.clearErrors("extraBarcodes");
+                      }}
+                    />
+                    {fieldState.error?.message ? (
+                      <p className="text-destructive text-sm">{fieldState.error.message}</p>
+                    ) : (
+                      <FormDescription>{t("otherBarcodesHint")}</FormDescription>
                     )}
                   </FormItem>
                 )}

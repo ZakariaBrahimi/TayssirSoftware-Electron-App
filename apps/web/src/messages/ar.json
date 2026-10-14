@@ -221,7 +221,12 @@
     "selectAll": "تحديد الكل في هذه الصفحة",
     "selectProduct": "تحديد {name}",
     "selectedCount": "{count, plural, one {منتج واحد محدد} two {منتجان محددان} few {# منتجات محددة} many {# منتجًا محددًا} other {# منتج محدد}}",
-    "clearSelection": "إلغاء التحديد"
+    "clearSelection": "إلغاء التحديد",
+    "otherBarcodes": "باركودات أخرى",
+    "otherBarcodesHint": "باركودات قد يحملها نفس المنتج: مورد آخر، ملصق استيراد… كلها تقود لهذا المنتج.",
+    "otherBarcodesPlaceholder": "امسح أو اكتب باركود ثم Enter",
+    "removeBarcode": "حذف {code}",
+    "otherBarcodeTaken": "{code} مستعمل لمنتج آخر."
   },
   "pos": {
     "title": "نقطة البيع",
@@ -275,7 +280,14 @@
     "priceAtTill": "السعر عند الصندوق",
     "service": "خدمة",
     "typePrice": "أدخل السعر لهذا البيع.",
-    "price": "السعر"
+    "price": "السعر",
+    "quickKeys": "الأزرار السريعة",
+    "editQuickKeys": "تعديل الأزرار",
+    "linkBarcode": "ربط بمنتج",
+    "linkBarcodeTitle": "باركود غير معروف",
+    "linkBarcodeDescription": "الباركود {code} غير موجود في منتجاتك. اختر المنتج الذي ينتمي إليه: سيُقرأ من الآن.",
+    "linkBarcodeSearch": "ابحث عن المنتج…",
+    "barcodeLinked": "{code} يُقرأ الآن كـ {name}"
   },
   "sales": {
     "title": "المبيعات",
@@ -452,7 +464,7 @@
     "exportCustomers": "الزبائن",
     "exportSales": "المبيعات (آخر 12 شهرًا)",
     "importTitle": "استيراد المنتجات",
-    "importDescription": "أعمدة CSV: name، barcode، category، brand، cost_price، sale_price، stock، low_stock_threshold، unit (piece، kg، g، l، m)، vat_rate. للمقاسات والألوان، أعطِ أسطر المنتج نفسه نفس family واملأ option_1/value_1 (حتى 3 خيارات). يتم التعرف على المنتجات بالباركود؛ الأسعار بـ {currency}.",
+    "importDescription": "أعمدة CSV: name، barcode، other_barcodes (مفصولة بـ |)، category، brand، cost_price، sale_price، stock، low_stock_threshold، unit (piece، kg، g، l، m)، vat_rate. للمقاسات والألوان، أعطِ أسطر المنتج نفسه نفس family واملأ option_1/value_1 (حتى 3 خيارات). يتم التعرف على المنتجات بالباركود؛ الأسعار بـ {currency}.",
     "chooseFile": "اختر ملف CSV",
     "preview": "{created} جديد، {updated} محدَّث",
     "importNow": "استيراد",
@@ -503,7 +515,8 @@
     "taxRate": "النسبة الافتراضية",
     "taxId": "رقم التعريف الجبائي (NIF)",
     "taxIdHint": "يُطبع على التذاكر. اختياري.",
-    "printing": "الطباعة"
+    "printing": "الطباعة",
+    "quick": "الأزرار السريعة"
   },
   "validation": {
     "invalid": "قيمة غير صالحة",
@@ -727,7 +740,8 @@
     "invalid_variant": "متغير: املأ أعمدة العائلة والخيار والقيمة (30 حرفًا كحد أقصى)",
     "inconsistent_options": "الخيارات تختلف عن باقي أسطر هذه العائلة",
     "duplicate_variant": "هذا المتغير مكرر في العائلة",
-    "invalid_type": "يجب أن يكون النوع منتج أو خدمة"
+    "invalid_type": "يجب أن يكون النوع منتج أو خدمة",
+    "barcode_in_use": "باركود إضافي مستعمل لمنتج آخر"
   },
   "platform": {
     "title": "لوحة المنصة",
@@ -1691,5 +1705,24 @@
     "qrUrl": "رابط رمز QR",
     "qrLabel": "نص تحت رمز QR",
     "qrLabelPlaceholder": "مثال: تابعونا على إنستغرام"
+  },
+  "quickKeys": {
+    "title": "الأزرار السريعة",
+    "description": "أزرار كبيرة في الصندوق لما تبيعه أكثر، خاصة المنتجات بدون باركود (خبز، أكياس، نسخ، تعبئة). تظهر عندما يكون البحث فارغًا.",
+    "defaultPage": "المفضلة",
+    "untitled": "بدون اسم",
+    "newPage": "صفحة {n}",
+    "addPage": "إضافة صفحة",
+    "pageName": "اسم الصفحة",
+    "deletePage": "حذف هذه الصفحة",
+    "addButton": "إضافة زر",
+    "searchProduct": "ابحث عن منتج أو خدمة…",
+    "empty": "لا توجد أزرار في هذه الصفحة: ابحث عن منتج أعلاه لإضافته.",
+    "product": "المنتج",
+    "label": "نص الزر",
+    "color": "اللون",
+    "moveBefore": "نقل للأمام",
+    "moveAfter": "نقل للخلف",
+    "removeButton": "حذف الزر"
   }
 }

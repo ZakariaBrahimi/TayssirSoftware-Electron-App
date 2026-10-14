@@ -17,6 +17,7 @@ const TEMPLATE = toCsv([
   [
     "name",
     "barcode",
+    "other_barcodes",
     "category",
     "brand",
     "cost_price",
@@ -34,6 +35,7 @@ const TEMPLATE = toCsv([
   [
     "Sugar 1kg",
     "6130000000017",
+    "",
     "Grocery",
     "Cevital",
     "90",
@@ -51,6 +53,7 @@ const TEMPLATE = toCsv([
   [
     "Tomatoes",
     "2000000000011",
+    "",
     "Vegetables",
     "",
     "80",
@@ -68,6 +71,7 @@ const TEMPLATE = toCsv([
   [
     "T-shirt",
     "TS-S-BLK",
+    "",
     "Men",
     "",
     "800",
@@ -85,6 +89,7 @@ const TEMPLATE = toCsv([
   [
     "T-shirt",
     "TS-M-BLK",
+    "",
     "Men",
     "",
     "800",

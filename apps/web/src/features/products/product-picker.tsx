@@ -21,9 +21,12 @@ export type PickedProduct = ProductPage["rows"][number];
 export function ProductPicker({
   onPick,
   placeholder,
+  stockedOnly = false,
 }: {
   onPick: (p: PickedProduct) => void;
   placeholder: string;
+  /** Only products with stock (purchases): no services. */
+  stockedOnly?: boolean;
 }) {
   const t = useTranslations("pos");
   const money = useMoney();
@@ -31,7 +34,13 @@ export function ProductPicker({
   const [open, setOpen] = useState(false);
   const q = useDebouncedValue(search.trim(), 200);
   const results = useProducts(
-    { q, includeInactive: "true", kind: "product", pageSize: 12, sort: "name" },
+    {
+      q,
+      includeInactive: "true",
+      kind: stockedOnly ? "product" : undefined,
+      pageSize: 12,
+      sort: "name",
+    },
     q.length > 0,
   );
 

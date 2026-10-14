@@ -1,4 +1,18 @@
-import { and, asc, count, desc, eq, isNull, like, lte, ne, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  like,
+  lte,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import type { z } from "zod";
 import { generateInternalEan13 } from "@/lib/barcode";
 import type {
@@ -27,6 +41,7 @@ const productColumns = {
   id: products.id,
   name: products.name,
   barcode: products.barcode,
+  extraBarcodesJson: products.extraBarcodes,
   description: products.description,
   costPrice: products.costPrice,
   salePrice: products.salePrice,
@@ -47,6 +62,26 @@ const productColumns = {
   createdAt: products.createdAt,
   updatedAt: products.updatedAt,
 };
+
+/** Product rows with the extra barcodes as an array. */
+function toDTO<T extends { extraBarcodesJson: string | null }>(row: T) {
+  const { extraBarcodesJson, ...rest } = row;
+  return { ...rest, extraBarcodes: parseBarcodes(extraBarcodesJson) };
+}
+
+export function parseBarcodes(json: string | null | undefined): string[] {
+  if (!json) return [];
+  try {
+    const list = JSON.parse(json);
+    return Array.isArray(list) ? list.filter((b): b is string => typeof b === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** True when `barcode` is one of the product's other barcodes. */
+const hasExtraBarcode = (barcode: string) =>
+  sql`exists (select 1 from json_each(${products.extraBarcodes}) where json_each.value = ${barcode})`;
 
 function baseSelect(db: Executor) {
   return db
@@ -81,12 +116,14 @@ export async function listProducts(
       or(
         sql`${products.name} like ${term} escape '\\'`,
         like(products.barcode, `${escapeLike(query.q)}%`),
+        hasExtraBarcode(query.q),
       ),
     );
   }
   if (query.categoryId) filters.push(eq(products.categoryId, query.categoryId));
   if (query.brandId) filters.push(eq(products.brandId, query.brandId));
   if (query.kind) filters.push(eq(products.kind, query.kind));
+  if (query.ids) filters.push(inArray(products.id, query.ids));
   // Stock filters only concern products (services have no stock).
   if (query.stock !== "all") filters.push(eq(products.kind, "product"));
   if (query.stock === "out") filters.push(lte(products.stock, 0));
@@ -107,7 +144,7 @@ export async function listProducts(
   ]);
 
   return {
-    rows,
+    rows: rows.map(toDTO),
     total,
     page: query.page,
     pageSize: query.pageSize,
@@ -118,7 +155,7 @@ export async function listProducts(
 export async function getProduct(db: Executor, ctx: Ctx, id: string) {
   const [row] = await baseSelect(db).where(and(eq(products.id, id), live(ctx)));
   if (!row) throw new AppError("NOT_FOUND");
-  return row;
+  return toDTO(row);
 }
 
 /**
@@ -131,7 +168,13 @@ export async function findByBarcode(db: Executor, ctx: Ctx, barcode: string) {
     // If an offline sync produced duplicates, prefer the most recent.
     .orderBy(desc(products.updatedAt))
     .limit(1);
-  if (row) return { ...row, scaleQuantity: null as number | null };
+  if (row) return { ...toDTO(row), scaleQuantity: null as number | null };
+  // One of the product's other barcodes (another supplier, an import sticker).
+  const [other] = await baseSelect(db)
+    .where(and(hasExtraBarcode(barcode), eq(products.isActive, true), live(ctx)))
+    .orderBy(desc(products.updatedAt))
+    .limit(1);
+  if (other) return { ...toDTO(other), scaleQuantity: null as number | null };
 
   const scale = parseScaleBarcode(barcode);
   if (scale) {
@@ -151,7 +194,7 @@ export async function findByBarcode(db: Executor, ctx: Ctx, barcode: string) {
             : product.salePrice > 0
               ? round3(toMinorWhole(scale.value) / product.salePrice)
               : 0;
-        if (quantity > 0) return { ...product, scaleQuantity: quantity };
+        if (quantity > 0) return { ...toDTO(product), scaleQuantity: quantity };
       }
     }
   }
@@ -173,12 +216,47 @@ export async function isBarcodeTaken(db: Executor, ctx: Ctx, barcode: string, ex
     .where(
       and(
         live(ctx),
-        eq(products.barcode, barcode),
+        // Main barcode or one of the other barcodes of any product.
+        or(eq(products.barcode, barcode), hasExtraBarcode(barcode)),
         exceptId ? ne(products.id, exceptId) : undefined,
       ),
     )
     .limit(1);
   return Boolean(row);
+}
+
+/**
+ * Cleans a product's other barcodes (no duplicates, not its main barcode)
+ * and checks none belongs to another product.
+ */
+async function checkExtraBarcodes(
+  db: Executor,
+  ctx: Ctx,
+  main: string,
+  extras: string[],
+  exceptId?: string,
+) {
+  const list = [...new Set(extras.map((b) => b.trim()).filter((b) => b && b !== main))];
+  for (const barcode of list) {
+    if (await isBarcodeTaken(db, ctx, barcode, exceptId)) {
+      throw new AppError("BARCODE_TAKEN", undefined, { barcode });
+    }
+  }
+  return list;
+}
+
+/** Adds a scanned barcode to a product (e.g. a new supplier's barcode). */
+export async function addBarcode(db: Database, ctx: Ctx, id: string, barcode: string) {
+  const product = await getProduct(db, ctx, id);
+  if (product.barcode === barcode || product.extraBarcodes.includes(barcode)) return product;
+  if (await isBarcodeTaken(db, ctx, barcode, id)) {
+    throw new AppError("BARCODE_TAKEN", undefined, { barcode });
+  }
+  await db
+    .update(products)
+    .set({ extraBarcodes: JSON.stringify([...product.extraBarcodes, barcode]) })
+    .where(and(eq(products.id, id), live(ctx)));
+  return getProduct(db, ctx, id);
 }
 
 /** Returns an internal EAN-13 barcode that is not used in this store yet. */
@@ -212,13 +290,19 @@ export async function createProduct(
 ) {
   assertPrices(input);
   if (await isBarcodeTaken(db, ctx, input.barcode)) throw new AppError("BARCODE_TAKEN");
-  const { stock: typedStock, ...fields } = input;
+  const extras = await checkExtraBarcodes(db, ctx, input.barcode, input.extraBarcodes ?? []);
+  const { stock: typedStock, extraBarcodes: _extras, ...fields } = input;
   // Services have no stock.
   const stock = input.kind === "service" ? 0 : typedStock;
   const id = await db.transaction(async (tx) => {
     const [row] = await tx
       .insert(products)
-      .values({ ...fields, storeId: ctx.storeId, stock: 0 })
+      .values({
+        ...fields,
+        extraBarcodes: extras.length ? JSON.stringify(extras) : null,
+        storeId: ctx.storeId,
+        stock: 0,
+      })
       .returning({ id: products.id });
     if (stock > 0) {
       await moveStock(tx, ctx, { productId: row.id, change: stock, reason: "initial" });
@@ -241,9 +325,19 @@ export async function updateProduct(db: Database, ctx: Ctx, id: string, input: P
   if (input.barcode && (await isBarcodeTaken(db, ctx, input.barcode, id))) {
     throw new AppError("BARCODE_TAKEN");
   }
+  const { extraBarcodes, ...fields } = input;
+  const extras =
+    extraBarcodes === undefined
+      ? undefined
+      : await checkExtraBarcodes(db, ctx, input.barcode ?? current.barcode, extraBarcodes, id);
   await db
     .update(products)
-    .set(input)
+    .set({
+      ...fields,
+      ...(extras !== undefined
+        ? { extraBarcodes: extras.length ? JSON.stringify(extras) : null }
+        : {}),
+    })
     .where(and(eq(products.id, id), live(ctx)));
   return getProduct(db, ctx, id);
 }

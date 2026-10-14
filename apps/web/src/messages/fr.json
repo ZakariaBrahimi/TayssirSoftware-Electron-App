@@ -221,7 +221,12 @@
     "selectAll": "Tout sélectionner sur cette page",
     "selectProduct": "Sélectionner {name}",
     "selectedCount": "{count, plural, one {# produit sélectionné} other {# produits sélectionnés}}",
-    "clearSelection": "Effacer la sélection"
+    "clearSelection": "Effacer la sélection",
+    "otherBarcodes": "Autres codes-barres",
+    "otherBarcodesHint": "Codes-barres que le même produit peut porter : autre fournisseur, étiquette d’importation… Tous mènent à ce produit.",
+    "otherBarcodesPlaceholder": "Scannez ou tapez un code-barres, puis Entrée",
+    "removeBarcode": "Retirer {code}",
+    "otherBarcodeTaken": "{code} est déjà utilisé par un autre produit."
   },
   "pos": {
     "title": "Caisse",
@@ -275,7 +280,14 @@
     "priceAtTill": "Prix à la caisse",
     "service": "Service",
     "typePrice": "Saisissez le prix pour cette vente.",
-    "price": "Prix"
+    "price": "Prix",
+    "quickKeys": "Boutons rapides",
+    "editQuickKeys": "Modifier les boutons",
+    "linkBarcode": "Associer à un produit",
+    "linkBarcodeTitle": "Code-barres inconnu",
+    "linkBarcodeDescription": "Le code-barres {code} n’est pas dans vos produits. Choisissez le produit auquel il appartient : il sera reconnu dès maintenant.",
+    "linkBarcodeSearch": "Rechercher le produit…",
+    "barcodeLinked": "{code} est maintenant reconnu comme {name}"
   },
   "sales": {
     "title": "Ventes",
@@ -452,7 +464,7 @@
     "exportCustomers": "Clients",
     "exportSales": "Ventes (12 derniers mois)",
     "importTitle": "Importer des produits",
-    "importDescription": "Colonnes CSV : name, barcode, category, brand, cost_price, sale_price, stock, low_stock_threshold, unit (piece, kg, g, l, m), vat_rate. Pour les tailles/couleurs, donnez la même family aux lignes d’un produit et remplissez option_1/value_1 (jusqu’à 3 options). Les produits sont reconnus par leur code-barres ; les prix sont en {currency}.",
+    "importDescription": "Colonnes CSV : name, barcode, other_barcodes (séparés par |), category, brand, cost_price, sale_price, stock, low_stock_threshold, unit (piece, kg, g, l, m), vat_rate. Pour les tailles/couleurs, donnez la même family aux lignes d’un produit et remplissez option_1/value_1 (jusqu’à 3 options). Les produits sont reconnus par leur code-barres ; les prix sont en {currency}.",
     "chooseFile": "Choisir un fichier CSV",
     "preview": "{created} nouveau(x), {updated} mis à jour",
     "importNow": "Importer",
@@ -503,7 +515,8 @@
     "taxRate": "Taux par défaut",
     "taxId": "Numéro fiscal (NIF)",
     "taxIdHint": "Imprimé sur les tickets. Facultatif.",
-    "printing": "Impression"
+    "printing": "Impression",
+    "quick": "Boutons rapides"
   },
   "validation": {
     "invalid": "Valeur invalide",
@@ -727,7 +740,8 @@
     "invalid_variant": "variante : remplissez les colonnes famille, option et valeur (30 caractères max.)",
     "inconsistent_options": "options différentes des autres lignes de cette famille",
     "duplicate_variant": "cette variante apparaît deux fois dans la famille",
-    "invalid_type": "le type doit être produit ou service"
+    "invalid_type": "le type doit être produit ou service",
+    "barcode_in_use": "un autre code-barres est déjà utilisé par un autre produit"
   },
   "platform": {
     "title": "Console plateforme",
@@ -1691,5 +1705,24 @@
     "qrUrl": "Lien du QR code",
     "qrLabel": "Texte sous le QR code",
     "qrLabelPlaceholder": "ex. Suivez-nous sur Instagram"
+  },
+  "quickKeys": {
+    "title": "Boutons rapides",
+    "description": "De grands boutons à la caisse pour ce que vous vendez le plus, surtout les articles sans code-barres (pain, sachets, photocopies, recharges). Ils s’affichent quand la recherche est vide.",
+    "defaultPage": "Favoris",
+    "untitled": "Sans nom",
+    "newPage": "Page {n}",
+    "addPage": "Ajouter une page",
+    "pageName": "Nom de la page",
+    "deletePage": "Supprimer cette page",
+    "addButton": "Ajouter un bouton",
+    "searchProduct": "Rechercher un produit ou un service…",
+    "empty": "Aucun bouton sur cette page : recherchez un produit ci-dessus pour en ajouter.",
+    "product": "Produit",
+    "label": "Texte du bouton",
+    "color": "Couleur",
+    "moveBefore": "Déplacer avant",
+    "moveAfter": "Déplacer après",
+    "removeButton": "Retirer le bouton"
   }
 }

@@ -31,7 +31,10 @@ import { Receipt } from "../sales/receipt";
 import { useCurrentShift } from "../shifts/api";
 import { CartPanel } from "./cart-panel";
 import { CheckoutDialog } from "./checkout-dialog";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { LinkBarcodeDialog } from "./link-barcode-dialog";
 import { PriceDialog } from "./price-dialog";
+import { QuickKeysPanel } from "./quick-keys-panel";
 import { type CartProduct, isService, quantityInCart, useCart } from "./use-cart";
 import { VariantPicker } from "./variant-picker";
 import { WeightDialog } from "./weight-dialog";
@@ -114,6 +117,9 @@ export function PosScreen() {
     return out;
   }, [products.data, q]);
 
+  const { isAdmin } = useCurrentUser();
+  const [linking, setLinking] = useState<string | null>(null);
+
   // Open-price products ask for the price, weighed ones for the weight.
   const [pricing, setPricing] = useState<CartProduct | null>(null);
   const [weighing, setWeighing] = useState<{ product: CartProduct; unitPrice?: number } | null>(
@@ -165,7 +171,12 @@ export function PosScreen() {
         router.push(`/sales?receipt=${encodeURIComponent(code.toUpperCase())}`);
         setSearch("");
       } else if (err instanceof ApiError && err.code === "NOT_FOUND") {
-        toast.error(t("productNotFound", { code }));
+        // An admin can attach the unknown barcode to an existing product.
+        toast.error(t("productNotFound", { code }), {
+          action: isAdmin
+            ? { label: t("linkBarcode"), onClick: () => setLinking(code) }
+            : undefined,
+        });
       } else {
         toast.error(errorMessage(err));
       }
@@ -247,7 +258,15 @@ export function PosScreen() {
           )}
         </form>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pb-20 lg:pb-0">
+        <div className="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto pb-20 lg:pb-0">
+          {!q && (
+            <QuickKeysPanel
+              onPick={(p) => {
+                addToCart(p);
+                focusInput();
+              }}
+            />
+          )}
           {products.isPending ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -466,6 +485,18 @@ export function PosScreen() {
         onPick={(product) => {
           addToCart(product);
           setPicking(null);
+          focusInput();
+        }}
+      />
+      <LinkBarcodeDialog
+        code={linking}
+        onClose={() => {
+          setLinking(null);
+          focusInput();
+        }}
+        onLinked={(product) => {
+          setLinking(null);
+          addToCart(product);
           focusInput();
         }}
       />

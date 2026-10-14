@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { InferResponseType } from "hono/client";
 import { api, unwrap } from "@/lib/api-client";
+import type { QuickKeysInput } from "@/lib/quick-keys";
 import type {
   FamilyInput,
   ProductCreateInput,
@@ -88,6 +89,11 @@ export function useProductMutations() {
       mutationFn: (id: string) => unwrap(api.products[":id"].$delete({ param: { id } })),
       onSuccess: invalidate,
     }),
+    addBarcode: useMutation({
+      mutationFn: ({ id, barcode }: { id: string; barcode: string }) =>
+        unwrap(api.products[":id"].barcodes.$post({ param: { id }, json: { barcode } })),
+      onSuccess: invalidate,
+    }),
     adjustStock: useMutation({
       mutationFn: ({ id, json }: { id: string; json: StockAdjustmentInput }) =>
         unwrap(api.products[":id"].stock.$post({ param: { id }, json })),
@@ -126,4 +132,23 @@ export function useFamilyMutations() {
       onSuccess: invalidate,
     }),
   };
+}
+
+/* ----------------------------- Quick buttons ----------------------------- */
+
+export type QuickKeys = InferResponseType<(typeof api)["quick-keys"]["$get"], 200>;
+
+export function useQuickKeys() {
+  return useQuery({
+    queryKey: ["products", "quick-keys"],
+    queryFn: () => unwrap(api["quick-keys"].$get()),
+  });
+}
+
+export function useSaveQuickKeys() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (json: QuickKeysInput) => unwrap(api["quick-keys"].$put({ json })),
+    onSuccess: (data) => qc.setQueryData(["products", "quick-keys"], data),
+  });
 }
