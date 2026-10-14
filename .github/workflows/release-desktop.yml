@@ -81,7 +81,12 @@ jobs:
         shell: bash
         run: npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version --workspace @tayssir/desktop
       - name: Build and upload to the draft release
-        run: npm run release -w @tayssir/desktop
+        shell: bash
+        run: |
+          # An empty CSC_LINK is read as a certificate path: unset it so
+          # unsigned builds work until a certificate is added.
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          npm run release -w @tayssir/desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Override apps/desktop/release-config.json when set (see README).
