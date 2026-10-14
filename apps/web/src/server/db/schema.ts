@@ -20,7 +20,12 @@
 import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { uuidv7 } from "@/lib/ids";
-import { PLATFORM_PAYMENT_METHODS, SUBSCRIPTION_STATUSES } from "@/lib/validators/platform";
+import {
+  BILLING_PERIODS,
+  PLATFORM_PAYMENT_METHODS,
+  REQUEST_STATUSES,
+  SUBSCRIPTION_STATUSES,
+} from "@/lib/validators/platform";
 
 const ms = (name: string) => integer(name, { mode: "timestamp_ms" });
 
@@ -175,6 +180,9 @@ export const stores = sqliteTable("stores", {
   /** Set by the platform owner: the store becomes read-only. */
   suspendedAt: ms("suspended_at"),
   suspendReason: text("suspend_reason"),
+  /** A downgrade paid in advance: `plan` becomes this at `planChangesAt`. */
+  scheduledPlan: text("scheduled_plan"),
+  planChangesAt: ms("plan_changes_at"),
   ...timestamps,
 });
 
@@ -637,6 +645,71 @@ export const platformPayments = sqliteTable(
     index("platform_payments_store_idx").on(t.storeId),
     index("platform_payments_license_idx").on(t.licenseId),
     index("platform_payments_created_idx").on(t.createdAt),
+  ],
+);
+
+/** Plans sold by the platform: prices, limits and features. */
+export const plans = sqliteTable("plans", {
+  id: id(),
+  code: text("code").notNull().unique(),
+  nameEn: text("name_en").notNull(),
+  nameFr: text("name_fr").notNull(),
+  nameAr: text("name_ar").notNull(),
+  descEn: text("desc_en").notNull().default(""),
+  descFr: text("desc_fr").notNull().default(""),
+  descAr: text("desc_ar").notNull().default(""),
+  /** Whole dinars; null = not offered / price on request. */
+  monthlyPrice: integer("monthly_price"),
+  yearlyPrice: integer("yearly_price"),
+  licensePrice: integer("license_price"),
+  /** null = unlimited. */
+  maxDevices: integer("max_devices"),
+  maxUsers: integer("max_users"),
+  /** JSON array of PlanFeature. */
+  features: text("features").notNull().default("[]"),
+  recommended: integer("recommended", { mode: "boolean" }).notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  ...timestamps,
+});
+
+/** A shop asking to pay for a plan; the platform owner approves it. */
+export const paymentRequests = sqliteTable(
+  "payment_requests",
+  {
+    id: id(),
+    /** Who asks: a cloud store, a licensed PC, or an unlicensed PC (new license). */
+    storeId: text("store_id"),
+    licenseId: text("license_id"),
+    deviceId: text("device_id"),
+    planCode: text("plan_code").notNull(),
+    period: text("period", { enum: BILLING_PERIODS }).notNull(),
+    months: integer("months").notNull(),
+    /** Minor units of `currency`, computed from the catalog. */
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull(),
+    method: text("method", { enum: PLATFORM_PAYMENT_METHODS }).notNull(),
+    reference: text("reference").notNull().default(""),
+    note: text("note").notNull().default(""),
+    /** Photo of the receipt (data URL). */
+    receipt: text("receipt"),
+    contactName: text("contact_name").notNull().default(""),
+    contactPhone: text("contact_phone").notNull().default(""),
+    shopName: text("shop_name").notNull().default(""),
+    status: text("status", { enum: REQUEST_STATUSES }).notNull().default("pending"),
+    decidedAt: ms("decided_at"),
+    decidedByName: text("decided_by_name"),
+    rejectReason: text("reject_reason"),
+    paymentId: text("payment_id"),
+    /** New license key, kept only until the requesting PC picks it up. */
+    deliveryKey: text("delivery_key"),
+    ...timestamps,
+  },
+  (t) => [
+    index("payment_requests_status_idx").on(t.status, t.createdAt),
+    index("payment_requests_store_idx").on(t.storeId),
+    index("payment_requests_license_idx").on(t.licenseId),
+    index("payment_requests_device_idx").on(t.deviceId),
   ],
 );
 

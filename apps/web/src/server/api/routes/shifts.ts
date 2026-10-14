@@ -9,10 +9,10 @@ import {
 import { db } from "../../db";
 import { AppError } from "../../errors";
 import * as shifts from "../../services/shifts";
-import { type AppEnv, isAdmin, requireEntitlement, validate } from "../context";
+import { type AppEnv, isAdmin, requireEntitlement, validate, requireFeature } from "../context";
 
 export const shiftsRoutes = new Hono<AppEnv>()
-  .use(requireEntitlement)
+  .use(requireEntitlement, requireFeature("shifts"))
   .get("/current", async (c) => c.json({ summary: await shifts.currentShift(db, c.get("ctx")) }))
   .post("/open", validate("json", shiftOpenInput), async (c) =>
     c.json(await shifts.openShift(db, c.get("ctx"), c.req.valid("json")), 201),

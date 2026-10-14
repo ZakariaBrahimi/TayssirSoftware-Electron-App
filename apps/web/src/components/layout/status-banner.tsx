@@ -8,17 +8,18 @@ import { useMe } from "@/hooks/use-me";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
-/** Trial countdown / expired license or subscription notice. */
+/** Trial countdown, renewal reminder, expired license or subscription notice. */
 export function StatusBanner() {
   const t = useTranslations("banner");
   const { data: me } = useMe();
   const { isAdmin } = useCurrentUser();
   const ent = me?.entitlement;
-  if (!ent || ent.status === "active" || ent.status === "unmanaged") return null;
+  if (!ent || ent.status === "unmanaged") return null;
   const cloud = me.mode === "cloud";
   const suspended = ent.status === "suspended";
   const expired = ent.status === "expired" || suspended;
-  // Remind during the last week of a trial, always when expired.
+  const renewing = ent.status === "active";
+  // Remind during the last week of a trial or a paid period, always when expired.
   if (!expired && (ent.daysLeft ?? 99) > 7) return null;
 
   return (
@@ -39,14 +40,21 @@ export function StatusBanner() {
           ? t("suspended")
           : expired
             ? t(cloud ? "expiredCloud" : "expired")
-            : t(cloud ? "trialCloud" : "trial", { days: ent.daysLeft ?? 0 })}
+            : renewing
+              ? t("renew", { days: ent.daysLeft ?? 0 })
+              : t(cloud ? "trialCloud" : "trial", { days: ent.daysLeft ?? 0 })}
       </span>
-      {isAdmin && !cloud && (
+      {isAdmin && !suspended && (
         <Button asChild size="sm" variant={expired ? "destructive" : "outline"}>
+          <Link href="/subscription">{t(renewing ? "renewAction" : "choosePlan")}</Link>
+        </Button>
+      )}
+      {isAdmin && !cloud && !renewing && (
+        <Button asChild size="sm" variant="ghost">
           <Link href="/settings?tab=license">{t("activate")}</Link>
         </Button>
       )}
-      {cloud && !suspended && <span className="text-xs opacity-80">{t("contact")}</span>}
+      {!isAdmin && !suspended && <span className="text-xs opacity-80">{t("askAdmin")}</span>}
     </div>
   );
 }

@@ -3,10 +3,10 @@ import { z } from "zod";
 import { licenseActivateInput } from "@/lib/validators";
 import { db } from "../../db";
 import { AppError } from "../../errors";
-import { getDeviceId, getEntitlement } from "../../licensing/entitlements";
-import { licenseServerUrl } from "../../licensing/client";
+import { activateWithKey } from "../../licensing/client";
+import { getEntitlement } from "../../licensing/entitlements";
 import { activateLicense, refreshLicense } from "../../licensing/server";
-import { appVersion, cleanVersion, VERSION_HEADER } from "../../version";
+import { cleanVersion, VERSION_HEADER } from "../../version";
 import { setMeta } from "../../services/meta";
 import { type AppEnv, onlyMode, rateLimit, requireAdmin, validate } from "../context";
 
@@ -15,36 +15,7 @@ export const licenseRoutes = new Hono<AppEnv>()
   .use(onlyMode("local"))
   .get("/", async (c) => c.json(await getEntitlement(db, c.get("ctx").storeId)))
   .post("/activate", requireAdmin, validate("json", licenseActivateInput), async (c) => {
-    const server = licenseServerUrl();
-    if (!server) throw new AppError("NOT_AVAILABLE", "No license server configured");
-    let res: Response;
-    try {
-      res = await fetch(`${server}/api/licenses/activate`, {
-        method: "POST",
-        headers: { "content-type": "application/json", [VERSION_HEADER]: appVersion() },
-        body: JSON.stringify({
-          key: c.req.valid("json").key,
-          deviceId: await getDeviceId(db),
-          deviceName: process.env.TAYSSIR_DEVICE_NAME ?? "Desktop",
-        }),
-        signal: AbortSignal.timeout(20_000),
-      });
-    } catch {
-      throw new AppError("SYNC_FAILED", "Cannot reach the license server");
-    }
-    const body = (await res.json().catch(() => null)) as {
-      token?: string;
-      error?: { code?: string };
-    } | null;
-    if (!res.ok || !body?.token) {
-      const code = body?.error?.code;
-      throw new AppError(
-        code === "LICENSE_EXPIRED" || code === "ACTIVATION_LIMIT" || code === "RATE_LIMITED"
-          ? code
-          : "LICENSE_INVALID",
-      );
-    }
-    await setMeta(db, "licenseToken", body.token);
+    await activateWithKey(db, c.req.valid("json").key);
     const ent = await getEntitlement(db, c.get("ctx").storeId);
     if (ent.source !== "license") throw new AppError("LICENSE_INVALID"); // wrong signing key
     return c.json(ent);

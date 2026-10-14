@@ -380,22 +380,24 @@ describe("platform console services", () => {
     expect(await getPlatformSettings(db)).toEqual(DEFAULT_SETTINGS);
     const saved = await updatePlatformSettings(db, actor, {
       ...DEFAULT_SETTINGS,
-      cloudMonthly: 2500,
       trialDays: 30,
       contactWhatsapp: "213555123456",
     });
-    expect(saved).toMatchObject({ cloudMonthly: 2500, licenseOneTime: null, trialDays: 30 });
+    expect(saved).toMatchObject({ trialDays: 30, payeeName: "" });
     const audit = await listAudit(db, { action: "platform.settings", page: 1, pageSize: 5 });
     expect(audit.rows[0].details).toEqual({
       changes: {
-        cloudMonthly: { from: null, to: 2500 },
         trialDays: { from: 14, to: 30 },
         contactWhatsapp: { from: "", to: "213555123456" },
       },
     });
     // A damaged value falls back to its default, the rest is kept.
-    await setMeta(db, "platform.settings", JSON.stringify({ cloudMonthly: "abc", trialDays: 21 }));
-    expect(await getPlatformSettings(db)).toMatchObject({ cloudMonthly: null, trialDays: 21 });
+    await setMeta(
+      db,
+      "platform.settings",
+      JSON.stringify({ trialDays: "abc", contactEmail: "a@b.dz" }),
+    );
+    expect(await getPlatformSettings(db)).toMatchObject({ trialDays: 14, contactEmail: "a@b.dz" });
   });
 
   it("validates the website settings", () => {
@@ -406,7 +408,7 @@ describe("platform console services", () => {
       { contactWhatsapp: "+213 555" },
       { contactEmail: "nope" },
       { trialDays: 0 },
-      { cloudMonthly: -5 },
+      { ccpAccount: "x".repeat(41) },
     ]) {
       expect(platformSettingsInput.safeParse({ ...ok, ...bad }).success).toBe(false);
     }

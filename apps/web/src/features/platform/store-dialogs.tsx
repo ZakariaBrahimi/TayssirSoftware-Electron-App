@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useErrorMessage } from "@/hooks/use-error-message";
 import { SUBSCRIPTION_STATUSES } from "@/lib/validators/platform";
 import { type StoreDetail, useStoreMutations } from "./api";
+import { PlanSelect } from "./plan-select";
 import { FormDialog, whenOpen } from "./form-dialog";
 import { toDateInput } from "./shared";
 
@@ -71,12 +72,7 @@ function SubscriptionDialogBody({ store, open, onOpenChange }: DialogProps) {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="sub-plan">{t("plan")}</Label>
-        <Input
-          id="sub-plan"
-          value={plan}
-          onChange={(e) => setPlan(e.target.value)}
-          maxLength={40}
-        />
+        <PlanSelect id="sub-plan" value={plan} onChange={setPlan} />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="sub-until">{t("paidUntil")}</Label>

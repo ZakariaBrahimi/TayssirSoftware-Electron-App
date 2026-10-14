@@ -27,6 +27,11 @@ export type EntitlementPayload = {
   /** Expiry (ms since epoch); null = never. */
   exp: number | null;
   iat: number;
+  /**
+   * Plan limits: devices, users, features. Absent in tokens issued before
+   * plans existed, or for plans without limits.
+   */
+  lim?: { d: number | null; u: number | null; f: string[] };
 };
 
 const b64url = (buf: Buffer) => buf.toString("base64url");

@@ -3,6 +3,7 @@ import { idParam, returnCreateInput, saleCreateInput, saleListQuery } from "@/li
 import { getMode } from "../../context";
 import { db } from "../../db";
 import { AppError } from "../../errors";
+import { getEntitlement, hasFeature } from "../../licensing/entitlements";
 import { getDeviceCode } from "../../services/meta";
 import { createReturn } from "../../services/returns";
 import * as sales from "../../services/sales";
@@ -25,14 +26,16 @@ export const salesRoutes = new Hono<AppEnv>()
     if (!isAdmin(user) && sale.cashierId !== user.id) throw new AppError("NOT_FOUND");
     return c.json(sale);
   })
-  .post("/", validate("json", saleCreateInput), async (c) =>
-    c.json(
+  .post("/", validate("json", saleCreateInput), async (c) => {
+    const ent = await getEntitlement(db, c.get("ctx").storeId);
+    return c.json(
       await sales.createSale(db, c.get("ctx"), c.req.valid("json"), {
         deviceCode: await deviceCode(),
+        shiftsEnabled: hasFeature(ent, "shifts"),
       }),
       201,
-    ),
-  )
+    );
+  })
   .post("/:id/void", requireAdmin, validate("param", idParam), async (c) =>
     c.json(await sales.voidSale(db, c.get("ctx"), c.req.valid("param").id)),
   )

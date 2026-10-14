@@ -50,6 +50,7 @@ import {
   useLicenses,
   usePlatformMoney,
 } from "./api";
+import { PlanSelect } from "./plan-select";
 import { FormDialog, whenOpen } from "./form-dialog";
 import { RecordPaymentDialog } from "./record-payment-dialog";
 import { ALL, LicenseStatusBadge, RelativeDate, ShortDate, toDateInput } from "./shared";
@@ -72,7 +73,7 @@ function CreateLicenseDialogBody({
   const errorMessage = useErrorMessage();
   const { create } = useLicenseMutations();
   const [customer, setCustomer] = useState("");
-  const [plan, setPlan] = useState("standard");
+  const [plan, setPlan] = useState("");
   const [devices, setDevices] = useState("1");
   const [lifetime, setLifetime] = useState(false);
   const [days, setDays] = useState("365");
@@ -122,11 +123,13 @@ function CreateLicenseDialogBody({
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-2">
           <Label htmlFor="lic-plan">{t("plan")}</Label>
-          <Input
+          <PlanSelect
             id="lic-plan"
             value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-            maxLength={40}
+            onChange={(code, p) => {
+              setPlan(code);
+              if (p?.maxDevices) setDevices(String(p.maxDevices));
+            }}
           />
         </div>
         <div className="grid gap-2">
@@ -252,7 +255,7 @@ function EditLicenseForm({ license }: { license: LicenseDetail["license"] }) {
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-2">
           <Label htmlFor="edit-plan">{t("plan")}</Label>
-          <Input id="edit-plan" value={plan} onChange={(e) => setPlan(e.target.value)} />
+          <PlanSelect id="edit-plan" value={plan} onChange={setPlan} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="edit-devices">{t("maxDevices")}</Label>

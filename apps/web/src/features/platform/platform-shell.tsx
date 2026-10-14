@@ -5,7 +5,9 @@ import {
   Building2,
   CreditCard,
   Globe,
+  Inbox,
   KeyRound,
+  Layers,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -27,14 +29,25 @@ import { cn } from "@/lib/utils";
 import { usePlatformMe } from "./api";
 
 type NavKey =
-  "overview" | "stores" | "licenses" | "devices" | "payments" | "site" | "audit" | "security";
+  | "overview"
+  | "stores"
+  | "licenses"
+  | "devices"
+  | "requests"
+  | "payments"
+  | "plans"
+  | "site"
+  | "audit"
+  | "security";
 
 const items: { href: string; key: NavKey; icon: LucideIcon }[] = [
   { href: "/platform", key: "overview", icon: LayoutDashboard },
   { href: "/platform/stores", key: "stores", icon: Building2 },
   { href: "/platform/licenses", key: "licenses", icon: KeyRound },
   { href: "/platform/devices", key: "devices", icon: MonitorSmartphone },
+  { href: "/platform/requests", key: "requests", icon: Inbox },
   { href: "/platform/payments", key: "payments", icon: CreditCard },
+  { href: "/platform/plans", key: "plans", icon: Layers },
   { href: "/platform/site", key: "site", icon: Globe },
   { href: "/platform/audit", key: "audit", icon: ScrollText },
   { href: "/platform/security", key: "security", icon: ShieldCheck },
@@ -45,6 +58,7 @@ const SECURITY = "/platform/security";
 function Nav({ locked, onNavigate }: { locked: boolean; onNavigate?: () => void }) {
   const t = useTranslations("platform.nav");
   const pathname = usePathname();
+  const pendingRequests = usePlatformMe().data?.pendingRequests ?? 0;
   return (
     <nav className="grid gap-1">
       {items.map(({ href, key, icon: Icon }) => {
@@ -68,6 +82,11 @@ function Nav({ locked, onNavigate }: { locked: boolean; onNavigate?: () => void 
           >
             <Icon className="size-4" />
             {t(key)}
+            {key === "requests" && pendingRequests > 0 && (
+              <span className="bg-brass text-brass-foreground ms-auto rounded-full px-2 text-xs font-semibold tabular-nums">
+                {pendingRequests}
+              </span>
+            )}
           </Link>
         );
       })}

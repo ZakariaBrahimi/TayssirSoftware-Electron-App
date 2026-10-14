@@ -22,6 +22,13 @@
       "when": 1791946790263,
       "tag": "0002_platform_console",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791953730528,
+      "tag": "0003_subscription_plans",
+      "breakpoints": true
     }
   ]
 }

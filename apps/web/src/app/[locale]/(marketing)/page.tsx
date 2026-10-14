@@ -24,14 +24,16 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
   };
 }
 
-/** Prices, trial length and contacts come from the platform console. */
+/** Plans, prices, trial length and contacts come from the platform console. */
 async function LandingWithSettings({ locale }: { locale: Locale }) {
   // Read at request time: the settings change without a new deployment,
   // and no database is needed while building.
   await connection();
   const { db } = await import("@/server/db");
   const { getPlatformSettings } = await import("@/server/platform/settings");
-  return <LandingPage locale={locale} settings={await getPlatformSettings(db)} />;
+  const { publicCatalog } = await import("@/server/platform/billing");
+  const [settings, catalog] = await Promise.all([getPlatformSettings(db), publicCatalog(db)]);
+  return <LandingPage locale={locale} settings={settings} catalog={catalog} />;
 }
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {

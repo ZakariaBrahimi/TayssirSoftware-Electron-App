@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorMessage } from "@/hooks/use-error-message";
 import { useMe } from "@/hooks/use-me";
 import { useDateFormat } from "@/hooks/use-settings";
+import { Link } from "@/i18n/navigation";
 import { useLicenseMutations } from "./api";
 
 /** License (local installs) or subscription (cloud stores) status. */
@@ -68,6 +69,11 @@ export function LicensePanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid max-w-xl gap-6">
+        {ent.status !== "unmanaged" && (
+          <Button asChild variant="outline" className="justify-self-start">
+            <Link href="/subscription">{t("managePlan")}</Link>
+          </Button>
+        )}
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
           {rows.map(([label, value]) => (
             <div key={label} className="contents">

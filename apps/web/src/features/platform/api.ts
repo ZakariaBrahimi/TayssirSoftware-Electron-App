@@ -16,7 +16,10 @@ import type {
   PlatformPaymentInput,
   PlatformPaymentListQuery,
   PlatformSettingsInput,
+  PlanInput,
+  PlanUpdateInput,
   PlatformStoreListQuery,
+  RequestListQuery,
   SubscriptionInput,
 } from "@/lib/validators/platform";
 
@@ -32,6 +35,9 @@ export type DevicePage = InferResponseType<typeof p.devices.$get, 200>;
 export type PaymentPage = InferResponseType<typeof p.payments.$get, 200>;
 export type AuditPage = InferResponseType<typeof p.audit.$get, 200>;
 export type PlatformSettings = InferResponseType<typeof p.settings.$get, 200>;
+export type PlatformPlan = InferResponseType<typeof p.plans.$get, 200>[number];
+export type RequestPage = InferResponseType<typeof p.requests.$get, 200>;
+export type RequestDetail = InferResponseType<(typeof p.requests)[":id"]["$get"], 200>;
 
 export function usePlatformMe() {
   return useQuery({
@@ -252,4 +258,73 @@ export function useSaveSettings() {
     mutationFn: (json: PlatformSettingsInput) => unwrap(p.settings.$put({ json })),
     onSuccess,
   });
+}
+
+export function usePlans() {
+  return useQuery({
+    queryKey: ["platform", "plans"],
+    queryFn: () => unwrap(p.plans.$get()),
+    staleTime: 60_000,
+  });
+}
+
+/** Plan name for a code, in the interface language (falls back to the code). */
+export function usePlatformPlanName() {
+  const plans = usePlans().data;
+  const locale = useLocale();
+  return useCallback(
+    (code: string | null | undefined) => {
+      if (!code) return "—";
+      const plan = plans?.find((x) => x.code === code);
+      if (!plan) return code;
+      return (locale === "fr" ? plan.nameFr : locale === "ar" ? plan.nameAr : plan.nameEn) || code;
+    },
+    [plans, locale],
+  );
+}
+
+export function usePlanMutations() {
+  const onSuccess = useInvalidate();
+  return {
+    create: useMutation({
+      mutationFn: (json: PlanInput) => unwrap(p.plans.$post({ json })),
+      onSuccess,
+    }),
+    update: useMutation({
+      mutationFn: ({ code, json }: { code: string; json: PlanUpdateInput }) =>
+        unwrap(p.plans[":code"].$put({ param: { code }, json })),
+      onSuccess,
+    }),
+  };
+}
+
+export function useRequests(query: RequestListQuery) {
+  return useQuery({
+    queryKey: ["platform", "requests", query],
+    queryFn: () => unwrap(p.requests.$get({ query: toQuery(query) })),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRequestDetail(id: string | null) {
+  return useQuery({
+    queryKey: ["platform", "request", id],
+    queryFn: () => unwrap(p.requests[":id"].$get({ param: { id: id! } })),
+    enabled: Boolean(id),
+  });
+}
+
+export function useRequestMutations() {
+  const onSuccess = useInvalidate();
+  return {
+    approve: useMutation({
+      mutationFn: (id: string) => unwrap(p.requests[":id"].approve.$post({ param: { id } })),
+      onSuccess,
+    }),
+    reject: useMutation({
+      mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+        unwrap(p.requests[":id"].reject.$post({ param: { id }, json: { reason } })),
+      onSuccess,
+    }),
+  };
 }

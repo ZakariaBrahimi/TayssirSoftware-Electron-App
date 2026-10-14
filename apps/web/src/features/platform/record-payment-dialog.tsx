@@ -19,6 +19,7 @@ import { useErrorMessage } from "@/hooks/use-error-message";
 import { cn } from "@/lib/utils";
 import { PLATFORM_PAYMENT_METHODS, type PlatformPaymentMethod } from "@/lib/validators/platform";
 import { useLicenseOptions, usePaymentMutations, usePlatformMoney, useStoreOptions } from "./api";
+import { PlanSelect } from "./plan-select";
 import { FormDialog, whenOpen } from "./form-dialog";
 
 export type PaymentTarget =
@@ -218,13 +219,7 @@ function RecordPaymentDialogBody({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="pay-plan">{t("plan")}</Label>
-          <Input
-            id="pay-plan"
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-            placeholder={picked?.plan && picked.plan !== "trial" ? picked.plan : "standard"}
-            maxLength={40}
-          />
+          <PlanSelect id="pay-plan" value={plan} onChange={setPlan} allowEmpty={t("keepPlan")} />
         </div>
       </div>
       <p className="text-muted-foreground text-xs">

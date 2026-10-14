@@ -6,6 +6,7 @@ import {
   Download,
   Boxes,
   Mail,
+  Minus,
   MessageCircle,
   Phone,
   RefreshCw,
@@ -26,6 +27,8 @@ import { Link } from "@/i18n/navigation";
 import { localeNames, routing, type Locale } from "@/i18n/routing";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { PLAN_FEATURES } from "@/lib/validators/platform";
+import type { PublicCatalog } from "@/server/platform/billing";
 import type { PlatformSettings } from "@/server/platform/settings";
 
 const FEATURES: { key: string; icon: LucideIcon }[] = [
@@ -142,21 +145,26 @@ function SectionHead({ eyebrow, title, body }: { eyebrow: string; title: string;
 export async function LandingPage({
   locale,
   settings,
+  catalog,
 }: {
   locale: Locale;
-  /** Prices, trial, download link and contacts, edited in the platform console. */
+  /** Trial, download link and contacts, edited in the platform console. */
   settings: PlatformSettings;
+  /** Plans and prices, edited on the console's Plans page. */
+  catalog: PublicCatalog;
 }) {
   const t = await getTranslations({ locale, namespace: "landing" });
   const { downloadUrl, trialDays: days } = settings;
-  const pricing = { cloudMonthly: settings.cloudMonthly, licenseOneTime: settings.licenseOneTime };
+  const plans = catalog.plans;
   const contact = {
     phone: settings.contactPhone,
     whatsapp: settings.contactWhatsapp,
     email: settings.contactEmail,
   };
   const price = (amount: number | null) =>
-    amount === null ? null : formatMoney(amount * 100, "DZD", locale).replace(/[.,]00(?=\D*$)/, "");
+    amount === null
+      ? null
+      : formatMoney(amount * 100, catalog.currency, locale).replace(/[.,]00(?=\D*$)/, "");
 
   return (
     <div className="bg-background text-foreground min-h-dvh">
@@ -289,71 +297,113 @@ export async function LandingPage({
             title={t("pricing.title")}
             body={t("pricing.body", { days })}
           />
-          <div className="grid gap-6 md:grid-cols-2">
-            {(
-              [
-                {
-                  key: "cloud",
-                  amount: price(pricing.cloudMonthly),
-                  href: "/signup",
-                  external: false,
-                  highlight: true,
-                },
-                {
-                  key: "license",
-                  amount: price(pricing.licenseOneTime),
-                  href: downloadUrl,
-                  external: true,
-                  highlight: false,
-                },
-              ] as const
-            ).map((plan) => (
-              <div
-                key={plan.key}
-                className={cn(
-                  "bg-card grid content-start gap-5 rounded-2xl border p-7",
-                  plan.highlight && "border-primary ring-primary/20 ring-4",
-                )}
-              >
-                <div className="grid gap-1">
-                  <h3 className="font-display text-xl font-semibold">
-                    {t(`pricing.${plan.key}.name`)}
-                  </h3>
-                  <p className="text-muted-foreground">{t(`pricing.${plan.key}.desc`)}</p>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  {plan.amount ? (
-                    <>
-                      <span className="font-display text-4xl font-semibold tabular-nums">
-                        {plan.amount}
-                      </span>
-                      <span className="text-muted-foreground">{t(`pricing.${plan.key}.per`)}</span>
-                    </>
-                  ) : (
-                    <span className="font-display text-2xl font-semibold">
-                      {t("pricing.onRequest")}
-                    </span>
+          {plans.length > 0 ? (
+            <div className={cn("grid gap-6 md:grid-cols-2", plans.length >= 3 && "lg:grid-cols-3")}>
+              {plans.map((plan) => (
+                <div
+                  key={plan.code}
+                  className={cn(
+                    "bg-card grid content-start gap-5 rounded-2xl border p-7",
+                    plan.recommended && "border-primary ring-primary/20 ring-4",
                   )}
-                </div>
-                <ul className="grid gap-2">
-                  {(["p1", "p2", "p3", "p4"] as const).map((p) => (
-                    <li key={p} className="flex gap-2">
+                >
+                  <div className="grid gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-display text-xl font-semibold">
+                        {plan.name[locale] || plan.name.en}
+                      </h3>
+                      {plan.recommended && (
+                        <span className="bg-primary text-primary-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">
+                          {t("pricing.recommended")}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground">
+                      {plan.description[locale] || plan.description.en}
+                    </p>
+                  </div>
+                  <div className="grid gap-1">
+                    <div className="flex items-baseline gap-2">
+                      {plan.monthlyPrice !== null ? (
+                        <>
+                          <span className="font-display text-4xl font-semibold tabular-nums">
+                            {price(plan.monthlyPrice)}
+                          </span>
+                          <span className="text-muted-foreground">{t("pricing.perMonth")}</span>
+                        </>
+                      ) : (
+                        <span className="font-display text-2xl font-semibold">
+                          {t("pricing.onRequest")}
+                        </span>
+                      )}
+                    </div>
+                    {plan.yearlyPrice !== null && (
+                      <p className="text-muted-foreground text-sm">
+                        {t("pricing.orYearly", { price: price(plan.yearlyPrice)! })}
+                      </p>
+                    )}
+                    {plan.licensePrice !== null && (
+                      <p className="text-muted-foreground text-sm">
+                        {t("pricing.orLicense", { price: price(plan.licensePrice)! })}
+                      </p>
+                    )}
+                  </div>
+                  <ul className="grid gap-2">
+                    <li className="flex gap-2">
                       <Check className="text-primary mt-1 size-4 shrink-0" />
-                      <span>{t(`pricing.${plan.key}.${p}`)}</span>
+                      <span>
+                        {plan.maxDevices === null
+                          ? t("pricing.devicesUnlimited")
+                          : t("pricing.devices", { count: plan.maxDevices })}
+                      </span>
                     </li>
-                  ))}
-                </ul>
-                <Button asChild size="lg" variant={plan.highlight ? "default" : "outline"}>
-                  {plan.external ? (
-                    <a href={plan.href} rel="noopener">
-                      {t(`pricing.${plan.key}.cta`)}
-                    </a>
-                  ) : (
-                    <Link href={plan.href}>{t(`pricing.${plan.key}.cta`)}</Link>
-                  )}
-                </Button>
-              </div>
-            ))}
+                    <li className="flex gap-2">
+                      <Check className="text-primary mt-1 size-4 shrink-0" />
+                      <span>
+                        {plan.maxUsers === null
+                          ? t("pricing.usersUnlimited")
+                          : t("pricing.users", { count: plan.maxUsers })}
+                      </span>
+                    </li>
+                    <li className="flex gap-2">
+                      <Check className="text-primary mt-1 size-4 shrink-0" />
+                      <span>{t("pricing.base")}</span>
+                    </li>
+                    {PLAN_FEATURES.map((f) => {
+                      const has = plan.features.includes(f);
+                      return (
+                        <li key={f} className={cn("flex gap-2", !has && "text-muted-foreground")}>
+                          {has ? (
+                            <Check className="text-primary mt-1 size-4 shrink-0" />
+                          ) : (
+                            <Minus className="mt-1 size-4 shrink-0" />
+                          )}
+                          <span>{t(`pricing.feature_${f}`)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <Button asChild size="lg" variant={plan.recommended ? "default" : "outline"}>
+                    <Link href="/signup">{t("pricing.cta")}</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-lg">{t("pricing.onRequest")}</p>
+          )}
+          <div className="bg-muted/50 flex flex-wrap items-center gap-4 rounded-2xl border p-6">
+            <CloudOff className="text-primary size-6 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">{t("pricing.desktopTitle")}</p>
+              <p className="text-muted-foreground text-sm">{t("pricing.desktopBody")}</p>
+            </div>
+            <Button asChild variant="outline">
+              <a href={downloadUrl} rel="noopener">
+                <Download />
+                {t("pricing.desktopCta")}
+              </a>
+            </Button>
           </div>
           <p className="text-muted-foreground text-sm">{t("pricing.payment")}</p>
         </section>

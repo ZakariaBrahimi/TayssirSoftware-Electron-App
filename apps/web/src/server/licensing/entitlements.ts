@@ -1,8 +1,12 @@
+import { eq } from "drizzle-orm";
+import { PLAN_FEATURES, type PlanFeature } from "@/lib/validators/platform";
 import { getMode } from "../context";
 import type { Executor } from "../db/client";
+import { stores } from "../db/schema";
+import { limitsForPlan, type PlanLimits } from "../platform/plans";
 import { getMeta, getOrInitMeta } from "../services/meta";
 import { getStore, TRIAL_DAYS } from "../services/stores";
-import { verifyEntitlement } from "./token";
+import { type EntitlementPayload, verifyEntitlement } from "./token";
 
 export type Entitlement = {
   /** "unmanaged": licensing is not enforced by this build. */
@@ -13,7 +17,33 @@ export type Entitlement = {
   daysLeft: number | null;
   /** False when the store may only read data (expired license/subscription). */
   canWrite: boolean;
+  /** What the plan allows; null = no limits (trial, unmanaged, older licenses). */
+  limits: PlanLimits | null;
+  /** A downgrade already paid for, taking effect at `planChangesAt` (cloud). */
+  scheduledPlan?: string | null;
+  planChangesAt?: number | null;
 };
+
+/** Limits carried in a signed token. */
+export function limitsFromToken(payload: EntitlementPayload): PlanLimits | null {
+  if (!payload.lim) return null;
+  return {
+    maxDevices: payload.lim.d,
+    maxUsers: payload.lim.u,
+    features: payload.lim.f.filter((f): f is PlanFeature =>
+      PLAN_FEATURES.includes(f as PlanFeature),
+    ),
+  };
+}
+
+/** Limits written into a signed token. */
+export function limitsToToken(limits: PlanLimits | null) {
+  return limits ? { d: limits.maxDevices, u: limits.maxUsers, f: limits.features } : undefined;
+}
+
+/** True when the plan includes the feature (or has no limits). */
+export const hasFeature = (ent: Entitlement, feature: PlanFeature) =>
+  !ent.limits || ent.limits.features.includes(feature);
 
 const DAY = 86_400_000;
 
@@ -23,9 +53,18 @@ function fromExpiry(
   plan: string | null,
   exp: number | null,
   now: number,
+  limits: PlanLimits | null = null,
 ): Entitlement {
   if (exp !== null && exp <= now) {
-    return { status: "expired", source, plan, expiresAt: exp, daysLeft: 0, canWrite: false };
+    return {
+      status: "expired",
+      source,
+      plan,
+      expiresAt: exp,
+      daysLeft: 0,
+      canWrite: false,
+      limits,
+    };
   }
   return {
     status,
@@ -34,6 +73,7 @@ function fromExpiry(
     expiresAt: exp,
     daysLeft: exp === null ? null : Math.ceil((exp - now) / DAY),
     canWrite: true,
+    limits,
   };
 }
 
@@ -53,7 +93,24 @@ export async function getEntitlement(
   now = Date.now(),
 ): Promise<Entitlement> {
   if (getMode() === "cloud") {
-    const store = await getStore(db, storeId);
+    let store = await getStore(db, storeId);
+    // A downgrade paid in advance takes effect at the end of the paid plan.
+    if (store.scheduledPlan && store.planChangesAt && store.planChangesAt.getTime() <= now) {
+      [store] = await db
+        .update(stores)
+        .set({ plan: store.scheduledPlan, scheduledPlan: null, planChangesAt: null })
+        .where(eq(stores.id, storeId))
+        .returning();
+    }
+    const scheduled = {
+      scheduledPlan: store.scheduledPlan,
+      planChangesAt: store.planChangesAt?.getTime() ?? null,
+    };
+    if (store.subscriptionStatus === "trialing" && !store.suspendedAt) {
+      // The trial includes everything.
+      return fromExpiry("trial", "trial", null, store.trialEndsAt?.getTime() ?? now, now);
+    }
+    const limits = await limitsForPlan(db, store.plan);
     if (store.suspendedAt) {
       return {
         status: "suspended",
@@ -62,19 +119,22 @@ export async function getEntitlement(
         expiresAt: null,
         daysLeft: 0,
         canWrite: false,
+        limits,
+        ...scheduled,
       };
     }
     if (store.subscriptionStatus === "active" || store.subscriptionStatus === "past_due") {
-      return fromExpiry(
-        "active",
-        "subscription",
-        store.plan,
-        store.currentPeriodEnd?.getTime() ?? null,
-        now,
-      );
-    }
-    if (store.subscriptionStatus === "trialing") {
-      return fromExpiry("trial", "trial", null, store.trialEndsAt?.getTime() ?? now, now);
+      return {
+        ...fromExpiry(
+          "active",
+          "subscription",
+          store.plan,
+          store.currentPeriodEnd?.getTime() ?? null,
+          now,
+          limits,
+        ),
+        ...scheduled,
+      };
     }
     return {
       status: "expired",
@@ -83,6 +143,7 @@ export async function getEntitlement(
       expiresAt: null,
       daysLeft: 0,
       canWrite: false,
+      limits,
     };
   }
 
@@ -95,6 +156,7 @@ export async function getEntitlement(
       expiresAt: null,
       daysLeft: null,
       canWrite: true,
+      limits: null,
     };
   }
 
@@ -104,7 +166,14 @@ export async function getEntitlement(
     const token = await getMeta(db, key);
     const payload = token ? verifyEntitlement(token, publicKey) : null;
     if (payload && payload.dev === deviceId && (payload.exp === null || payload.exp > now)) {
-      return fromExpiry("active", payload.kind, payload.plan, payload.exp, now);
+      return fromExpiry(
+        "active",
+        payload.kind,
+        payload.plan,
+        payload.exp,
+        now,
+        limitsFromToken(payload),
+      );
     }
   }
 

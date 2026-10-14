@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorMessage } from "@/hooks/use-error-message";
+import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { platformSettingsInput } from "@/lib/validators/platform";
 import { type PlatformSettings, usePlatformSettings, useSaveSettings } from "./api";
@@ -18,16 +19,17 @@ import { type PlatformSettings, usePlatformSettings, useSaveSettings } from "./a
 type Form = Record<keyof PlatformSettings, string>;
 
 const toForm = (s: PlatformSettings): Form => ({
-  cloudMonthly: s.cloudMonthly === null ? "" : String(s.cloudMonthly),
-  licenseOneTime: s.licenseOneTime === null ? "" : String(s.licenseOneTime),
   trialDays: String(s.trialDays),
   downloadUrl: s.downloadUrl,
   contactPhone: s.contactPhone,
   contactWhatsapp: s.contactWhatsapp,
   contactEmail: s.contactEmail,
+  payeeName: s.payeeName,
+  ccpAccount: s.ccpAccount,
+  ripAccount: s.ripAccount,
+  bankRib: s.bankRib,
+  paymentNote: s.paymentNote,
 });
-
-const optionalNumber = (v: string) => (v.trim() === "" ? null : Number(v));
 
 function Field({
   id,
@@ -69,13 +71,16 @@ function SettingsForm({ initial }: { initial: PlatformSettings }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = platformSettingsInput.safeParse({
-      cloudMonthly: optionalNumber(form.cloudMonthly),
-      licenseOneTime: optionalNumber(form.licenseOneTime),
       trialDays: Number(form.trialDays),
       downloadUrl: form.downloadUrl.trim(),
       contactPhone: form.contactPhone,
       contactWhatsapp: form.contactWhatsapp.replace(/[\s+]/g, ""),
       contactEmail: form.contactEmail.trim(),
+      payeeName: form.payeeName.trim(),
+      ccpAccount: form.ccpAccount.trim(),
+      ripAccount: form.ripAccount.trim(),
+      bankRib: form.bankRib.trim(),
+      paymentNote: form.paymentNote.trim(),
     });
     if (!parsed.success) {
       const next: Partial<Record<keyof Form, string>> = {};
@@ -108,41 +113,48 @@ function SettingsForm({ initial }: { initial: PlatformSettings }) {
           <CardTitle className="text-base">{t("pricing")}</CardTitle>
           <CardDescription>{t("pricingHint")}</CardDescription>
         </CardHeader>
+        <CardContent>
+          <Button variant="outline" asChild>
+            <Link href="/platform/plans">{t("openPlans")}</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("payment")}</CardTitle>
+          <CardDescription>{t("paymentHint")}</CardDescription>
+        </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id="cloudMonthly"
-            label={t("f_cloudMonthly")}
-            hint={t("emptyOnRequest")}
-            error={errors.cloudMonthly}
-          >
+          <Field id="payeeName" label={t("f_payeeName")} error={errors.payeeName}>
+            <Input id="payeeName" value={form.payeeName} onChange={set("payeeName")} />
+          </Field>
+          <Field id="ccpAccount" label={t("f_ccpAccount")} error={errors.ccpAccount}>
             <Input
-              id="cloudMonthly"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              value={form.cloudMonthly}
-              onChange={set("cloudMonthly")}
-              placeholder={t("onRequest")}
+              id="ccpAccount"
+              dir="ltr"
+              value={form.ccpAccount}
+              onChange={set("ccpAccount")}
+              placeholder="0012345678 clé 90"
             />
           </Field>
-          <Field
-            id="licenseOneTime"
-            label={t("f_licenseOneTime")}
-            hint={t("emptyOnRequest")}
-            error={errors.licenseOneTime}
-          >
+          <Field id="ripAccount" label={t("f_ripAccount")} error={errors.ripAccount}>
             <Input
-              id="licenseOneTime"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              value={form.licenseOneTime}
-              onChange={set("licenseOneTime")}
-              placeholder={t("onRequest")}
+              id="ripAccount"
+              dir="ltr"
+              value={form.ripAccount}
+              onChange={set("ripAccount")}
+              placeholder="00799999001234567890"
             />
           </Field>
+          <Field id="bankRib" label={t("f_bankRib")} error={errors.bankRib}>
+            <Input id="bankRib" dir="ltr" value={form.bankRib} onChange={set("bankRib")} />
+          </Field>
+          <div className="sm:col-span-2">
+            <Field id="paymentNote" label={t("f_paymentNote")} error={errors.paymentNote}>
+              <Input id="paymentNote" value={form.paymentNote} onChange={set("paymentNote")} />
+            </Field>
+          </div>
         </CardContent>
       </Card>
 

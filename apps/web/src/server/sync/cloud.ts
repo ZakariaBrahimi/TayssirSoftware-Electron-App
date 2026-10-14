@@ -3,7 +3,7 @@ import type { Database, Executor } from "../db/client";
 import { syncDevices } from "../db/schema";
 import { AppError } from "../errors";
 import { signEntitlement, hashSecret } from "../licensing/token";
-import { getEntitlement } from "../licensing/entitlements";
+import { getEntitlement, limitsToToken } from "../licensing/entitlements";
 import { touchStore } from "../platform/activity";
 import { getStore, publicStore } from "../services/stores";
 import { applyChanges, collectChanges } from "./engine";
@@ -25,9 +25,18 @@ export async function linkDevice(
   if (account.role !== "admin") throw new AppError("FORBIDDEN");
 
   const existing = await db
-    .select({ code: syncDevices.deviceCode })
+    .select({ code: syncDevices.deviceCode, revokedAt: syncDevices.revokedAt })
     .from(syncDevices)
     .where(eq(syncDevices.storeId, account.storeId));
+  // The plan sets how many PCs can be linked.
+  const { limits } = await getEntitlement(db, account.storeId);
+  const linked = existing.filter((d) => !d.revokedAt).length;
+  if (limits?.maxDevices && linked >= limits.maxDevices) {
+    throw new AppError("PLAN_LIMIT", "Device limit reached", {
+      limit: "devices",
+      max: limits.maxDevices,
+    });
+  }
   const used = new Set(existing.map((d) => d.code));
   let n = existing.length + 1;
   while (used.has(`D${n}`)) n++;
@@ -96,6 +105,7 @@ async function deviceEntitlementToken(db: Executor, storeId: string, deviceId: s
       ref: storeId,
       exp: ent.expiresAt === null ? maxExp : Math.min(ent.expiresAt, maxExp),
       iat: Date.now(),
+      ...(ent.limits ? { lim: limitsToToken(ent.limits) } : {}),
     },
     key,
   );

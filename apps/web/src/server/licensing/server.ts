@@ -2,6 +2,8 @@ import { and, count, eq } from "drizzle-orm";
 import type { Executor } from "../db/client";
 import { licenseActivations, licenses } from "../db/schema";
 import { AppError } from "../errors";
+import { getPlan, planLimits } from "../platform/plans";
+import { limitsToToken } from "./entitlements";
 import { generateLicenseKey, hashSecret, signEntitlement, verifyEntitlement } from "./token";
 
 /* Vendor side (cloud mode): issues licenses and activates devices. */
@@ -79,16 +81,22 @@ export async function activateLicense(
     });
   }
 
-  const token = licenseToken(license, input.deviceId, privateKey, now);
+  const token = await licenseToken(db, license, input.deviceId, privateKey, now);
   return { token, plan: license.plan, expiresAt: license.expiresAt };
 }
 
-function licenseToken(
+/** Signed token for one PC, carrying the plan's limits (the license sets the PC count). */
+async function licenseToken(
+  db: Executor,
   license: typeof licenses.$inferSelect,
   deviceId: string,
   privateKey: string,
   now: number,
 ) {
+  const plan = await getPlan(db, license.plan);
+  const lim = plan
+    ? limitsToToken({ ...planLimits(plan), maxDevices: license.maxDevices })
+    : undefined;
   return signEntitlement(
     {
       v: 1,
@@ -98,6 +106,7 @@ function licenseToken(
       ref: license.id,
       exp: license.expiresAt?.getTime() ?? null,
       iat: now,
+      ...(lim ? { lim } : {}),
     },
     privateKey,
   );
@@ -136,5 +145,8 @@ export async function refreshLicense(
     .update(licenseActivations)
     .set({ lastSeenAt: new Date(now), appVersion: input.appVersion ?? activation.appVersion })
     .where(eq(licenseActivations.id, activation.id));
-  return { status: "ok" as const, token: licenseToken(license, payload.dev, privateKey, now) };
+  return {
+    status: "ok" as const,
+    token: await licenseToken(db, license, payload.dev, privateKey, now),
+  };
 }

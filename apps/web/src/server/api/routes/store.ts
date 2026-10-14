@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { storeSettingsInput, userCreateInput, userUpdateInput } from "@/lib/validators";
 import { getMode } from "../../context";
 import { db } from "../../db";
+import { AppError } from "../../errors";
 import { getEntitlement } from "../../licensing/entitlements";
 import { getStore, publicStore, updateStore } from "../../services/stores";
 import * as users from "../../services/users";
@@ -34,9 +35,19 @@ export const settingsRoutes = new Hono<AppEnv>()
 export const usersRoutes = new Hono<AppEnv>()
   .use(requireAdmin)
   .get("/", async (c) => c.json(await users.listUsers(db, c.get("ctx"))))
-  .post("/", validate("json", userCreateInput), async (c) =>
-    c.json(await users.createUser(db, c.get("ctx"), c.req.valid("json")), 201),
-  )
+  .post("/", validate("json", userCreateInput), async (c) => {
+    const { limits } = await getEntitlement(db, c.get("ctx").storeId);
+    if (limits?.maxUsers) {
+      const count = (await users.listUsers(db, c.get("ctx"))).length;
+      if (count >= limits.maxUsers) {
+        throw new AppError("PLAN_LIMIT", "User limit reached", {
+          limit: "users",
+          max: limits.maxUsers,
+        });
+      }
+    }
+    return c.json(await users.createUser(db, c.get("ctx"), c.req.valid("json")), 201);
+  })
   .patch("/:id", validate("json", userUpdateInput), async (c) =>
     c.json(await users.updateUser(db, c.get("ctx"), c.req.param("id"), c.req.valid("json"))),
   )

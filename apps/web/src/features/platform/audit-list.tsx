@@ -82,6 +82,14 @@ function useDescribe() {
       }
       case "payment.void":
         return `${money.format(Number(d.amount))}${d.reason ? ` · ${str(d.reason)}` : ""}`;
+      case "plan.create":
+        return str(d.code);
+      case "plan.update":
+        return `${str(d.code)}${Array.isArray(d.changed) && d.changed.length ? ` · ${(d.changed as string[]).join(", ")}` : ""}`;
+      case "request.approve":
+        return `${str(d.plan)} · ${money.format(Number(d.amount))}${d.newLicense ? ` · ${t("d_newLicense")}` : ""}`;
+      case "request.reject":
+        return `${str(d.plan)}${d.reason ? ` · ${str(d.reason)}` : ""}`;
       default:
         return "";
     }

@@ -4,6 +4,7 @@ import { auth } from "../auth";
 import { AppError } from "../errors";
 import { type AppEnv, requireAuth } from "./context";
 import { backupRoutes } from "./routes/backup";
+import { billingRoutes, subscriptionRoutes } from "./routes/billing";
 import { brandsRoutes, categoriesRoutes } from "./routes/catalog";
 import { dataRoutes } from "./routes/data";
 import { licenseRoutes, licenseServerRoutes } from "./routes/licensing";
@@ -36,7 +37,8 @@ const protectedRoutes = new Hono<AppEnv>()
   .route("/backup", backupRoutes)
   .route("/data", dataRoutes)
   .route("/sync-client", syncClientRoutes)
-  .route("/sync-devices", syncDevicesRoutes);
+  .route("/sync-devices", syncDevicesRoutes)
+  .route("/subscription", subscriptionRoutes);
 
 export const app = new Hono()
   .basePath("/api")
@@ -52,6 +54,7 @@ export const app = new Hono()
   .route("/licenses", licenseServerRoutes)
   .route("/sync", syncServerRoutes)
   .route("/platform", platformRoutes)
+  .route("/billing", billingRoutes)
   .route("/", protectedRoutes);
 
 app.onError((err, c) => {

@@ -139,7 +139,32 @@ npm run admin -- platform:admin <username> --name "Your Name"   # console accoun
 npm run admin -- platform:2fa-reset <username>                  # lost authenticator
 ```
 
-Subscription payments are not connected to a payment provider yet: record them in the [platform console](#platform-console) (or call the same service from a payment webhook later).
+Subscription payments are not connected to a payment provider yet. Shops send a payment request from their **Subscription** page and you approve it in the [platform console](#platform-console); you can also record a payment by hand (or call the same service from a payment webhook later).
+
+### Plans
+
+What shops buy is a catalog of plans, edited in the console under **Plans** (two ship by default: _Essentiel_ and _Pro_, with no prices until you set them). Each plan has:
+
+- names and descriptions in English, French and Arabic;
+- a monthly and a yearly price for online stores, and a one-time license price for PCs (whole dinars; empty = not sold that way);
+- limits: tills/PCs (desktops linked to a store, or PCs using a license) and users (empty = unlimited);
+- features: suppliers and purchases, cash register shifts, product import. Sales, stock, customers, credit, returns and reports are in every plan;
+- a "recommended" flag and an "on sale" switch (a hidden plan stays valid for shops that have it).
+
+Limits are enforced on the server: a feature outside the plan is read-only (existing data stays visible), and adding a user or linking a desktop beyond the limit is refused. The free trial has no limits. Licenses carry their plan's limits in the signed token, so they also apply offline.
+
+Plan changes:
+
+- **Upgrade** (online store): starts as soon as the payment is approved; the unused days of the old plan are converted at the new plan's price.
+- **Downgrade**: scheduled for the end of the paid period; the current plan stays until then.
+- **Renewal** of the same plan: added after the current end date.
+- **License upgrade**: same key, new plan and PC limit, no expiry; it charges the new license's full price.
+
+### Paying from the app
+
+Shop owners (admins) open **Subscription** in the app, on the web or on a desktop. They see their plan, end date, usage against the limits and their payment history, compare the plans (monthly/yearly for online stores, one-time for PCs), pay by CCP/BaridiMob/bank transfer using the details you enter in the console under **Website**, and send "I have paid" with a reference and an optional receipt photo. A reminder shows during the last 7 days of a plan or trial.
+
+The request lands in the console under **Payment requests** (with a counter in the menu). Approving records the payment and applies the plan at once; declining sends your reason back to the shop. A PC with no license yet gets a new key on approval: it is shown to you once and delivered to that PC automatically next time it is online. Desktops reach the server for this, so a desktop that is offline shows its current license and waits.
 
 Desktops check their license in with the server every 12 hours when online: renewals and plan changes reach them, and a revoked license or a freed device slot takes effect at the next check-in.
 
@@ -149,7 +174,7 @@ Without `LICENSE_PUBLIC_KEY`, a local install is unlicensed and unrestricted, wh
 
 In cloud mode, signed-out visitors of `/` see a public landing page (English, French, Arabic) with the features, pricing, questions and links to sign-up and the Windows download. Signed-in users go straight to the app, and local installs keep opening the sign-in screen.
 
-Prices, the free-trial length, the Windows download link and the contacts (phone, WhatsApp, email) are edited in the platform console under **Website** and show on the page right away. An empty price shows "Price on request", an empty contact is hidden, and the trial length also applies to every new online sign-up (desktop installs keep a 14-day trial). "View the landing page" opens it even while you are signed in (`/?preview`). The wording itself lives in the `landing` section of `apps/web/src/messages/*.json`.
+The pricing section lists the plans on sale with their prices and limits, from the console's **Plans** page. The free-trial length, the Windows download link and the contacts (phone, WhatsApp, email) are edited under **Website**. Changes show on the page right away. A plan without a monthly price shows "Price on request", an empty contact is hidden, and the trial length also applies to every new online sign-up (desktop installs keep a 14-day trial). "View the landing page" opens it even while you are signed in (`/?preview`). The wording itself lives in the `landing` section of `apps/web/src/messages/*.json`.
 
 ## Platform console
 
@@ -159,8 +184,10 @@ On the cloud deployment, the owner of the SaaS manages everything at `/platform`
 - **Stores**: search and filter by status; per store: subscription, usage totals, users, linked desktops, payments and history. Actions: record a payment (renews the subscription from the end of the paid period), change the subscription, extend the trial, suspend or reactivate (a suspended store is read-only, on the web and on its desktops), reset a user's password.
 - **Licenses**: create (the key is shown once), edit plan/devices/end date, revoke or restore, free one or all PCs, record a payment (extends a dated license).
 - **Devices**: every linked desktop with its store, app version and last sync; "not syncing" after 3 days; revoke.
+- **Payment requests**: what shops say they have paid, with reference and receipt photo; approve (records the payment and applies the plan) or decline with a reason.
 - **Payments**: all payments with filters and totals; void a mistaken one (kept in the history, excluded from revenue).
-- **Website**: prices, free-trial length, download link and contacts shown on the landing page.
+- **Plans**: the plan catalog: names in three languages, prices, limits and features (see [Plans](#plans)).
+- **Website**: free-trial length, payment details (CCP, RIP, RIB), download link and contacts.
 - **Audit log**: every change made in the console or with the CLI, with who, when and from which IP.
 
 The console only shows store totals, never a store's sales, customers or products.

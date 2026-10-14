@@ -6,7 +6,8 @@ import { auth, type Session } from "../auth";
 import { type Ctx, getMode, type Mode } from "../context";
 import { db } from "../db";
 import { AppError } from "../errors";
-import { getEntitlement } from "../licensing/entitlements";
+import type { PlanFeature } from "@/lib/validators/platform";
+import { getEntitlement, hasFeature } from "../licensing/entitlements";
 import { touchStore } from "../platform/activity";
 
 export type AppEnv = {
@@ -54,6 +55,19 @@ export const requireEntitlement = createMiddleware<AppEnv>(async (c, next) => {
   }
   await next();
 });
+
+/**
+ * Blocks changes to a part of the app the plan doesn't include. Reading
+ * stays possible, so data entered before a downgrade is never hidden.
+ */
+export const requireFeature = (feature: PlanFeature) =>
+  createMiddleware<AppEnv>(async (c, next) => {
+    if (c.req.method !== "GET" && c.req.method !== "HEAD") {
+      const ent = await getEntitlement(db, c.get("ctx").storeId);
+      if (!hasFeature(ent, feature)) throw new AppError("PLAN_REQUIRED", feature, { feature });
+    }
+    await next();
+  });
 
 /** Restricts a route group to one deployment mode. */
 export const onlyMode = (mode: Mode) =>

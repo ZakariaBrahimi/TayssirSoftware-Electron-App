@@ -9,7 +9,13 @@ import {
   importProducts,
 } from "../../services/data-io";
 import { getStore } from "../../services/stores";
-import { type AppEnv, requireAdmin, requireEntitlement, validate } from "../context";
+import {
+  type AppEnv,
+  requireAdmin,
+  requireEntitlement,
+  requireFeature,
+  validate,
+} from "../context";
 
 const csv = (body: string, name: string) =>
   new Response(body, {
@@ -53,6 +59,7 @@ export const dataRoutes = new Hono<AppEnv>()
   .post(
     "/import/products",
     requireEntitlement,
+    requireFeature("import"),
     validate("query", z.object({ dryRun: z.enum(["true", "false"]).default("true") })),
     async (c) => {
       const text = await c.req.text();

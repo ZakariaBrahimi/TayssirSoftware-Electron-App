@@ -52,6 +52,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useErrorMessage } from "@/hooks/use-error-message";
+import { useMe } from "@/hooks/use-me";
+import { Link } from "@/i18n/navigation";
 import { usernameSchema } from "@/lib/validators";
 import { type StoreUser, useUserMutations, useUsers } from "./api";
 
@@ -228,14 +230,27 @@ export function UsersManager() {
   const { remove } = useUserMutations();
   const [dialog, setDialog] = useState<{ user: StoreUser | null } | null>(null);
   const [deleting, setDeleting] = useState<StoreUser | null>(null);
+  const maxUsers = useMe().data?.entitlement.limits?.maxUsers ?? null;
+  const userCount = users.data?.length ?? 0;
+  const atLimit = maxUsers !== null && userCount >= maxUsers;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t("users")}</CardTitle>
-        <CardDescription>{t("usersDescription")}</CardDescription>
+        <CardDescription>
+          {t("usersDescription")}
+          {maxUsers !== null && (
+            <span className="ms-1">{t("usersLimit", { count: userCount, max: maxUsers })}</span>
+          )}
+          {atLimit && (
+            <Link href="/subscription" className="text-primary ms-1 font-medium hover:underline">
+              {t("usersUpgrade")}
+            </Link>
+          )}
+        </CardDescription>
         <CardAction>
-          <Button onClick={() => setDialog({ user: null })}>
+          <Button onClick={() => setDialog({ user: null })} disabled={atLimit}>
             <Plus />
             {t("newUser")}
           </Button>

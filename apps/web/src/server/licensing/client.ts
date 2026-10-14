@@ -1,4 +1,6 @@
 import type { Database } from "../db/client";
+import { AppError } from "../errors";
+import { getDeviceId } from "./entitlements";
 import { getMeta, setMeta } from "../services/meta";
 import { appVersion, VERSION_HEADER } from "../version";
 
@@ -50,4 +52,38 @@ export function startLicenseWorker(db: Database, intervalMs = 12 * 60 * 60_000) 
   setTimeout(run, 30_000).unref?.();
   timer = setInterval(run, intervalMs);
   timer.unref?.();
+}
+
+/** Activates a license key on this PC with the license server. */
+export async function activateWithKey(db: Database, key: string) {
+  const server = licenseServerUrl();
+  if (!server) throw new AppError("NOT_AVAILABLE", "No license server configured");
+  let res: Response;
+  try {
+    res = await fetch(`${server}/api/licenses/activate`, {
+      method: "POST",
+      headers: { "content-type": "application/json", [VERSION_HEADER]: appVersion() },
+      body: JSON.stringify({
+        key,
+        deviceId: await getDeviceId(db),
+        deviceName: process.env.TAYSSIR_DEVICE_NAME ?? "Desktop",
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch {
+    throw new AppError("SYNC_FAILED", "Cannot reach the license server");
+  }
+  const body = (await res.json().catch(() => null)) as {
+    token?: string;
+    error?: { code?: string };
+  } | null;
+  if (!res.ok || !body?.token) {
+    const code = body?.error?.code;
+    throw new AppError(
+      code === "LICENSE_EXPIRED" || code === "ACTIVATION_LIMIT" || code === "RATE_LIMITED"
+        ? code
+        : "LICENSE_INVALID",
+    );
+  }
+  await setMeta(db, "licenseToken", body.token);
 }

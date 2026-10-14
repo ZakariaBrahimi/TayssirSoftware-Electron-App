@@ -28,6 +28,8 @@ const IGNORED_ON_APPLY: Partial<Record<SyncTableName, string[]>> = {
     "current_period_end",
     "suspended_at",
     "suspend_reason",
+    "scheduled_plan",
+    "plan_changes_at",
   ],
   products: ["stock"],
 };

@@ -11,7 +11,13 @@ import { db } from "../../db";
 import * as customers from "../../services/customers";
 import { supplierStatement } from "../../services/purchases";
 import * as suppliers from "../../services/suppliers";
-import { type AppEnv, requireAdmin, requireEntitlement, validate } from "../context";
+import {
+  type AppEnv,
+  requireAdmin,
+  requireEntitlement,
+  validate,
+  requireFeature,
+} from "../context";
 
 export const customersRoutes = new Hono<AppEnv>()
   .use(requireEntitlement)
@@ -67,7 +73,7 @@ export const customersRoutes = new Hono<AppEnv>()
   );
 
 export const suppliersRoutes = new Hono<AppEnv>()
-  .use(requireAdmin, requireEntitlement)
+  .use(requireAdmin, requireEntitlement, requireFeature("suppliers"))
   .get("/", validate("query", partyListQuery), async (c) =>
     c.json(await suppliers.listSuppliers(db, c.get("ctx"), c.req.valid("query"))),
   )

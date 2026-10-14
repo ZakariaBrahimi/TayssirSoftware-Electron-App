@@ -5,6 +5,7 @@ import { licenses, platformPayments, stores } from "../db/schema";
 import { AppError } from "../errors";
 import { type Actor, platformCurrency } from "./access";
 import { recordAudit } from "./audit";
+import { getPlan, listPlans, monthlyValue } from "./plans";
 
 export type PaymentMethod = PlatformPaymentMethod;
 
@@ -28,6 +29,8 @@ export type RecordPaymentInput = {
   plan?: string;
   months: number;
   note?: string;
+  /** License only: one payment for life (removes the end date). */
+  lifetime?: boolean;
 };
 
 /**
@@ -48,32 +51,72 @@ export async function recordPayment(
   let periodEnd: Date | null = null;
   let plan = input.plan?.trim() || null;
 
+  let planChange: "upgrade" | "downgrade" | null = null;
+
   if (input.storeId) {
     const [store] = await db.select().from(stores).where(eq(stores.id, input.storeId));
     if (!store) throw new AppError("NOT_FOUND");
-    plan ??= store.plan === "trial" ? "standard" : store.plan;
+    plan ??=
+      store.plan === "trial"
+        ? ((await listPlans(db, { activeOnly: true }))[0]?.code ?? "standard")
+        : store.plan;
     if (input.months > 0) {
-      const paidUntil =
-        store.subscriptionStatus !== "trialing" &&
-        store.subscriptionStatus !== "canceled" &&
-        store.currentPeriodEnd
-          ? store.currentPeriodEnd.getTime()
-          : 0;
-      periodStart = new Date(Math.max(now, paidUntil));
-      periodEnd = addMonths(periodStart, input.months);
-      await db
-        .update(stores)
-        .set({ subscriptionStatus: "active", plan, currentPeriodEnd: periodEnd })
-        .where(eq(stores.id, store.id));
+      const paidUntil = store.currentPeriodEnd?.getTime() ?? 0;
+      const inPaidPeriod =
+        (store.subscriptionStatus === "active" || store.subscriptionStatus === "past_due") &&
+        paidUntil > now;
+      const update: Partial<typeof stores.$inferInsert> = { subscriptionStatus: "active" };
+
+      if (!inPaidPeriod || plan === store.plan) {
+        // New period, or a renewal of the same plan: stack after the paid period.
+        periodStart = new Date(inPaidPeriod ? paidUntil : now);
+        periodEnd = addMonths(periodStart, input.months);
+        update.plan = plan;
+        if (!inPaidPeriod) Object.assign(update, { scheduledPlan: null, planChangesAt: null });
+      } else {
+        const [oldPlan, newPlan] = await Promise.all([getPlan(db, store.plan), getPlan(db, plan)]);
+        const oldValue = monthlyValue(oldPlan);
+        const newValue = monthlyValue(newPlan);
+        if (oldValue !== null && newValue !== null && newValue < oldValue) {
+          // Downgrade: the current plan runs to the end of what was paid for.
+          planChange = "downgrade";
+          periodStart = new Date(paidUntil);
+          periodEnd = addMonths(periodStart, input.months);
+          Object.assign(update, { scheduledPlan: plan, planChangesAt: new Date(paidUntil) });
+        } else {
+          // Upgrade: starts now; unused days of the old plan become days of the new one.
+          planChange = "upgrade";
+          const unused = paidUntil - now;
+          const credit = oldValue && newValue ? (unused * oldValue) / newValue : unused;
+          periodStart = new Date(now);
+          periodEnd = new Date(addMonths(periodStart, input.months).getTime() + Math.round(credit));
+          Object.assign(update, { plan, scheduledPlan: null, planChangesAt: null });
+        }
+      }
+      update.currentPeriodEnd = periodEnd;
+      await db.update(stores).set(update).where(eq(stores.id, store.id));
     }
   } else {
     const [license] = await db.select().from(licenses).where(eq(licenses.id, input.licenseId!));
     if (!license) throw new AppError("NOT_FOUND");
     plan ??= license.plan;
-    if (input.months > 0 && license.expiresAt) {
+    const update: Partial<typeof licenses.$inferInsert> = {};
+    if (plan !== license.plan) {
+      // A license moves to the new plan with its device limit.
+      planChange = "upgrade";
+      update.plan = plan;
+      const target = await getPlan(db, plan);
+      if (target?.maxDevices) update.maxDevices = target.maxDevices;
+    }
+    if (input.lifetime) {
+      update.expiresAt = null;
+    } else if (input.months > 0 && license.expiresAt) {
       periodStart = new Date(Math.max(now, license.expiresAt.getTime()));
       periodEnd = addMonths(periodStart, input.months);
-      await db.update(licenses).set({ expiresAt: periodEnd }).where(eq(licenses.id, license.id));
+      update.expiresAt = periodEnd;
+    }
+    if (Object.keys(update).length) {
+      await db.update(licenses).set(update).where(eq(licenses.id, license.id));
     }
   }
 
@@ -108,6 +151,7 @@ export async function recordPayment(
       plan,
       licenseId: input.licenseId ?? null,
       periodEnd: periodEnd?.getTime() ?? null,
+      planChange,
     },
   });
   return payment;

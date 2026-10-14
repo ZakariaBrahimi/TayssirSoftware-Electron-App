@@ -2,10 +2,16 @@ import { Hono } from "hono";
 import { idParam, purchaseCreateInput, purchaseListQuery } from "@/lib/validators";
 import { db } from "../../db";
 import * as purchases from "../../services/purchases";
-import { type AppEnv, requireAdmin, requireEntitlement, validate } from "../context";
+import {
+  type AppEnv,
+  requireAdmin,
+  requireEntitlement,
+  validate,
+  requireFeature,
+} from "../context";
 
 export const purchasesRoutes = new Hono<AppEnv>()
-  .use(requireAdmin, requireEntitlement)
+  .use(requireAdmin, requireEntitlement, requireFeature("suppliers"))
   .get("/", validate("query", purchaseListQuery), async (c) =>
     c.json(await purchases.listPurchases(db, c.get("ctx"), c.req.valid("query"))),
   )

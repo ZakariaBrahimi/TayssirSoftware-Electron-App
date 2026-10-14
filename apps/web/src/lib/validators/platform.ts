@@ -28,6 +28,22 @@ export const PLATFORM_PAYMENT_METHODS = [
 ] as const;
 export type PlatformPaymentMethod = (typeof PLATFORM_PAYMENT_METHODS)[number];
 
+/* ------------------------------ Plan catalog ------------------------------ */
+
+/**
+ * Parts of the app a plan can include. Everything else (till, stock,
+ * customers and credit, receipts, reports, exports) is in every plan.
+ */
+export const PLAN_FEATURES = ["suppliers", "shifts", "import"] as const;
+export type PlanFeature = (typeof PLAN_FEATURES)[number];
+
+/** How a request pays: a subscription period, or a one-time PC license. */
+export const BILLING_PERIODS = ["month", "year", "lifetime"] as const;
+export type BillingPeriod = (typeof BILLING_PERIODS)[number];
+
+export const REQUEST_STATUSES = ["pending", "approved", "rejected", "canceled"] as const;
+export type RequestStatus = (typeof REQUEST_STATUSES)[number];
+
 const pagination = {
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -139,16 +155,15 @@ export const AUDIT_ACTIONS = [
   "payment.create",
   "payment.void",
   "platform.settings",
+  "plan.create",
+  "plan.update",
+  "request.approve",
+  "request.reject",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
-/** Public website settings (landing page, sign-up trial), edited in the console. */
-const price = z.number().int().min(0).max(100_000_000).nullable();
+/** Public website settings (landing page, sign-up trial, payment details), edited in the console. */
 export const platformSettingsInput = z.object({
-  /** Online subscription per month, in whole dinars; null = "price on request". */
-  cloudMonthly: price,
-  /** PC license, one payment, in whole dinars; null = "price on request". */
-  licenseOneTime: price,
   /** Free days for new online sign-ups. */
   trialDays: z.number().int().min(1).max(90),
   downloadUrl: z.url().refine((u) => u.startsWith("https://"), "https_only"),
@@ -159,8 +174,77 @@ export const platformSettingsInput = z.object({
     .trim()
     .regex(/^(\d{8,15})?$/, "whatsapp_digits"),
   contactEmail: z.union([z.literal(""), z.email().max(120)]),
+  /** Where shops send money (shown when they ask to pay). Empty = hidden. */
+  payeeName: z.string().trim().max(80),
+  ccpAccount: z.string().trim().max(40),
+  ripAccount: z.string().trim().max(40),
+  bankRib: z.string().trim().max(60),
+  paymentNote: z.string().trim().max(300),
 });
 export type PlatformSettingsInput = z.input<typeof platformSettingsInput>;
+
+const planPrice = z.number().int().min(0).max(100_000_000).nullable();
+const limit = z.number().int().min(1).max(1000).nullable();
+const label = (max: number) => z.string().trim().max(max);
+
+export const planInput = z.object({
+  /** Short id used in licenses and payments, e.g. "pro". Cannot change later. */
+  code: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z][a-z0-9-]{1,23}$/, "plan_code"),
+  nameEn: label(40).min(1),
+  nameFr: label(40).min(1),
+  nameAr: label(40).min(1),
+  descEn: label(160).default(""),
+  descFr: label(160).default(""),
+  descAr: label(160).default(""),
+  /** Whole dinars; null = not sold this way / price on request. */
+  monthlyPrice: planPrice,
+  yearlyPrice: planPrice,
+  licensePrice: planPrice,
+  /** null = unlimited. Devices = tills / PCs (linked desktops or license activations). */
+  maxDevices: limit,
+  maxUsers: limit,
+  features: z.array(z.enum(PLAN_FEATURES)).max(PLAN_FEATURES.length),
+  recommended: z.boolean().default(false),
+  sortOrder: z.number().int().min(0).max(1000).default(0),
+  active: z.boolean().default(true),
+});
+export type PlanInput = z.input<typeof planInput>;
+export const planUpdateInput = planInput.omit({ code: true });
+export type PlanUpdateInput = z.input<typeof planUpdateInput>;
+
+/** A shop asking to pay for a plan (approved by the platform owner). */
+export const paymentRequestInput = z.object({
+  planCode: z.string().trim().min(1).max(24),
+  period: z.enum(BILLING_PERIODS),
+  method: z.enum(PLATFORM_PAYMENT_METHODS),
+  reference: z.string().trim().max(120).default(""),
+  note: z.string().trim().max(300).default(""),
+  /** Photo of the receipt, as a data URL (JPEG/PNG/WebP, about 1.5 MB at most). */
+  receipt: z
+    .string()
+    .max(2_100_000)
+    .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, "receipt_image")
+    .nullable()
+    .default(null),
+  /** Who to call back (shown to the platform owner). */
+  contactName: z.string().trim().max(80).default(""),
+  contactPhone: z.string().trim().max(40).default(""),
+  /** Desktops without a license or store: the shop's name. */
+  shopName: z.string().trim().max(120).default(""),
+});
+export type PaymentRequestInput = z.input<typeof paymentRequestInput>;
+
+export const requestListQuery = z.object({
+  status: z.enum(REQUEST_STATUSES).optional(),
+  ...pagination,
+});
+export type RequestListQuery = z.input<typeof requestListQuery>;
+
+export const rejectInput = z.object({ reason: z.string().trim().min(1).max(300) });
 
 export const auditListQuery = z.object({
   action: z.enum(AUDIT_ACTIONS).optional(),

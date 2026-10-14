@@ -132,12 +132,15 @@ export async function createSale(
   db: Database,
   ctx: Ctx,
   input: SaleInput,
-  options: { deviceCode: string },
+  options: { deviceCode: string; shiftsEnabled?: boolean },
 ) {
   const [store] = await db.select().from(stores).where(eq(stores.id, ctx.storeId));
   if (!store) throw new AppError("NOT_FOUND");
   const shift = await findOpenShift(db, ctx);
-  if (store.requireShift && !shift) throw new AppError("SHIFT_REQUIRED");
+  // A plan without cash shifts never requires one.
+  if (store.requireShift && options.shiftsEnabled !== false && !shift) {
+    throw new AppError("SHIFT_REQUIRED");
+  }
 
   const customer = input.customerId ? await getCustomer(db, ctx, input.customerId) : null;
 

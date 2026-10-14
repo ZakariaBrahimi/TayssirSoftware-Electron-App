@@ -10,13 +10,16 @@ import { recordAudit } from "./audit";
 export type PlatformSettings = z.output<typeof platformSettingsInput>;
 
 export const DEFAULT_SETTINGS: PlatformSettings = {
-  cloudMonthly: null,
-  licenseOneTime: null,
   trialDays: TRIAL_DAYS,
   downloadUrl: "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App/releases/latest",
   contactPhone: "",
   contactWhatsapp: "",
   contactEmail: "",
+  payeeName: "",
+  ccpAccount: "",
+  ripAccount: "",
+  bankRib: "",
+  paymentNote: "",
 };
 
 /**

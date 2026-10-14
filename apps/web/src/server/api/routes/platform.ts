@@ -12,6 +12,10 @@ import {
   platformPaymentInput,
   platformPaymentListQuery,
   platformSettingsInput,
+  planInput,
+  planUpdateInput,
+  rejectInput,
+  requestListQuery,
   platformStoreListQuery,
   reasonInput,
   subscriptionInput,
@@ -29,7 +33,15 @@ import {
   setLicenseRevoked,
   updateLicense,
 } from "../../platform/licenses";
+import {
+  approveRequest,
+  getRequest,
+  listRequests,
+  pendingRequestCount,
+  rejectRequest,
+} from "../../platform/billing";
 import { getOverview } from "../../platform/overview";
+import { createPlan, listPlans, updatePlan } from "../../platform/plans";
 import { getPlatformSettings, updatePlatformSettings } from "../../platform/settings";
 import { listPayments, recordPayment, voidPayment } from "../../platform/payments";
 import {
@@ -156,7 +168,14 @@ const paymentsRoutes = new Hono<PlatformEnv>()
 /** Cloud mode: the platform owner's console API. */
 export const platformRoutes = new Hono<PlatformEnv>()
   .use(onlyMode("cloud"), requirePlatformAdmin)
-  .get("/me", (c) => c.json({ user: c.get("platformUser"), currency: platformCurrency() }))
+  .get("/me", async (c) =>
+    c.json({
+      user: c.get("platformUser"),
+      currency: platformCurrency(),
+      // Shown as a badge in the menu (0 until two-step verification is on).
+      pendingRequests: c.get("platformUser").twoFactorEnabled ? await pendingRequestCount(db) : 0,
+    }),
+  )
   .use(requireTwoFactor)
   .get("/overview", async (c) => c.json(await getOverview(db)))
   .get("/audit", validate("query", auditListQuery), async (c) =>
@@ -165,6 +184,23 @@ export const platformRoutes = new Hono<PlatformEnv>()
   .get("/settings", async (c) => c.json(await getPlatformSettings(db)))
   .put("/settings", validate("json", platformSettingsInput), async (c) =>
     c.json(await updatePlatformSettings(db, c.get("actor"), c.req.valid("json"))),
+  )
+  .get("/plans", async (c) => c.json(await listPlans(db)))
+  .post("/plans", validate("json", planInput), async (c) =>
+    c.json(await createPlan(db, c.get("actor"), c.req.valid("json")), 201),
+  )
+  .put("/plans/:code", validate("json", planUpdateInput), async (c) =>
+    c.json(await updatePlan(db, c.get("actor"), c.req.param("code"), c.req.valid("json"))),
+  )
+  .get("/requests", validate("query", requestListQuery), async (c) =>
+    c.json(await listRequests(db, c.req.valid("query"))),
+  )
+  .get("/requests/:id", async (c) => c.json(await getRequest(db, c.req.param("id"))))
+  .post("/requests/:id/approve", async (c) =>
+    c.json(await approveRequest(db, c.get("actor"), c.req.param("id"))),
+  )
+  .post("/requests/:id/reject", validate("json", rejectInput), async (c) =>
+    c.json(await rejectRequest(db, c.get("actor"), c.req.param("id"), c.req.valid("json").reason)),
   )
   .route("/stores", storesRoutes)
   .route("/licenses", licensesRoutes)

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { PlanNotice } from "@/components/plan-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useErrorMessage } from "@/hooks/use-error-message";
@@ -109,6 +110,7 @@ export function DataPanel() {
           <CardDescription>{t("importDescription", { currency })}</CardDescription>
         </CardHeader>
         <CardContent className="grid max-w-2xl gap-4">
+          <PlanNotice feature="import" />
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={busy}>
               <FileUp />

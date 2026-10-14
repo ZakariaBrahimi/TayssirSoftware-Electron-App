@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Contact,
+  Gem,
   LayoutDashboard,
   Package,
   Receipt,
@@ -22,6 +23,7 @@ export type NavKey =
   | "customers"
   | "suppliers"
   | "reports"
+  | "subscription"
   | "settings";
 
 export type NavItem = {
@@ -41,5 +43,6 @@ export const navItems: NavItem[] = [
   { href: "/purchases", key: "purchases", icon: Truck, adminOnly: true },
   { href: "/suppliers", key: "suppliers", icon: Contact, adminOnly: true },
   { href: "/reports", key: "reports", icon: BarChart3, adminOnly: true },
+  { href: "/subscription", key: "subscription", icon: Gem, adminOnly: true },
   { href: "/settings", key: "settings", icon: Settings, adminOnly: true },
 ];
