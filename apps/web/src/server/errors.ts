@@ -10,6 +10,8 @@ const STATUS = {
   INSUFFICIENT_STOCK: 409,
   /** A product sold by the piece got a fractional quantity. */
   QUANTITY_WHOLE: 422,
+  /** Services have no stock: no purchases or stock adjustments. */
+  NOT_STOCKED: 422,
   PRODUCT_INACTIVE: 409,
   INVALID_DISCOUNT: 400,
   INSUFFICIENT_PAYMENT: 400,

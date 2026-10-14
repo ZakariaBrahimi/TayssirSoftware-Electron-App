@@ -207,7 +207,16 @@
     "scaleCode": "Scale item code",
     "scaleCodeHint": "The code of this product in your label scale (up to 5 digits).",
     "vatRate": "VAT rate",
-    "vatRateHint": "Leave empty to use the shop's rate ({rate} %). Use 0 for exempt products."
+    "vatRateHint": "Leave empty to use the shop's rate ({rate} %). Use 0 for exempt products.",
+    "kind": "Type",
+    "kind_product": "Product",
+    "kind_productHint": "Goods with stock: bought, counted and sold.",
+    "kind_service": "Service",
+    "kind_serviceHint": "Repairs, printing, installation… no stock.",
+    "serviceNoStock": "Services have no stock: they are never out of stock and stay out of stock alerts and reorders.",
+    "openPrice": "Price typed at the till",
+    "openPriceHint": "The cashier enters the price at each sale (e.g. a repair). The sale price above is only a suggestion.",
+    "priceAtTill": "Price at till"
   },
   "pos": {
     "title": "Point of sale",
@@ -256,7 +265,12 @@
     "inStockMeasured": "{amount} in stock",
     "weight": "Weight in {unit}",
     "addToCart": "Add to cart",
-    "variantCount": "{count, plural, one {# variant} other {# variants}}"
+    "variantCount": "{count, plural, one {# variant} other {# variants}}",
+    "typedPrice": "price typed",
+    "priceAtTill": "Price at till",
+    "service": "Service",
+    "typePrice": "Type the price for this sale.",
+    "price": "Price"
   },
   "sales": {
     "title": "Sales",
@@ -544,7 +558,8 @@
     "PLAN_LIMIT": "You have reached your plan's limit. Upgrade to add more.",
     "PRICE_NOT_SET": "This plan has no price for this period yet. Contact us.",
     "REQUEST_PENDING": "You already have a request waiting for confirmation.",
-    "QUANTITY_WHOLE": "This product is sold by the piece: use a whole number."
+    "QUANTITY_WHOLE": "This product is sold by the piece: use a whole number.",
+    "NOT_STOCKED": "Services have no stock: they can't be bought or adjusted."
   },
   "banner": {
     "trial": "Trial: {days, plural, one {# day} other {# days}} left.",
@@ -698,7 +713,8 @@
     "invalid_vat_rate": "VAT rate must be between 0 and 100",
     "invalid_variant": "variant: fill family, option and value columns (max 30 characters)",
     "inconsistent_options": "options differ from the other rows of this family",
-    "duplicate_variant": "this variant appears twice in the family"
+    "duplicate_variant": "this variant appears twice in the family",
+    "invalid_type": "type must be product or service"
   },
   "platform": {
     "title": "Platform console",

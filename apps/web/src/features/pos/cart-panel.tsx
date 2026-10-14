@@ -16,7 +16,7 @@ import {
   type Unit,
 } from "@/lib/quantity";
 import { QuantityInput } from "./quantity-input";
-import type { Cart } from "./use-cart";
+import { type Cart, isService, linePrice, quantityInCart } from "./use-cart";
 
 export function CartPanel({
   cart,
@@ -60,23 +60,28 @@ export function CartPanel({
           <p className="text-muted-foreground p-6 text-center text-sm">{t("emptyCart")}</p>
         ) : (
           <ul className="divide-y">
-            {cart.lines.map(({ product, quantity, discount }) => {
-              const over = quantity > product.stock;
+            {cart.lines.map((line) => {
+              const { key, product, quantity, discount } = line;
+              const price = linePrice(line);
+              // Over all the lines of the product (open prices make several).
+              const over =
+                !isService(product) && quantityInCart(cart.lines, product.id) > product.stock;
               return (
-                <li key={product.id} className="grid gap-2 px-4 py-3">
+                <li key={key} className="grid gap-2 px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{product.name}</p>
                       <p className="text-muted-foreground text-xs tabular-nums">
-                        {money.format(product.salePrice)}
+                        {money.format(price)}
                         {isMeasured(product.unit) && ` / ${UNIT_SYMBOLS[product.unit as Unit]}`}
+                        {product.openPrice && ` · ${t("typedPrice")}`}
                       </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon-sm"
                       className="-me-2 -mt-1"
-                      onClick={() => cart.remove(product.id)}
+                      onClick={() => cart.remove(key)}
                       aria-label="remove"
                     >
                       <X />
@@ -87,9 +92,7 @@ export function CartPanel({
                       <Button
                         variant="outline"
                         size="icon-sm"
-                        onClick={() =>
-                          cart.setQuantity(product.id, quantity - quantityStep(product.unit))
-                        }
+                        onClick={() => cart.setQuantity(key, quantity - quantityStep(product.unit))}
                         aria-label="-1"
                       >
                         <Minus />
@@ -98,7 +101,7 @@ export function CartPanel({
                         aria-label={t("qty")}
                         value={quantity}
                         unit={product.unit}
-                        onCommit={(q) => cart.setQuantity(product.id, q)}
+                        onCommit={(q) => cart.setQuantity(key, q)}
                         className={cn(
                           "h-8 text-center",
                           isMeasured(product.unit) ? "w-20" : "w-14",
@@ -113,16 +116,14 @@ export function CartPanel({
                       <Button
                         variant="outline"
                         size="icon-sm"
-                        onClick={() =>
-                          cart.setQuantity(product.id, quantity + quantityStep(product.unit))
-                        }
+                        onClick={() => cart.setQuantity(key, quantity + quantityStep(product.unit))}
                         aria-label="+1"
                       >
                         <Plus />
                       </Button>
                     </div>
                     <span className="font-semibold tabular-nums">
-                      {money.format(lineAmount(product.salePrice, quantity) - discount)}
+                      {money.format(lineAmount(price, quantity) - discount)}
                     </span>
                   </div>
                   {over && (
@@ -166,7 +167,13 @@ export function CartPanel({
         <Button
           size="lg"
           className="mt-2 h-12 text-base"
-          disabled={cart.lines.length === 0 || cart.lines.some((l) => l.quantity > l.product.stock)}
+          disabled={
+            cart.lines.length === 0 ||
+            cart.lines.some(
+              (l) =>
+                !isService(l.product) && quantityInCart(cart.lines, l.product.id) > l.product.stock,
+            )
+          }
           onClick={onCheckout}
         >
           {t("charge", { amount: money.format(cart.total) })}

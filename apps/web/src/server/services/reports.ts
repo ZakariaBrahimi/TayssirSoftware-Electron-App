@@ -242,10 +242,12 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
 export type SalesReport = Awaited<ReturnType<typeof salesReport>>;
 
 export async function inventoryOverview(db: Executor, ctx: Ctx) {
+  // Services have no stock: they don't count in stock value or alerts.
   const live = and(
     eq(products.storeId, ctx.storeId),
     eq(products.isActive, true),
     isNull(products.deletedAt),
+    eq(products.kind, "product"),
   );
   const [totals] = await db
     .select({

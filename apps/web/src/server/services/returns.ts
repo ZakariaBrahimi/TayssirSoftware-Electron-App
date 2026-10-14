@@ -40,10 +40,10 @@ export async function createReturn(
       productIds.length
         ? (
             await tx
-              .select({ id: products.id, unit: products.unit })
+              .select({ id: products.id, unit: products.unit, kind: products.kind })
               .from(products)
               .where(inArray(products.id, productIds))
-          ).map((p) => [p.id, p.unit])
+          ).map((p) => [p.id, p])
         : [],
     );
     const returned = await tx
@@ -76,7 +76,7 @@ export async function createReturn(
       const line = lines.find((l) => l.id === saleItemId);
       if (!line) throw new AppError("NOT_FOUND", undefined, { saleItemId });
       const already = returnedBy.get(saleItemId) ?? 0;
-      if (!Number.isInteger(quantity) && !isMeasured(unitOf.get(line.productId ?? ""))) {
+      if (!Number.isInteger(quantity) && !isMeasured(unitOf.get(line.productId ?? "")?.unit)) {
         throw new AppError("QUANTITY_WHOLE", undefined, { name: line.productName });
       }
       if (round3(already + quantity - line.quantity) > 0) {
@@ -94,7 +94,8 @@ export async function createReturn(
         refundAmount,
         // The refund gives back the VAT it includes.
         taxAmount: includedTax(refundAmount, line.taxRate),
-        unitCost: line.unitCost,
+        // Services don't go back in stock: no cost is given back.
+        unitCost: unitOf.get(line.productId ?? "")?.kind === "service" ? 0 : line.unitCost,
       });
     }
 

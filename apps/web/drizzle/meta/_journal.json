@@ -57,6 +57,13 @@
       "when": 1791985386772,
       "tag": "0007_shop_type_vat",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791989465699,
+      "tag": "0008_services",
+      "breakpoints": true
     }
   ]
 }

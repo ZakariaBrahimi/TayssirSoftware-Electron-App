@@ -207,7 +207,16 @@
     "scaleCode": "Code article balance",
     "scaleCodeHint": "Le code de ce produit dans votre balance étiqueteuse (5 chiffres max).",
     "vatRate": "Taux de TVA",
-    "vatRateHint": "Laissez vide pour le taux du magasin ({rate} %). Mettez 0 pour les produits exonérés."
+    "vatRateHint": "Laissez vide pour le taux du magasin ({rate} %). Mettez 0 pour les produits exonérés.",
+    "kind": "Type",
+    "kind_product": "Produit",
+    "kind_productHint": "Marchandise en stock : achetée, comptée et vendue.",
+    "kind_service": "Service",
+    "kind_serviceHint": "Réparation, impression, installation… sans stock.",
+    "serviceNoStock": "Les services n’ont pas de stock : jamais en rupture, ils restent hors des alertes de stock et du réapprovisionnement.",
+    "openPrice": "Prix saisi à la caisse",
+    "openPriceHint": "Le caissier saisit le prix à chaque vente (ex. une réparation). Le prix de vente ci-dessus n’est qu’une suggestion.",
+    "priceAtTill": "Prix à la caisse"
   },
   "pos": {
     "title": "Caisse",
@@ -256,7 +265,12 @@
     "inStockMeasured": "{amount} en stock",
     "weight": "Poids en {unit}",
     "addToCart": "Ajouter au panier",
-    "variantCount": "{count, plural, one {# variante} other {# variantes}}"
+    "variantCount": "{count, plural, one {# variante} other {# variantes}}",
+    "typedPrice": "prix saisi",
+    "priceAtTill": "Prix à la caisse",
+    "service": "Service",
+    "typePrice": "Saisissez le prix pour cette vente.",
+    "price": "Prix"
   },
   "sales": {
     "title": "Ventes",
@@ -544,7 +558,8 @@
     "PLAN_LIMIT": "Vous avez atteint la limite de votre formule. Passez à une formule supérieure pour en ajouter.",
     "PRICE_NOT_SET": "Cette formule n'a pas encore de prix pour cette période. Contactez-nous.",
     "REQUEST_PENDING": "Vous avez déjà une demande en attente de confirmation.",
-    "QUANTITY_WHOLE": "Ce produit se vend à la pièce : utilisez un nombre entier."
+    "QUANTITY_WHOLE": "Ce produit se vend à la pièce : utilisez un nombre entier.",
+    "NOT_STOCKED": "Les services n’ont pas de stock : ils ne peuvent pas être achetés ni ajustés."
   },
   "banner": {
     "trial": "Essai : {days, plural, one {# jour restant} other {# jours restants}}.",
@@ -698,7 +713,8 @@
     "invalid_vat_rate": "le taux de TVA doit être entre 0 et 100",
     "invalid_variant": "variante : remplissez les colonnes famille, option et valeur (30 caractères max.)",
     "inconsistent_options": "options différentes des autres lignes de cette famille",
-    "duplicate_variant": "cette variante apparaît deux fois dans la famille"
+    "duplicate_variant": "cette variante apparaît deux fois dans la famille",
+    "invalid_type": "le type doit être produit ou service"
   },
   "platform": {
     "title": "Console plateforme",

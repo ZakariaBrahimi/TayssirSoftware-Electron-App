@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import type { Ctx } from "../context";
 import type { Executor } from "../db/client";
 import { products, stockMovements, type StockMovementReason } from "../db/schema";
@@ -11,6 +11,9 @@ import { col } from "../db/sql";
  *
  * With `requireAvailable`, the update only happens if enough stock is left
  * (guards against concurrent sales overselling); returns null otherwise.
+ *
+ * Services (repairs, printing...) have no stock: nothing is recorded and
+ * the move always succeeds.
  */
 export async function moveStock(
   db: Executor,
@@ -24,7 +27,11 @@ export async function moveStock(
     requireAvailable?: boolean;
   },
 ): Promise<{ stock: number } | null> {
-  const where = [eq(products.id, input.productId), eq(products.storeId, ctx.storeId)];
+  const where = [
+    eq(products.id, input.productId),
+    eq(products.storeId, ctx.storeId),
+    ne(products.kind, "service"),
+  ];
   if (input.requireAvailable) {
     // Rounded: measured quantities (0.75 kg) must not drift (0.1 + 0.2).
     where.push(sql`round(${products.stock} + ${input.change}, 3) >= 0`);
@@ -37,7 +44,19 @@ export async function moveStock(
     })
     .where(and(...where))
     .returning({ stock: products.stock });
-  if (!row) return null;
+  if (!row) {
+    const [service] = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(
+        and(
+          eq(products.id, input.productId),
+          eq(products.storeId, ctx.storeId),
+          eq(products.kind, "service"),
+        ),
+      );
+    return service ? { stock: 0 } : null;
+  }
 
   await db.insert(stockMovements).values({
     storeId: ctx.storeId,

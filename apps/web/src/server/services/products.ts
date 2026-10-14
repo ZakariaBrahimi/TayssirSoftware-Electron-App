@@ -34,6 +34,8 @@ const productColumns = {
   lowStockThreshold: products.lowStockThreshold,
   unit: products.unit,
   scaleCode: products.scaleCode,
+  kind: products.kind,
+  openPrice: products.openPrice,
   taxRate: products.taxRate,
   familyId: products.familyId,
   familyName: productFamilies.name,
@@ -84,6 +86,9 @@ export async function listProducts(
   }
   if (query.categoryId) filters.push(eq(products.categoryId, query.categoryId));
   if (query.brandId) filters.push(eq(products.brandId, query.brandId));
+  if (query.kind) filters.push(eq(products.kind, query.kind));
+  // Stock filters only concern products (services have no stock).
+  if (query.stock !== "all") filters.push(eq(products.kind, "product"));
   if (query.stock === "out") filters.push(lte(products.stock, 0));
   if (query.stock === "low") filters.push(lte(products.stock, products.lowStockThreshold));
   const where = and(...filters);
@@ -185,8 +190,10 @@ export async function generateUniqueBarcode(db: Executor, ctx: Ctx) {
   throw new AppError("INTERNAL_ERROR", "Could not generate a unique barcode");
 }
 
-function assertPrices(input: { costPrice?: number; salePrice?: number }) {
+function assertPrices(input: { costPrice?: number; salePrice?: number; openPrice?: boolean }) {
+  // An open price is only a suggestion: it may be anything.
   if (
+    !input.openPrice &&
     input.costPrice !== undefined &&
     input.salePrice !== undefined &&
     input.salePrice < input.costPrice
@@ -205,7 +212,9 @@ export async function createProduct(
 ) {
   assertPrices(input);
   if (await isBarcodeTaken(db, ctx, input.barcode)) throw new AppError("BARCODE_TAKEN");
-  const { stock, ...fields } = input;
+  const { stock: typedStock, ...fields } = input;
+  // Services have no stock.
+  const stock = input.kind === "service" ? 0 : typedStock;
   const id = await db.transaction(async (tx) => {
     const [row] = await tx
       .insert(products)
@@ -227,6 +236,7 @@ export async function updateProduct(db: Database, ctx: Ctx, id: string, input: P
   assertPrices({
     costPrice: input.costPrice ?? current.costPrice,
     salePrice: input.salePrice ?? current.salePrice,
+    openPrice: input.openPrice ?? current.openPrice,
   });
   if (input.barcode && (await isBarcodeTaken(db, ctx, input.barcode, id))) {
     throw new AppError("BARCODE_TAKEN");
@@ -251,6 +261,9 @@ export async function deleteProduct(db: Executor, ctx: Ctx, id: string) {
 
 export async function adjustStock(db: Database, ctx: Ctx, id: string, input: StockAdjustmentInput) {
   const product = await getProduct(db, ctx, id);
+  if (product.kind === "service") {
+    throw new AppError("NOT_STOCKED", undefined, { name: product.name });
+  }
   if (!isMeasured(product.unit) && !Number.isInteger(input.change)) {
     throw new AppError("QUANTITY_WHOLE", undefined, { name: product.name });
   }

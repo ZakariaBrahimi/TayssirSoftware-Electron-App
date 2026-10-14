@@ -31,7 +31,7 @@ export function ProductPicker({
   const [open, setOpen] = useState(false);
   const q = useDebouncedValue(search.trim(), 200);
   const results = useProducts(
-    { q, includeInactive: "true", pageSize: 12, sort: "name" },
+    { q, includeInactive: "true", kind: "product", pageSize: 12, sort: "name" },
     q.length > 0,
   );
 

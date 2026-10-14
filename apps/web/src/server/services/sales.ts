@@ -33,6 +33,9 @@ export type CatalogEntry = {
   unit: string;
   /** VAT rate override (percent); null uses the store's rate. */
   taxRate?: number | null;
+  /** Services have no stock; open-price products take the typed price. */
+  kind?: string;
+  openPrice?: boolean;
 };
 
 /** The store's VAT settings (off: no VAT on the sale). */
@@ -60,18 +63,29 @@ export function priceSale(
   catalog: Map<string, CatalogEntry>,
   tax: SaleTax = { enabled: false, rate: 0 },
 ) {
-  // Merge duplicate lines for the same product.
-  const merged = new Map<string, { quantity: number; discount: number }>();
+  // Merge duplicate lines for the same product (and the same typed price).
+  const merged = new Map<
+    string,
+    { productId: string; quantity: number; discount: number; unitPrice?: number }
+  >();
   for (const item of input.items) {
-    const prev = merged.get(item.productId);
-    merged.set(item.productId, {
+    const key = `${item.productId}|${item.unitPrice ?? ""}`;
+    const prev = merged.get(key);
+    merged.set(key, {
+      productId: item.productId,
       quantity: round3((prev?.quantity ?? 0) + item.quantity),
       discount: (prev?.discount ?? 0) + item.discount,
+      unitPrice: item.unitPrice,
     });
+  }
+  // Stock is checked per product, over all its lines.
+  const wanted = new Map<string, number>();
+  for (const m of merged.values()) {
+    wanted.set(m.productId, round3((wanted.get(m.productId) ?? 0) + m.quantity));
   }
 
   const lines: PricedLine[] = [];
-  for (const [productId, { quantity, discount }] of merged) {
+  for (const { productId, quantity, discount, unitPrice } of merged.values()) {
     const product = catalog.get(productId);
     if (!product) throw new AppError("NOT_FOUND", undefined, { productId });
     if (!product.isActive) {
@@ -80,21 +94,24 @@ export function priceSale(
     if (!isMeasured(product.unit) && !Number.isInteger(quantity)) {
       throw new AppError("QUANTITY_WHOLE", undefined, { productId, name: product.name });
     }
-    if (round3(product.stock - quantity) < 0) {
+    const requested = wanted.get(productId) ?? quantity;
+    if (product.kind !== "service" && round3(product.stock - requested) < 0) {
       throw new AppError("INSUFFICIENT_STOCK", undefined, {
         productId,
         name: product.name,
         available: product.stock,
-        requested: quantity,
+        requested,
       });
     }
-    const gross = lineAmount(product.salePrice, quantity);
+    // Only open-price products take the price typed at the till.
+    const price = product.openPrice && unitPrice !== undefined ? unitPrice : product.salePrice;
+    const gross = lineAmount(price, quantity);
     if (discount > gross) throw new AppError("INVALID_DISCOUNT", undefined, { productId });
     lines.push({
       productId,
       productName: product.name,
       barcode: product.barcode,
-      unitPrice: product.salePrice,
+      unitPrice: price,
       unitCost: product.costPrice,
       quantity,
       discount,
@@ -187,6 +204,8 @@ export async function createSale(
         isActive: products.isActive,
         unit: products.unit,
         taxRate: products.taxRate,
+        kind: products.kind,
+        openPrice: products.openPrice,
       })
       .from(products)
       .where(

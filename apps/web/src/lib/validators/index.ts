@@ -54,6 +54,9 @@ export const barcodeSchema = z
   .max(64)
   .regex(/^[A-Za-z0-9\-_.]+$/, "invalid_barcode");
 
+export const PRODUCT_KINDS = ["product", "service"] as const;
+export type ProductKind = (typeof PRODUCT_KINDS)[number];
+
 export const productBase = z.object({
   name: z.string().trim().min(1).max(120),
   barcode: barcodeSchema,
@@ -63,6 +66,10 @@ export const productBase = z.object({
   lowStockThreshold: stockAmount(1_000_000).default(5),
   /** piece, or a measured unit sold in fractions (kg, g, L, m). */
   unit: z.enum(UNITS).default("piece"),
+  /** Services (repairs, printing...) have no stock. */
+  kind: z.enum(PRODUCT_KINDS).default("product"),
+  /** The price is typed at the till; salePrice is the suggested price. */
+  openPrice: z.boolean().default(false),
   /** Item code programmed in a label scale (scale barcodes), digits only. */
   scaleCode: z
     .string()
@@ -208,6 +215,7 @@ export const productListQuery = z.object({
   categoryId: id.optional(),
   brandId: id.optional(),
   stock: z.enum(PRODUCT_STOCK_FILTERS).default("all"),
+  kind: z.enum(PRODUCT_KINDS).optional(),
   includeInactive: booleanQuery,
   sort: z.enum(PRODUCT_SORTS).default("name"),
   ...pagination,
@@ -227,6 +235,8 @@ export const saleCreateInput = z.object({
         productId: id,
         quantity: quantity(100_000),
         discount: money.default(0),
+        /** Price typed at the till (open-price products only). */
+        unitPrice: money.optional(),
       }),
     )
     .min(1)

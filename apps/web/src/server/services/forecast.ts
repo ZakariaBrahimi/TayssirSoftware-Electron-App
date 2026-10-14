@@ -118,6 +118,8 @@ export async function stockForecast(db: Executor, ctx: Pick<Ctx, "storeId">, now
           eq(products.storeId, ctx.storeId),
           eq(products.isActive, true),
           isNull(products.deletedAt),
+          // Services have no stock to run out of.
+          eq(products.kind, "product"),
         ),
       ),
     db

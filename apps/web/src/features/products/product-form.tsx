@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Boxes, Loader2, Printer, Trash2, Wand2 } from "lucide-react";
+import { Boxes, Loader2, Package, Printer, Trash2, Wand2, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -42,6 +42,8 @@ import {
   UNITS,
   type Unit,
 } from "@/lib/quantity";
+import { cn } from "@/lib/utils";
+import { PRODUCT_KINDS, type ProductKind } from "@/lib/validators";
 import { CatalogSelect } from "../catalog/catalog-select";
 import { generateBarcode, isBarcodeAvailable, type Product, useProductMutations } from "./api";
 import { PrintLabelsDialog } from "./labels";
@@ -76,6 +78,8 @@ const schema = z
       z.coerce.number({ message: "required" }).min(0, "must_be_positive"),
     ),
     unit: z.enum(UNITS),
+    kind: z.enum(PRODUCT_KINDS),
+    openPrice: z.boolean(),
     scaleCode: z
       .string()
       .trim()
@@ -90,7 +94,8 @@ const schema = z
     brandId: z.string().nullable(),
     isActive: z.boolean(),
   })
-  .refine((v) => v.salePrice >= v.costPrice, {
+  // An open price is only a suggestion.
+  .refine((v) => v.openPrice || v.salePrice >= v.costPrice, {
     message: "price_below_cost",
     path: ["salePrice"],
   })
@@ -127,6 +132,8 @@ export function ProductForm({ product }: { product?: Product }) {
       stock: product?.stock ?? 0,
       lowStockThreshold: product?.lowStockThreshold ?? 5,
       unit: (product?.unit as Unit | undefined) ?? "piece",
+      kind: (product?.kind as ProductKind | undefined) ?? "product",
+      openPrice: product?.openPrice ?? false,
       scaleCode: product?.scaleCode ?? "",
       taxRate: product?.taxRate == null ? "" : String(product.taxRate),
       categoryId: product?.categoryId ?? null,
@@ -135,10 +142,11 @@ export function ProductForm({ product }: { product?: Product }) {
     },
   });
 
-  const [barcode, cost, price, name, unit, taxRateText] = useWatch({
+  const [barcode, cost, price, name, unit, taxRateText, kind] = useWatch({
     control: form.control,
-    name: ["barcode", "costPrice", "salePrice", "name", "unit", "taxRate"],
+    name: ["barcode", "costPrice", "salePrice", "name", "unit", "taxRate", "kind"],
   });
+  const service = kind === "service";
   const store = useSettings().data;
   const taxOn = Boolean(store?.taxEnabled);
   const rate = taxOn
@@ -191,6 +199,8 @@ export function ProductForm({ product }: { product?: Product }) {
       salePrice: money.toMinor(values.salePrice),
       lowStockThreshold: values.lowStockThreshold,
       unit: values.unit,
+      kind: values.kind,
+      openPrice: values.openPrice,
       scaleCode: values.scaleCode || null,
       taxRate: values.taxRate ? Number(values.taxRate.replace(",", ".")) : null,
       categoryId: values.categoryId,
@@ -202,7 +212,10 @@ export function ProductForm({ product }: { product?: Product }) {
         await update.mutateAsync({ id: product.id, json: payload });
         toast.success(t("updated"));
       } else {
-        await create.mutateAsync({ ...payload, stock: values.stock });
+        await create.mutateAsync({
+          ...payload,
+          stock: values.kind === "service" ? 0 : values.stock,
+        });
         toast.success(t("created"));
       }
       router.push("/products");
@@ -280,6 +293,46 @@ export function ProductForm({ product }: { product?: Product }) {
                         <FormMessage />
                       </>
                     )}
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="kind"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("kind")}</FormLabel>
+                    <div
+                      role="radiogroup"
+                      aria-label={t("kind")}
+                      className="grid gap-2 sm:grid-cols-2"
+                    >
+                      {PRODUCT_KINDS.map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          role="radio"
+                          aria-checked={field.value === k}
+                          onClick={() => field.onChange(k)}
+                          className={cn(
+                            "hover:bg-accent flex items-start gap-3 rounded-lg border p-3 text-start transition-colors",
+                            field.value === k && "border-primary bg-primary/5 ring-primary ring-1",
+                          )}
+                        >
+                          {k === "service" ? (
+                            <Wrench className="text-muted-foreground mt-0.5 size-4" />
+                          ) : (
+                            <Package className="text-muted-foreground mt-0.5 size-4" />
+                          )}
+                          <span className="grid gap-0.5">
+                            <span className="text-sm font-medium">{t(`kind_${k}`)}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {t(`kind_${k}Hint`)}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </FormItem>
                 )}
               />
@@ -414,6 +467,21 @@ export function ProductForm({ product }: { product?: Product }) {
                   )}
                 />
               )}
+              <FormField
+                control={form.control}
+                name="openPrice"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-3 sm:col-span-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>{t("openPrice")}</FormLabel>
+                      <FormDescription>{t("openPriceHint")}</FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               <div className="grid gap-2">
                 <span className="text-sm font-medium">{t("margin")}</span>
                 <div className="bg-muted flex h-9 items-center rounded-md px-3 text-sm tabular-nums">
@@ -428,7 +496,9 @@ export function ProductForm({ product }: { product?: Product }) {
               <CardTitle>{t("inventory")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              {isEdit ? (
+              {service ? (
+                <p className="text-muted-foreground text-sm sm:col-span-2">{t("serviceNoStock")}</p>
+              ) : isEdit ? (
                 <div className="grid gap-2">
                   <span className="text-sm font-medium">{t("stock")}</span>
                   <div className="flex items-center gap-2">
@@ -462,26 +532,28 @@ export function ProductForm({ product }: { product?: Product }) {
                   )}
                 />
               )}
-              <FormField
-                control={form.control}
-                name="lowStockThreshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("lowStockThreshold")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        {...amountProps}
-                        {...field}
-                        value={field.value as string | number}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {measured && (
+              {!service && (
+                <FormField
+                  control={form.control}
+                  name="lowStockThreshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("lowStockThreshold")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          {...amountProps}
+                          {...field}
+                          value={field.value as string | number}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {measured && !service && (
                 <FormField
                   control={form.control}
                   name="scaleCode"
@@ -515,7 +587,7 @@ export function ProductForm({ product }: { product?: Product }) {
             </CardContent>
           </Card>
 
-          {product && <StockHistory productId={product.id} />}
+          {product && !service && <StockHistory productId={product.id} />}
         </div>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">

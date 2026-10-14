@@ -46,6 +46,9 @@ export async function createPurchase(
     const lines = input.items.map((item) => {
       const product = byId.get(item.productId);
       if (!product) throw new AppError("NOT_FOUND", undefined, { productId: item.productId });
+      if (product.kind === "service") {
+        throw new AppError("NOT_STOCKED", undefined, { name: product.name });
+      }
       if (!isMeasured(product.unit) && !Number.isInteger(item.quantity)) {
         throw new AppError("QUANTITY_WHOLE", undefined, { name: product.name });
       }

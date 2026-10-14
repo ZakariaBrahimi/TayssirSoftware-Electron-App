@@ -13,6 +13,7 @@ import {
   Printer,
   Search,
   Trash2,
+  Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -117,10 +118,12 @@ function RowActions({ product }: { product: Row }) {
             <Pencil />
             {tc("edit")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setDialog("stock")}>
-            <Boxes />
-            {t("adjustStock")}
-          </DropdownMenuItem>
+          {product.kind !== "service" && (
+            <DropdownMenuItem onSelect={() => setDialog("stock")}>
+              <Boxes />
+              {t("adjustStock")}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => setDialog("labels")}>
             <Printer />
             {t("printLabels")}
@@ -227,9 +230,15 @@ export function ProductsList() {
           header: () => (
             <SortButton label={t("stock")} column="stock" sort={sort} onSort={resetPage(setSort)} />
           ),
-          cell: ({ row }) => (
-            <StockBadge stock={row.original.stock} threshold={row.original.lowStockThreshold} />
-          ),
+          cell: ({ row }) =>
+            row.original.kind === "service" ? (
+              <Badge variant="secondary" className="font-normal">
+                <Wrench className="size-3" />
+                {t("kind_service")}
+              </Badge>
+            ) : (
+              <StockBadge stock={row.original.stock} threshold={row.original.lowStockThreshold} />
+            ),
         }),
         helper.accessor("salePrice", {
           header: () => (
@@ -240,7 +249,12 @@ export function ProductsList() {
               onSort={resetPage(setSort)}
             />
           ),
-          cell: ({ getValue }) => <span className="tabular-nums">{money.format(getValue())}</span>,
+          cell: ({ row }) =>
+            row.original.openPrice && row.original.salePrice === 0 ? (
+              <span className="text-muted-foreground text-sm">{t("priceAtTill")}</span>
+            ) : (
+              <span className="tabular-nums">{money.format(row.original.salePrice)}</span>
+            ),
         }),
         ...(isAdmin
           ? [

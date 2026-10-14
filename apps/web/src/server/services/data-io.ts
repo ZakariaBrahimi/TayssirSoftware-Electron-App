@@ -46,6 +46,17 @@ const UNIT_ALIASES: Record<string, Unit> = {
   متر: "m",
 };
 
+/** Product types accepted in CSV files. */
+const KIND_ALIASES: Record<string, "product" | "service"> = {
+  product: "product",
+  produit: "product",
+  منتج: "product",
+  service: "service",
+  prestation: "service",
+  خدمة: "service",
+};
+const YES = ["yes", "oui", "true", "1", "نعم"];
+
 /* CSV export / import. Amounts are in major units (e.g. 120.50). */
 
 export const PRODUCT_COLUMNS = [
@@ -59,6 +70,8 @@ export const PRODUCT_COLUMNS = [
   "low_stock_threshold",
   "unit",
   "active",
+  "type",
+  "open_price",
   "vat_rate",
   // Variants: rows sharing a family are one product in several versions.
   "family",
@@ -89,6 +102,8 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
       lowStockThreshold: products.lowStockThreshold,
       unit: products.unit,
       isActive: products.isActive,
+      kind: products.kind,
+      openPrice: products.openPrice,
       taxRate: products.taxRate,
       family: productFamilies.name,
       options: productFamilies.options,
@@ -116,6 +131,8 @@ export async function exportProducts(db: Executor, ctx: Ctx, currency: string) {
       r.lowStockThreshold,
       r.unit,
       r.isActive ? "yes" : "no",
+      r.kind,
+      r.openPrice ? "yes" : "no",
       r.taxRate ?? "",
       ...variantCells(r.family, r.options, r.values),
     ]),
@@ -272,6 +289,10 @@ const HEADER_ALIASES: Record<string, Column> = {
   unité: "unit",
   active: "active",
   actif: "active",
+  type: "type",
+  kind: "type",
+  open_price: "open_price",
+  prix_libre: "open_price",
   vat_rate: "vat_rate",
   vat: "vat_rate",
   tva: "vat_rate",
@@ -330,6 +351,8 @@ export async function importProducts(
     lowStockThreshold: number | null;
     unit: Unit | null;
     isActive: boolean;
+    kind: "product" | "service" | null;
+    openPrice: boolean | null;
     /** undefined: leave as is; null: the store's rate. */
     taxRate: number | null | undefined;
     family: string;
@@ -383,6 +406,11 @@ export async function importProducts(
     ) {
       return fail("invalid_vat_rate");
     }
+    const kindRaw = get(row, "type").toLowerCase();
+    const kind = kindRaw === "" ? null : (KIND_ALIASES[kindRaw] ?? undefined);
+    if (kind === undefined) return fail("invalid_type");
+    const openRaw = get(row, "open_price").toLowerCase();
+    const openPrice = openRaw === "" ? null : YES.includes(openRaw);
     const family = get(row, "family");
     const options: string[] = [];
     const values: string[] = [];
@@ -415,6 +443,8 @@ export async function importProducts(
       unit,
       isActive: !["no", "non", "false", "0", "لا"].includes(activeRaw),
       taxRate: vat,
+      kind,
+      openPrice,
       family,
       options: family ? options : [],
       values: family ? values : [],
@@ -521,6 +551,8 @@ export async function importProducts(
             }
           : {}),
         ...(p.taxRate !== undefined ? { taxRate: p.taxRate } : {}),
+        ...(p.kind !== null ? { kind: p.kind } : {}),
+        ...(p.openPrice !== null ? { openPrice: p.openPrice } : {}),
         costPrice: p.costPrice,
         salePrice: p.salePrice,
         isActive: p.isActive,

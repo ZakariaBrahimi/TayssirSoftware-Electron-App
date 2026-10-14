@@ -261,6 +261,10 @@ export const products = sqliteTable(
     lowStockThreshold: integer("low_stock_threshold").notNull().default(5),
     /** piece, or a measured unit (kg, g, l, m) sold in fractions. */
     unit: text("unit").notNull().default("piece"),
+    /** "product" (stock is tracked) or "service" (repairs, printing: no stock). */
+    kind: text("kind").notNull().default("product"),
+    /** The price is typed at the till (salePrice is only a suggestion). */
+    openPrice: integer("open_price", { mode: "boolean" }).notNull().default(false),
     /** Item code programmed in a label scale (see stores.scaleBarcodes). */
     scaleCode: text("scale_code"),
     /** VAT rate in percent; null uses the store's default rate. */

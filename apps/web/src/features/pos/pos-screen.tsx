@@ -1,6 +1,6 @@
 "use client";
 
-import { Layers, Loader2, Printer, ScanBarcode, ShoppingCart, Wallet } from "lucide-react";
+import { Layers, Loader2, Printer, ScanBarcode, ShoppingCart, Wallet, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -30,7 +30,8 @@ import { Receipt } from "../sales/receipt";
 import { useCurrentShift } from "../shifts/api";
 import { CartPanel } from "./cart-panel";
 import { CheckoutDialog } from "./checkout-dialog";
-import { type CartProduct, useCart } from "./use-cart";
+import { PriceDialog } from "./price-dialog";
+import { type CartProduct, isService, quantityInCart, useCart } from "./use-cart";
 import { VariantPicker } from "./variant-picker";
 import { WeightDialog } from "./weight-dialog";
 import {
@@ -111,24 +112,31 @@ export function PosScreen() {
     return out;
   }, [products.data, q]);
 
-  // Weighed products clicked or typed in: ask for the weight first.
-  const [weighing, setWeighing] = useState<CartProduct | null>(null);
+  // Open-price products ask for the price, weighed ones for the weight.
+  const [pricing, setPricing] = useState<CartProduct | null>(null);
+  const [weighing, setWeighing] = useState<{ product: CartProduct; unitPrice?: number } | null>(
+    null,
+  );
 
   const addToCart = useCallback(
-    (product: CartProduct, quantity?: number) => {
+    (product: CartProduct, quantity?: number, unitPrice?: number) => {
+      if (product.openPrice && unitPrice === undefined) {
+        setPricing(product);
+        return;
+      }
       if (quantity === undefined && isMeasured(product.unit)) {
-        setWeighing(product);
+        setWeighing({ product, unitPrice });
         return;
       }
       const qty = quantity ?? 1;
-      const inCart = cart.lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
-      if (round3(product.stock - inCart - qty) < 0) {
+      const inCart = quantityInCart(cart.lines, product.id);
+      if (!isService(product) && round3(product.stock - inCart - qty) < 0) {
         toast.error(t("notEnoughStock", { available: formatQuantity(product.stock) }));
         return;
       }
-      cart.add(product, qty);
+      cart.add(product, qty, unitPrice);
     },
-    [cart, t, setWeighing],
+    [cart, t, setPricing, setWeighing],
   );
 
   // Barcode scanners type the code then press Enter.
@@ -168,6 +176,7 @@ export function PosScreen() {
           productId: l.product.id,
           quantity: l.quantity,
           discount: l.discount,
+          ...(l.unitPrice !== undefined ? { unitPrice: l.unitPrice } : {}),
         })),
         discount: cart.discount,
         customerId: customer?.id ?? null,
@@ -274,7 +283,8 @@ export function PosScreen() {
                   );
                 }
                 const p = tile.product;
-                const out = p.stock <= 0;
+                const service = isService(p);
+                const out = !service && p.stock <= 0;
                 return (
                   <button
                     key={p.id}
@@ -291,7 +301,11 @@ export function PosScreen() {
                     <span className="line-clamp-2 text-sm font-medium">{p.name}</span>
                     <span className="flex items-end justify-between gap-2">
                       <span className="font-semibold tabular-nums">
-                        {money.format(p.salePrice)}
+                        {p.openPrice && p.salePrice === 0 ? (
+                          <span className="text-sm">{t("priceAtTill")}</span>
+                        ) : (
+                          money.format(p.salePrice)
+                        )}
                         {isMeasured(p.unit) && (
                           <span className="text-muted-foreground text-xs font-normal">
                             {" "}
@@ -299,7 +313,12 @@ export function PosScreen() {
                           </span>
                         )}
                       </span>
-                      {out ? (
+                      {service ? (
+                        <Badge variant="secondary" className="font-normal">
+                          <Wrench className="size-3" />
+                          {t("service")}
+                        </Badge>
+                      ) : out ? (
                         <Badge variant="destructive">{t("outOfStock")}</Badge>
                       ) : (
                         <span
@@ -440,14 +459,31 @@ export function PosScreen() {
           focusInput();
         }}
       />
+      <PriceDialog
+        product={pricing}
+        onClose={() => {
+          setPricing(null);
+          focusInput();
+        }}
+        onConfirm={(unitPrice) => {
+          if (pricing) addToCart(pricing, undefined, unitPrice);
+          setPricing(null);
+          focusInput();
+        }}
+      />
       <WeightDialog
-        product={weighing}
+        product={
+          weighing && {
+            ...weighing.product,
+            salePrice: weighing.unitPrice ?? weighing.product.salePrice,
+          }
+        }
         onClose={() => {
           setWeighing(null);
           focusInput();
         }}
         onConfirm={(quantity) => {
-          if (weighing) addToCart(weighing, quantity);
+          if (weighing) addToCart(weighing.product, quantity, weighing.unitPrice);
           setWeighing(null);
           focusInput();
         }}
