@@ -1,6 +1,7 @@
 "use client";
 
 import { formatWithUnit } from "@/lib/quantity";
+import { formatRate, taxBreakdown } from "@/lib/tax";
 import { useTranslations } from "next-intl";
 import { useDateFormat, useMoney, useSettings } from "@/hooks/use-settings";
 import type { Sale } from "./api";
@@ -15,6 +16,7 @@ export function Receipt({ sale }: { sale: Sale }) {
   const dates = useDateFormat();
   const { data: store } = useSettings();
   const paid = Math.min(sale.amountPaid, sale.total);
+  const vat = sale.taxTotal > 0 ? taxBreakdown(sale.items, sale.discount) : [];
 
   return (
     <div className="mx-auto w-[72mm] bg-white p-2 font-mono text-[11px] leading-snug text-black">
@@ -22,6 +24,7 @@ export function Receipt({ sale }: { sale: Sale }) {
         <div className="text-sm font-bold">{store?.name}</div>
         {store?.address && <div>{store.address}</div>}
         {store?.phone && <div dir="ltr">{store.phone}</div>}
+        {store?.taxEnabled && store.taxId && <div>{t("taxId", { id: store.taxId })}</div>}
       </div>
       <div className="my-2 border-t border-dashed border-black" />
       <div className="flex justify-between">
@@ -69,6 +72,22 @@ export function Receipt({ sale }: { sale: Sale }) {
         <span>{tp("total")}</span>
         <span>{money.format(sale.total)}</span>
       </div>
+      {vat.length > 0 && (
+        <div className="my-1 text-[10px]">
+          {vat.map((row) => (
+            <div key={row.rate} className="flex justify-between">
+              <span>
+                {t("vatLine", { rate: formatRate(row.rate), base: money.format(row.base) })}
+              </span>
+              <span>{money.format(row.tax)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between">
+            <span>{t("vatIncluded")}</span>
+            <span>{money.format(sale.taxTotal)}</span>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between">
         <span>{tc(sale.paymentMethod === "credit" ? "credit" : sale.paymentMethod)}</span>
         <span>{money.format(sale.paymentMethod === "credit" ? paid : sale.amountPaid)}</span>

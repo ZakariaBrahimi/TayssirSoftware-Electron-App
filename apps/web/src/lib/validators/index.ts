@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hasAtMost3Decimals, UNITS } from "@/lib/quantity";
+import { SHOP_TYPES } from "@/lib/shop-types";
 
 /** off, weight (grams) or price (whole currency units) in scale barcodes. */
 export const SCALE_BARCODE_MODES = ["off", "weight", "price"] as const;
@@ -16,6 +17,12 @@ const quantity = (max: number) =>
 const stockAmount = (max: number) =>
   z.number().min(0).max(max).refine(hasAtMost3Decimals, "too_many_decimals");
 const positiveMoney = money.min(1);
+/** VAT rate in percent, e.g. 19 or 9.5. */
+const taxRate = z
+  .number()
+  .min(0)
+  .max(100)
+  .refine((v) => Math.round(v * 100) === v * 100, "too_many_decimals");
 const id = z.string().uuid();
 const optionalText = (max: number) => z.string().trim().max(max).nullish();
 
@@ -64,6 +71,8 @@ export const productBase = z.object({
     .nullish()
     // Leading zeros don't matter: "00123" and "123" are the same code.
     .transform((v) => (v === undefined ? undefined : v ? String(Number(v)) : null)),
+  /** VAT rate override; null uses the store's rate. */
+  taxRate: taxRate.nullish(),
   categoryId: id.nullish(),
   brandId: id.nullish(),
   isActive: z.boolean().default(true),
@@ -370,6 +379,11 @@ export const storeSettingsInput = z.object({
   reorderCoverDays: z.number().int().min(1).max(180).default(14),
   /** Label-scale barcodes (EAN-13 starting with 2): what the 5 digits hold. */
   scaleBarcodes: z.enum(SCALE_BARCODE_MODES).default("off"),
+  shopType: z.enum(SHOP_TYPES).default("general"),
+  /** VAT: prices include it; receipts and reports show it. */
+  taxEnabled: z.boolean().default(false),
+  taxRate: taxRate.default(19),
+  taxId: optionalText(40),
 });
 export type StoreSettingsInput = z.infer<typeof storeSettingsInput>;
 
@@ -389,6 +403,9 @@ export const setupInput = z.object({
   name: z.string().trim().min(1).max(80),
   username: usernameSchema,
   password: passwordSchema,
+  shopType: z.enum(SHOP_TYPES).default("general"),
+  /** Language of the starter categories. */
+  locale: z.enum(["en", "fr", "ar"]).default("fr"),
 });
 export type SetupInput = z.infer<typeof setupInput>;
 

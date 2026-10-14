@@ -2,6 +2,7 @@
 
 import {
   Banknote,
+  Landmark,
   BookUser,
   Percent,
   Receipt,
@@ -133,6 +134,15 @@ export function ReportsScreen() {
           isLoading={isPending}
           value={s && money.format(s.discounts)}
         />
+        {s && s.tax !== 0 && (
+          <StatCard
+            title={t("vatCollected")}
+            icon={Landmark}
+            isLoading={isPending}
+            value={money.format(s.tax)}
+            hint={t("vatCollectedHint")}
+          />
+        )}
         <StatCard
           title={t("refunds")}
           icon={Undo2}

@@ -7,6 +7,7 @@ import type { Database } from "../db/client";
 import { products, returnItems, saleItems, saleReturns, sales } from "../db/schema";
 import { AppError } from "../errors";
 import { isMeasured, lineAmount, round3 } from "@/lib/quantity";
+import { includedTax } from "@/lib/tax";
 import { getSale } from "./sales";
 import { findOpenShift } from "./shifts";
 import { moveStock } from "./stock";
@@ -68,6 +69,7 @@ export async function createReturn(
       productName: string;
       quantity: number;
       refundAmount: number;
+      taxAmount: number;
       unitCost: number;
     }[] = [];
     for (const [saleItemId, quantity] of requested) {
@@ -83,12 +85,15 @@ export async function createReturn(
           returnable: round3(line.quantity - already),
         });
       }
+      const refundAmount = lineRefund(line, sale, already, quantity);
       toInsert.push({
         saleItemId,
         productId: line.productId,
         productName: line.productName,
         quantity,
-        refundAmount: lineRefund(line, sale, already, quantity),
+        refundAmount,
+        // The refund gives back the VAT it includes.
+        taxAmount: includedTax(refundAmount, line.taxRate),
         unitCost: line.unitCost,
       });
     }
@@ -123,6 +128,7 @@ export async function createReturn(
         productName: i.productName,
         quantity: i.quantity,
         refundAmount: i.refundAmount,
+        taxAmount: i.taxAmount,
       })),
     );
 

@@ -205,7 +205,9 @@
     "unit_m": "Length: metre (m)",
     "unitChangeHint": "Prices are per unit: check them after changing how the product is sold.",
     "scaleCode": "Scale item code",
-    "scaleCodeHint": "The code of this product in your label scale (up to 5 digits)."
+    "scaleCodeHint": "The code of this product in your label scale (up to 5 digits).",
+    "vatRate": "VAT rate",
+    "vatRateHint": "Leave empty to use the shop's rate ({rate} %). Use 0 for exempt products."
   },
   "pos": {
     "title": "Point of sale",
@@ -305,7 +307,10 @@
     "saleNo": "Sale {id}",
     "cashier": "Cashier: {name}",
     "thankYou": "Thank you for your purchase!",
-    "voided": "VOIDED"
+    "voided": "VOIDED",
+    "taxId": "Tax ID: {id}",
+    "vatLine": "VAT {rate} on {base}",
+    "vatIncluded": "Total VAT included"
   },
   "reports": {
     "title": "Reports",
@@ -334,7 +339,9 @@
     "refunds": "Refunds",
     "grossSales": "Gross sales",
     "soldOnCredit": "Sold on account",
-    "paymentsReceived": "Account payments received"
+    "paymentsReceived": "Account payments received",
+    "vatCollected": "VAT collected",
+    "vatCollectedHint": "Included in revenue, excluded from profit"
   },
   "settings": {
     "title": "Settings",
@@ -463,7 +470,13 @@
     "scale_off": "Not used",
     "scale_weight": "Labels contain the weight",
     "scale_price": "Labels contain the price",
-    "scaleBarcodesHint": "Barcodes printed by a weighing scale (starting with 2). Give each weighed product its scale item code."
+    "scaleBarcodesHint": "Barcodes printed by a weighing scale (starting with 2). Give each weighed product its scale item code.",
+    "vat": "VAT",
+    "taxEnabled": "Charge VAT",
+    "taxEnabledHint": "Your prices include VAT. Receipts show the VAT breakdown and reports show the VAT collected.",
+    "taxRate": "Default rate",
+    "taxId": "Tax ID (NIF)",
+    "taxIdHint": "Printed on receipts. Optional."
   },
   "validation": {
     "invalid": "Invalid value",
@@ -488,7 +501,9 @@
     "range_1_90": "Enter a number between 1 and 90.",
     "range_1_180": "Enter a number between 1 and 180.",
     "invalid_scale_code": "Up to 5 digits.",
-    "too_many_decimals": "Use at most 3 decimals."
+    "too_many_decimals": "Use at most 3 decimals.",
+    "range_0_100": "Between 0 and 100",
+    "invalid_rate": "Enter a rate such as 19 or 9.5"
   },
   "errors": {
     "UNAUTHORIZED": "Your session has expired. Please sign in again.",
@@ -1549,5 +1564,17 @@
     "errorNoVariant": "Turn on at least one variant.",
     "errorRows": "Check the highlighted prices and quantities (sale price ≥ cost).",
     "chooseVariant": "Choose a variant"
+  },
+  "shopTypes": {
+    "label": "Type of shop",
+    "question": "What kind of shop is it?",
+    "settingsHint": "Adapts a few defaults (e.g. clothing shops create products with sizes and colours first).",
+    "supermarket": "Supermarket / grocery",
+    "fashion": "Clothing & shoes",
+    "phones": "Phones & electronics",
+    "cosmetics": "Cosmetics & perfume",
+    "hardware": "Hardware",
+    "stationery": "Stationery & books",
+    "general": "Other / general shop"
   }
 }

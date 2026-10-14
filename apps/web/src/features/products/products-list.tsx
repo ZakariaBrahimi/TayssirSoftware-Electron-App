@@ -43,7 +43,8 @@ import { Switch } from "@/components/ui/switch";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { useErrorMessage } from "@/hooks/use-error-message";
-import { useMoney } from "@/hooks/use-settings";
+import { useMoney, useSettings } from "@/hooks/use-settings";
+import { usesVariants } from "@/lib/shop-types";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { PRODUCT_SORTS, PRODUCT_STOCK_FILTERS } from "@/lib/validators";
 import { useCatalogList } from "../catalog/api";
@@ -162,6 +163,8 @@ export function ProductsList() {
   const t = useTranslations("products");
   const tv = useTranslations("variants");
   const money = useMoney();
+  // Clothing shops mostly create products with sizes and colours.
+  const variantsFirst = usesVariants(useSettings().data?.shopType);
   const router = useRouter();
   const { isAdmin } = useCurrentUser();
   const categories = useCatalogList("categories");
@@ -275,13 +278,13 @@ export function ProductsList() {
         actions={
           isAdmin && (
             <>
-              <Button asChild variant="outline">
+              <Button asChild variant={variantsFirst ? "default" : "outline"}>
                 <Link href="/products/families/new">
                   <Layers />
                   {tv("newShort")}
                 </Link>
               </Button>
-              <Button asChild>
+              <Button asChild variant={variantsFirst ? "outline" : "default"}>
                 <Link href="/products/new">
                   <Plus />
                   {t("new")}

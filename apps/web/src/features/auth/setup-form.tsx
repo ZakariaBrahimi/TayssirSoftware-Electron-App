@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -24,7 +24,9 @@ import { useAppInfo } from "@/hooks/use-me";
 import { Link, useRouter } from "@/i18n/navigation";
 import { api, unwrap } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
+import { SHOP_TYPES } from "@/lib/shop-types";
 import { usernameSchema } from "@/lib/validators";
+import { ShopTypePicker } from "./shop-type-picker";
 
 const schema = z
   .object({
@@ -37,6 +39,7 @@ const schema = z
     username: usernameSchema.min(3, "username_too_short"),
     password: z.string().min(6, "password_too_short"),
     confirmPassword: z.string(),
+    shopType: z.enum(SHOP_TYPES),
   })
   .refine((v) => v.password === v.confirmPassword, {
     message: "passwords_mismatch",
@@ -48,6 +51,8 @@ export function SetupForm({ mode = "setup" }: { mode?: "setup" | "signup" }) {
   const router = useRouter();
   const errorMessage = useErrorMessage();
   const info = useAppInfo();
+  const locale = useLocale();
+  const ts = useTranslations("shopTypes");
 
   useEffect(() => {
     if (!info.data) return;
@@ -64,12 +69,17 @@ export function SetupForm({ mode = "setup" }: { mode?: "setup" | "signup" }) {
       username: "",
       password: "",
       confirmPassword: "",
+      shopType: "general",
     },
   });
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof schema>) => {
-      const json = { ...values, currency: values.currency.toUpperCase() };
+      const json = {
+        ...values,
+        currency: values.currency.toUpperCase(),
+        locale: locale as "en" | "fr" | "ar",
+      };
       await unwrap(mode === "signup" ? api.signup.$post({ json }) : api.setup.$post({ json }));
       // Sign the new administrator in straight away.
       await authClient.signIn.username({ username: values.username, password: values.password });
@@ -116,6 +126,16 @@ export function SetupForm({ mode = "setup" }: { mode?: "setup" | "signup" }) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="shopType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{ts("question")}</FormLabel>
+                  <ShopTypePicker value={field.value} onChange={field.onChange} />
+                </FormItem>
+              )}
+            />
             <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
               {field("storeName", t("storeName"), { autoFocus: true })}
               {field("currency", t("currency"), { maxLength: 3, className: "uppercase" })}

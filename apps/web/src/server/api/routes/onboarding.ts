@@ -26,7 +26,12 @@ export const setupRoutes = new Hono()
   .post("/", validate("json", setupInput), async (c) => {
     if (!(await needsSetup(db))) throw new AppError("SETUP_ALREADY_DONE");
     const input = c.req.valid("json");
-    const store = await createStore(db, { name: input.storeName, currency: input.currency });
+    const store = await createStore(db, {
+      name: input.storeName,
+      currency: input.currency,
+      shopType: input.shopType,
+      locale: input.locale,
+    });
     await createStoreUser(db, store.id, {
       name: input.name,
       username: input.username,
@@ -44,7 +49,12 @@ export const signupRoutes = new Hono()
     const { trialDays } = await getPlatformSettings(db);
     const store = await createStore(
       db,
-      { name: input.storeName, currency: input.currency },
+      {
+        name: input.storeName,
+        currency: input.currency,
+        shopType: input.shopType,
+        locale: input.locale,
+      },
       trialDays,
     );
     await createStoreUser(db, store.id, {

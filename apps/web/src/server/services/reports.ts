@@ -50,6 +50,7 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       cost: sql<number>`coalesce(sum(${sales.totalCost}), 0)`,
       discounts: sql<number>`coalesce(sum(${sales.discount}), 0)`,
       onCredit: sql<number>`coalesce(sum(${sales.balanceDue}), 0)`,
+      tax: sql<number>`coalesce(sum(${sales.taxTotal}), 0)`,
       salesCount: sql<number>`count(*)`,
     })
     .from(sales)
@@ -59,6 +60,7 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
     .select({
       refunds: sql<number>`coalesce(sum(${saleReturns.refundAmount}), 0)`,
       restockedCost: sql<number>`coalesce(sum(${saleReturns.restockedCost}), 0)`,
+      tax: sql<number>`coalesce(sum((select sum(${returnItems.taxAmount}) from ${returnItems} where ${returnItems.returnId} = ${col("sale_returns", "id")})), 0)`,
       count: sql<number>`count(*)`,
     })
     .from(saleReturns)
@@ -87,6 +89,7 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       date: saleDay,
       revenue: sql<number>`sum(${sales.total})`,
       cost: sql<number>`sum(${sales.totalCost})`,
+      tax: sql<number>`sum(${sales.taxTotal})`,
       salesCount: sql<number>`count(*)`,
     })
     .from(sales)
@@ -99,19 +102,29 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       date: returnDay,
       refunds: sql<number>`sum(${saleReturns.refundAmount})`,
       restockedCost: sql<number>`sum(${saleReturns.restockedCost})`,
+      tax: sql<number>`coalesce(sum((select sum(${returnItems.taxAmount}) from ${returnItems} where ${returnItems.returnId} = ${col("sale_returns", "id")})), 0)`,
     })
     .from(saleReturns)
     .where(returnsInRange)
     .groupBy(returnDay);
 
-  const days = new Map<string, { revenue: number; cost: number; salesCount: number }>();
+  const days = new Map<
+    string,
+    { revenue: number; cost: number; tax: number; salesCount: number }
+  >();
   for (const d of dailySales) {
-    days.set(d.date, { revenue: n(d.revenue), cost: n(d.cost), salesCount: n(d.salesCount) });
+    days.set(d.date, {
+      revenue: n(d.revenue),
+      cost: n(d.cost),
+      tax: n(d.tax),
+      salesCount: n(d.salesCount),
+    });
   }
   for (const r of dailyReturns) {
-    const d = days.get(r.date) ?? { revenue: 0, cost: 0, salesCount: 0 };
+    const d = days.get(r.date) ?? { revenue: 0, cost: 0, tax: 0, salesCount: 0 };
     d.revenue -= n(r.refunds);
     d.cost -= n(r.restockedCost);
+    d.tax -= n(r.tax);
     days.set(r.date, d);
   }
 
@@ -120,6 +133,8 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
   const returnedAmount = sql<number>`coalesce((select sum(${returnItems.refundAmount}) from ${returnItems} where ${returnItems.saleItemId} = ${col("sale_items", "id")}), 0)`;
   const netQty = sql<number>`sum(${saleItems.quantity} - ${returnedQty})`;
   const netRevenue = sql<number>`sum(${saleItems.lineTotal} - ${returnedAmount})`;
+  const returnedTax = sql<number>`coalesce((select sum(${returnItems.taxAmount}) from ${returnItems} where ${returnItems.saleItemId} = ${col("sale_items", "id")}), 0)`;
+  const netTax = sql<number>`sum(${saleItems.taxAmount} - ${returnedTax})`;
   const netCost = sql<number>`sum(${saleItems.unitCost} * (${saleItems.quantity} - ${returnedQty}))`;
 
   const topProducts = await db
@@ -129,6 +144,7 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       quantity: netQty,
       revenue: netRevenue,
       cost: netCost,
+      tax: netTax,
     })
     .from(saleItems)
     .innerJoin(sales, eq(saleItems.saleId, sales.id))
@@ -165,6 +181,9 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
   const revenue = n(totals.gross) - n(refundTotals.refunds);
   const cost = n(totals.cost) - n(refundTotals.restockedCost);
   const salesCount = n(totals.salesCount);
+  // VAT collected belongs to the tax office: profit is counted without it.
+  const tax = n(totals.tax) - n(refundTotals.tax);
+  const netOfTax = revenue - tax;
 
   return {
     summary: {
@@ -173,8 +192,9 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       refunds: n(refundTotals.refunds),
       returnsCount: n(refundTotals.count),
       cost,
-      profit: revenue - cost,
-      margin: revenue > 0 ? (revenue - cost) / revenue : 0,
+      tax,
+      profit: netOfTax - cost,
+      margin: netOfTax > 0 ? (netOfTax - cost) / netOfTax : 0,
       discounts: n(totals.discounts),
       salesCount,
       itemsSold: n(itemsSold),
@@ -187,14 +207,14 @@ export async function salesReport(db: Executor, ctx: Ctx, query: Query) {
       .map(([date, d]) => ({
         date,
         revenue: d.revenue,
-        profit: d.revenue - d.cost,
+        profit: d.revenue - d.tax - d.cost,
         salesCount: d.salesCount,
       })),
     topProducts: topProducts.map((p) => ({
       ...p,
       quantity: n(p.quantity),
       revenue: n(p.revenue),
-      profit: n(p.revenue) - n(p.cost),
+      profit: n(p.revenue) - n(p.tax) - n(p.cost),
     })),
     byCategory: byCategory.map((c) => ({ ...c, revenue: n(c.revenue), quantity: n(c.quantity) })),
     byPaymentMethod: byPaymentMethod.map((p) => ({

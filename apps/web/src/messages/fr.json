@@ -205,7 +205,9 @@
     "unit_m": "À la longueur : mètre (m)",
     "unitChangeHint": "Les prix sont par unité : vérifiez-les après avoir changé le mode de vente.",
     "scaleCode": "Code article balance",
-    "scaleCodeHint": "Le code de ce produit dans votre balance étiqueteuse (5 chiffres max)."
+    "scaleCodeHint": "Le code de ce produit dans votre balance étiqueteuse (5 chiffres max).",
+    "vatRate": "Taux de TVA",
+    "vatRateHint": "Laissez vide pour le taux du magasin ({rate} %). Mettez 0 pour les produits exonérés."
   },
   "pos": {
     "title": "Caisse",
@@ -305,7 +307,10 @@
     "saleNo": "Vente {id}",
     "cashier": "Caissier : {name}",
     "thankYou": "Merci pour votre achat !",
-    "voided": "ANNULÉE"
+    "voided": "ANNULÉE",
+    "taxId": "NIF : {id}",
+    "vatLine": "TVA {rate} sur {base}",
+    "vatIncluded": "Total TVA incluse"
   },
   "reports": {
     "title": "Rapports",
@@ -334,7 +339,9 @@
     "refunds": "Remboursements",
     "grossSales": "Ventes brutes",
     "soldOnCredit": "Vendu à crédit",
-    "paymentsReceived": "Règlements clients reçus"
+    "paymentsReceived": "Règlements clients reçus",
+    "vatCollected": "TVA collectée",
+    "vatCollectedHint": "Incluse dans le chiffre d’affaires, exclue du bénéfice"
   },
   "settings": {
     "title": "Paramètres",
@@ -463,7 +470,13 @@
     "scale_off": "Non utilisés",
     "scale_weight": "Les étiquettes contiennent le poids",
     "scale_price": "Les étiquettes contiennent le prix",
-    "scaleBarcodesHint": "Codes-barres imprimés par une balance (commençant par 2). Donnez à chaque produit pesé son code article balance."
+    "scaleBarcodesHint": "Codes-barres imprimés par une balance (commençant par 2). Donnez à chaque produit pesé son code article balance.",
+    "vat": "TVA",
+    "taxEnabled": "Appliquer la TVA",
+    "taxEnabledHint": "Vos prix sont TTC. Les tickets affichent le détail de la TVA et les rapports la TVA collectée.",
+    "taxRate": "Taux par défaut",
+    "taxId": "Numéro fiscal (NIF)",
+    "taxIdHint": "Imprimé sur les tickets. Facultatif."
   },
   "validation": {
     "invalid": "Valeur invalide",
@@ -488,7 +501,9 @@
     "range_1_90": "Saisissez un nombre entre 1 et 90.",
     "range_1_180": "Saisissez un nombre entre 1 et 180.",
     "invalid_scale_code": "5 chiffres maximum.",
-    "too_many_decimals": "3 décimales maximum."
+    "too_many_decimals": "3 décimales maximum.",
+    "range_0_100": "Entre 0 et 100",
+    "invalid_rate": "Saisissez un taux comme 19 ou 9,5"
   },
   "errors": {
     "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
@@ -1549,5 +1564,17 @@
     "errorNoVariant": "Activez au moins une variante.",
     "errorRows": "Vérifiez les prix et quantités en rouge (prix de vente ≥ coût).",
     "chooseVariant": "Choisir une variante"
+  },
+  "shopTypes": {
+    "label": "Type de commerce",
+    "question": "Quel type de commerce ?",
+    "settingsHint": "Adapte quelques réglages (ex. les boutiques de vêtements créent d’abord des produits avec tailles et couleurs).",
+    "supermarket": "Supérette / alimentation",
+    "fashion": "Vêtements et chaussures",
+    "phones": "Téléphonie et électronique",
+    "cosmetics": "Cosmétiques et parfums",
+    "hardware": "Quincaillerie",
+    "stationery": "Papeterie et librairie",
+    "general": "Autre / commerce général"
   }
 }

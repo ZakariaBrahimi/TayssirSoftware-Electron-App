@@ -31,7 +31,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorMessage } from "@/hooks/use-error-message";
-import { useMoney } from "@/hooks/use-settings";
+import { useMoney, useSettings } from "@/hooks/use-settings";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import {
@@ -80,6 +80,12 @@ const schema = z
       .string()
       .trim()
       .regex(/^(\d{1,5})?$/, "invalid_scale_code"),
+    /** Empty: the store's VAT rate. */
+    taxRate: z
+      .string()
+      .trim()
+      .regex(/^(\d{1,3}([.,]\d{1,2})?)?$/, "invalid_rate")
+      .refine((v) => !v || Number(v.replace(",", ".")) <= 100, "invalid_rate"),
     categoryId: z.string().nullable(),
     brandId: z.string().nullable(),
     isActive: z.boolean(),
@@ -122,23 +128,32 @@ export function ProductForm({ product }: { product?: Product }) {
       lowStockThreshold: product?.lowStockThreshold ?? 5,
       unit: (product?.unit as Unit | undefined) ?? "piece",
       scaleCode: product?.scaleCode ?? "",
+      taxRate: product?.taxRate == null ? "" : String(product.taxRate),
       categoryId: product?.categoryId ?? null,
       brandId: product?.brandId ?? null,
       isActive: product?.isActive ?? true,
     },
   });
 
-  const [barcode, cost, price, name, unit] = useWatch({
+  const [barcode, cost, price, name, unit, taxRateText] = useWatch({
     control: form.control,
-    name: ["barcode", "costPrice", "salePrice", "name", "unit"],
+    name: ["barcode", "costPrice", "salePrice", "name", "unit", "taxRate"],
   });
+  const store = useSettings().data;
+  const taxOn = Boolean(store?.taxEnabled);
+  const rate = taxOn
+    ? taxRateText
+      ? Number(taxRateText.replace(",", ".")) || 0
+      : (store?.taxRate ?? 0)
+    : 0;
   const measured = isMeasured(unit);
   const perUnit = measured ? ` / ${UNIT_SYMBOLS[unit]}` : "";
   const amountProps = measured
     ? ({ inputMode: "decimal", step: "any" } as const)
     : ({ inputMode: "numeric", step: 1 } as const);
   const costN = Number(cost) || 0;
-  const priceN = Number(price) || 0;
+  // With VAT, the margin is on the price before VAT.
+  const priceN = (Number(price) || 0) / (1 + rate / 100);
   const margin = priceN > 0 ? ((priceN - costN) / priceN) * 100 : null;
 
   const onGenerate = async () => {
@@ -177,6 +192,7 @@ export function ProductForm({ product }: { product?: Product }) {
       lowStockThreshold: values.lowStockThreshold,
       unit: values.unit,
       scaleCode: values.scaleCode || null,
+      taxRate: values.taxRate ? Number(values.taxRate.replace(",", ".")) : null,
       categoryId: values.categoryId,
       brandId: values.brandId,
       isActive: values.isActive,
@@ -370,6 +386,34 @@ export function ProductForm({ product }: { product?: Product }) {
                   )}
                 />
               ))}
+              {taxOn && (
+                <FormField
+                  control={form.control}
+                  name="taxRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("vatRate")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            inputMode="decimal"
+                            className="pe-8"
+                            placeholder={String(store?.taxRate ?? "")}
+                            {...field}
+                          />
+                          <span className="text-muted-foreground pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-sm">
+                            %
+                          </span>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        {t("vatRateHint", { rate: store?.taxRate ?? 0 })}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <div className="grid gap-2">
                 <span className="text-sm font-medium">{t("margin")}</span>
                 <div className="bg-muted flex h-9 items-center rounded-md px-3 text-sm tabular-nums">

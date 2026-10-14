@@ -176,6 +176,14 @@ export const stores = sqliteTable("stores", {
   reorderCoverDays: integer("reorder_cover_days").notNull().default(14),
   /** Label-scale barcodes: off, or the 5 digits hold a weight / a price. */
   scaleBarcodes: text("scale_barcodes").notNull().default("off"),
+  /** Kind of shop (supermarket, fashion...): starter categories and UI hints. */
+  shopType: text("shop_type").notNull().default("general"),
+  /** VAT: when on, prices include it and receipts show the breakdown. */
+  taxEnabled: integer("tax_enabled", { mode: "boolean" }).notNull().default(false),
+  /** Default VAT rate in percent (products may override it). */
+  taxRate: integer("tax_rate").notNull().default(19),
+  /** Tax identification number printed on receipts (NIF). */
+  taxId: text("tax_id"),
   // Cloud subscription (managed by the platform, never accepted from a sync).
   plan: text("plan").notNull().default("trial"),
   subscriptionStatus: text("subscription_status", { enum: SUBSCRIPTION_STATUSES })
@@ -255,6 +263,8 @@ export const products = sqliteTable(
     unit: text("unit").notNull().default("piece"),
     /** Item code programmed in a label scale (see stores.scaleBarcodes). */
     scaleCode: text("scale_code"),
+    /** VAT rate in percent; null uses the store's default rate. */
+    taxRate: integer("tax_rate"),
     /** Family of a variant, and its option values as a JSON array ("42", "Black"). */
     familyId: text("family_id"),
     variantValues: text("variant_values"),
@@ -400,6 +410,8 @@ export const sales = sqliteTable(
     /** Discount applied to the whole ticket. */
     discount: integer("discount").notNull().default(0),
     total: integer("total").notNull(),
+    /** VAT included in the total (0 when the store doesn't charge VAT). */
+    taxTotal: integer("tax_total").notNull().default(0),
     /** Cost of goods sold, snapshotted at sale time. */
     totalCost: integer("total_cost").notNull(),
     paymentMethod: text("payment_method", { enum: SALE_PAYMENT_METHODS }).notNull().default("cash"),
@@ -436,6 +448,9 @@ export const saleItems = sqliteTable(
     quantity: integer("quantity").notNull(),
     discount: integer("discount").notNull().default(0),
     lineTotal: integer("line_total").notNull(),
+    /** VAT rate (percent) and the VAT included in this line, after discounts. */
+    taxRate: integer("tax_rate").notNull().default(0),
+    taxAmount: integer("tax_amount").notNull().default(0),
     ...timestamps,
   },
   (t) => [
@@ -481,6 +496,8 @@ export const returnItems = sqliteTable(
     productName: text("product_name").notNull(),
     quantity: integer("quantity").notNull(),
     refundAmount: integer("refund_amount").notNull(),
+    /** VAT included in the refund. */
+    taxAmount: integer("tax_amount").notNull().default(0),
     ...timestamps,
   },
   (t) => [

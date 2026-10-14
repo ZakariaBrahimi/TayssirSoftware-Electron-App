@@ -15,6 +15,7 @@ import {
 import { col } from "../db/sql";
 import { AppError } from "../errors";
 import { isMeasured, lineAmount, round3 } from "@/lib/quantity";
+import { allocate, includedTax } from "@/lib/tax";
 import { getCustomer } from "./customers";
 import { findOpenShift } from "./shifts";
 import { moveStock } from "./stock";
@@ -30,7 +31,12 @@ export type CatalogEntry = {
   stock: number;
   isActive: boolean;
   unit: string;
+  /** VAT rate override (percent); null uses the store's rate. */
+  taxRate?: number | null;
 };
+
+/** The store's VAT settings (off: no VAT on the sale). */
+export type SaleTax = { enabled: boolean; rate: number };
 
 export interface PricedLine {
   productId: string;
@@ -41,13 +47,19 @@ export interface PricedLine {
   quantity: number;
   discount: number;
   lineTotal: number;
+  taxRate: number;
+  taxAmount: number;
 }
 
 /**
  * Pure pricing logic: computes the lines and totals of a sale from the
  * catalog prices (never from prices sent by the client).
  */
-export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) {
+export function priceSale(
+  input: SaleInput,
+  catalog: Map<string, CatalogEntry>,
+  tax: SaleTax = { enabled: false, rate: 0 },
+) {
   // Merge duplicate lines for the same product.
   const merged = new Map<string, { quantity: number; discount: number }>();
   for (const item of input.items) {
@@ -87,12 +99,24 @@ export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) 
       quantity,
       discount,
       lineTotal: gross - discount,
+      taxRate: tax.enabled ? (product.taxRate ?? tax.rate) : 0,
+      taxAmount: 0,
     });
   }
 
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
   if (input.discount > subtotal) throw new AppError("INVALID_DISCOUNT");
   const total = subtotal - input.discount;
+  // VAT is included in the prices: extract it from each line once its share
+  // of the ticket discount is taken off.
+  const shares = allocate(
+    input.discount,
+    lines.map((l) => l.lineTotal),
+  );
+  lines.forEach((l, i) => {
+    l.taxAmount = includedTax(l.lineTotal - shares[i], l.taxRate);
+  });
+  const taxTotal = lines.reduce((sum, l) => sum + l.taxAmount, 0);
   const totalCost = lines.reduce((sum, l) => sum + lineAmount(l.unitCost, l.quantity), 0);
 
   let amountPaid: number;
@@ -117,6 +141,7 @@ export function priceSale(input: SaleInput, catalog: Map<string, CatalogEntry>) 
     subtotal,
     discount: input.discount,
     total,
+    taxTotal,
     totalCost,
     amountPaid,
     changeDue: Math.max(0, amountPaid - total),
@@ -161,6 +186,7 @@ export async function createSale(
         stock: products.stock,
         isActive: products.isActive,
         unit: products.unit,
+        taxRate: products.taxRate,
       })
       .from(products)
       .where(
@@ -171,7 +197,10 @@ export async function createSale(
         ),
       );
 
-    const priced = priceSale(input, new Map(rows.map((r) => [r.id, r])));
+    const priced = priceSale(input, new Map(rows.map((r) => [r.id, r])), {
+      enabled: store.taxEnabled,
+      rate: store.taxRate,
+    });
 
     if (customer && priced.balanceDue > 0 && customer.creditLimit !== null) {
       if (customer.balance + priced.balanceDue > customer.creditLimit) {
@@ -196,6 +225,7 @@ export async function createSale(
         subtotal: priced.subtotal,
         discount: priced.discount,
         total: priced.total,
+        taxTotal: priced.taxTotal,
         totalCost: priced.totalCost,
         paymentMethod: input.paymentMethod,
         amountPaid: priced.amountPaid,

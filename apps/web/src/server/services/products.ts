@@ -34,6 +34,7 @@ const productColumns = {
   lowStockThreshold: products.lowStockThreshold,
   unit: products.unit,
   scaleCode: products.scaleCode,
+  taxRate: products.taxRate,
   familyId: products.familyId,
   familyName: productFamilies.name,
   isActive: products.isActive,

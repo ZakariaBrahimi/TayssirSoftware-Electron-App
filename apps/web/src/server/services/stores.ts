@@ -1,9 +1,10 @@
 import { count, eq, isNotNull } from "drizzle-orm";
 import type { StoreSettingsInput } from "@/lib/validators";
 import type { Executor } from "../db/client";
-import { stores, user } from "../db/schema";
+import { categories, stores, user } from "../db/schema";
 import { AppError } from "../errors";
 import type { ScaleBarcodeMode } from "@/lib/validators";
+import { isShopType, type ShopType, starterCategories } from "@/lib/shop-types";
 
 export type Store = typeof stores.$inferSelect;
 
@@ -17,16 +18,22 @@ export async function getStore(db: Executor, storeId: string): Promise<Store> {
 
 export async function createStore(
   db: Executor,
-  input: { name: string; currency: string; id?: string },
+  input: { name: string; currency: string; id?: string; shopType?: ShopType; locale?: string },
   trialDays = TRIAL_DAYS,
 ) {
+  const { locale, ...values } = input;
   const [row] = await db
     .insert(stores)
     .values({
-      ...input,
+      ...values,
       trialEndsAt: new Date(Date.now() + trialDays * 86_400_000),
     })
     .returning();
+  // Starter categories for the kind of shop, in the owner's language.
+  const names = starterCategories(values.shopType ?? "general", locale ?? "fr");
+  if (names.length) {
+    await db.insert(categories).values(names.map((name) => ({ storeId: row.id, name })));
+  }
   return row;
 }
 
@@ -61,5 +68,9 @@ export function publicStore(s: Store) {
     stockAlertDays: s.stockAlertDays,
     reorderCoverDays: s.reorderCoverDays,
     scaleBarcodes: s.scaleBarcodes as ScaleBarcodeMode,
+    shopType: (isShopType(s.shopType) ? s.shopType : "general") as ShopType,
+    taxEnabled: s.taxEnabled,
+    taxRate: s.taxRate,
+    taxId: s.taxId,
   };
 }
