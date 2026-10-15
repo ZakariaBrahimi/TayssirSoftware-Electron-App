@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mizan POS</string>
+    <string name="title_activity_main">Mizan POS</string>
+    <string name="package_name">app.mizan.pos</string>
+    <string name="custom_url_scheme">app.mizan.pos</string>
+</resources>

@@ -1,98 +1,324 @@
-# Tayssir POS Software
+# Mizan POS · ميزان
 
-Tayssir POS (Point of Sale) Software is a comprehensive and efficient solution for managing sales, inventory, and customer interactions. Built with modern technologies such as Electron.js, React.js, Shadcn, Sequelize, and PostgreSQL, it provides a seamless experience for businesses of all sizes.
+Point of sale, inventory and sales reporting for small shops. It runs **in the browser, as an installable app (PWA) on desktop, tablet and phone, and as an offline desktop app**, all from one codebase.
+
+> Version 2 is a full rewrite of the original Electron + Sequelize app (kept for reference in [`legacy/electron-app`](legacy/electron-app)). See [What changed](#what-changed-from-v1) below.
+
+## Brand
+
+The product was renamed from Tayssir POS to **Mizan** (ميزان, "scale, balance"). The mark is the letter م with its loop drawn as a coin; sources are in [`apps/web/public/brand`](apps/web/public/brand) and the React component in `apps/web/src/components/brand/logo.tsx`.
+
+| Role                                        | Color                             |
+| ------------------------------------------- | --------------------------------- |
+| Primary (teal)                              | `#0E7C6B`, `#2BB39C` in dark mode |
+| Accent (brass), always with dark text on it | `#D6A23A`                         |
+| Ink                                         | `#0B2A26`                         |
+
+Headings, the logo and big totals use Readex Pro (Arabic and Latin). The app icons in `apps/web/public/icons`, `apps/web/src/app/icon.png` and `apps/desktop/build/icon.png` are rendered from the SVGs.
+
+For compatibility, the rename only touches what people see. License keys sold before it (`TAYS-…`) stay valid next to new `MIZN-…` keys; the desktop app keeps its `com.tayssir.pos` id and an existing "Tayssir POS" data folder; environment variables keep their `TAYSSIR_` prefix; backups named `tayssir-…` can still be restored.
 
 ## Features
 
-- **Sales Management**: Easily handle sales transactions, generate receipts, and manage customer data.
-- **Inventory Management**: Track stock levels, manage product details, and receive alerts for low stock.
-- **Reporting**: Generate detailed reports on sales, inventory, and customer behavior.
-- **Barcode Generation**: Automatically generate and print barcodes for products.
-- **User Authentication**: Secure user login and role-based access control.
+- **Point of sale**: barcode scanner support (USB/Bluetooth scanners in keyboard mode), product search and tap-to-add grid, line and ticket discounts, cash/card/other payments, change calculation, and 80 mm thermal receipt printing. The cart survives a page refresh.
+- **Customers and credit sales**: sell on account or take a partial payment, per-customer credit limits, balances, payments received and a printable account statement.
+- **Returns and refunds**: partial or full returns of a sale, refund in cash, card or to the customer's account, with or without putting the items back in stock. A sale that has returns can no longer be voided.
+- **Suppliers and purchases**: receive stock from suppliers, update cost prices with a weighted average, track what you owe and record supplier payments.
+- **Cash register shifts**: open a shift with a float, record cash in/out, and close with a counted amount; the Z report shows expected cash, the difference, sales by payment method, refunds and credit collected. Shifts can be made mandatory before selling.
+- **Products**: catalog with categories and brands, cost and sale prices with live margin, low-stock alerts, active/inactive products, unique in-store EAN-13 barcode generation, printable barcode labels, and stock adjustments with a full stock history.
+- **Sales**: history with date, status and number filters, sale details, receipt reprint, and voiding a sale (which restores stock).
+- **Reports**: revenue, cost, gross profit, margin, average ticket (all net of returns), a daily chart, top products, and sales by category and by payment method.
+- **Import / export**: products, customers and suppliers as CSV (opens in Excel; `;` or `,` separators and decimal commas are accepted on import), and sales as CSV.
+- **Backups**: automatic daily backup on local installs, a copy before every migration, manual backups, download, and restore from the settings screen.
+- **Team**: administrator and cashier roles. Cashiers can sell and see their own sales; administrators manage everything.
+- **Languages**: English, French and Arabic (right-to-left layout), plus light and dark mode.
 
-## Technologies Used
+## Tech stack
 
-- **Electron.js**: For creating the desktop application.
-- **React.js**: For building the user interface.
-- **Shadcn**: For UI components and design system.
-- **Sequelize**: For interacting with the PostgreSQL database.
-- **PostgreSQL**: For storing application data.
+| Concern                | Choice                                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Framework              | [Next.js 16](https://nextjs.org) (App Router, Cache Components, Turbopack), React 19, TypeScript                     |
+| UI                     | [shadcn/ui](https://ui.shadcn.com) (Radix), Tailwind CSS v4, lucide icons, Recharts                                  |
+| Data fetching / tables | [TanStack Query](https://tanstack.com/query) and [TanStack Table v9](https://tanstack.com/table)                     |
+| API                    | [Hono](https://hono.dev) REST API at `/api/*` with zod validation and a typed RPC client                             |
+| Database               | [Drizzle ORM](https://orm.drizzle.team) with libSQL/SQLite: a local file or [Turso](https://turso.tech) in the cloud |
+| Auth                   | [Better Auth](https://better-auth.com): username login, sessions, admin/cashier roles                                |
+| Forms                  | react-hook-form + zod (the same schemas validate on the server)                                                      |
+| i18n                   | next-intl (en / fr / ar with RTL)                                                                                    |
+| Desktop                | PWA install, or the Electron shell in `apps/desktop` for offline single-PC shops                                     |
+| Tests                  | Vitest                                                                                                               |
 
-## Getting Started
+## Repository layout
 
-### Prerequisites
+```
+apps/
+  web/        Next.js app: UI + API + database (this is the product)
+  desktop/    Thin Electron shell that runs apps/web locally (offline)
+legacy/
+  electron-app/   The original v1 application, for reference only
+```
 
-Ensure you have the following installed on your system:
+Inside `apps/web/src`:
 
-- Node.js (version 14 or higher)
-- PostgreSQL
+```
+app/[locale]/        Routes: (auth)/login|setup|signup, (app)/dashboard|pos|products|sales|customers|
+                     suppliers|purchases|shifts|reports|settings
+app/api/[[...route]] Mounts the Hono API
+server/              Server-only code
+  db/                Drizzle schema, client, migrations runner, seed
+  services/          Business logic (products, sales, reports…), unit-tested
+  api/               Hono routes, auth middleware, error handling
+  licensing/         Signed license and subscription tokens, activation server
+  sync/              Change log, push/pull sync between desktop installs and the cloud
+  cli/admin.ts       Vendor command line (keys, licenses, subscriptions)
+  auth.ts            Better Auth configuration
+features/            UI by domain (pos, products, sales, reports, settings…)
+components/ui/       shadcn/ui components
+lib/validators       zod schemas shared by API, forms and future mobile clients
+messages/            Translations (en, fr, ar)
+```
 
-### Installation
+## Getting started
 
-1. **Clone the Repository**
+Requirements: Node.js 20.9+ (22 recommended).
 
-   ```sh
-   git clone https://github.com/your-username/tayssir-pos-software.git
-   cd tayssir-pos-software
-   ```
+```sh
+npm install
+cp apps/web/.env.example apps/web/.env.local   # optional in development
+npm run dev
+```
 
-2. **Install Dependencies**
+Open http://localhost:3000. On first launch you are taken to **setup**, where you create the store and the administrator account. Database migrations run automatically when the server starts. The database lives in `apps/web/data/tayssir.db` by default.
 
-   ```sh
-   npm install
-   ```
+Optional demo data: `npm run db:seed`.
 
-3. **Set Up Environment Variables**
+### Useful scripts
 
-   Create a `.env` file in the root of your project and add the following variables:
+| Command                                           | Description                                                |
+| ------------------------------------------------- | ---------------------------------------------------------- |
+| `npm run dev`                                     | Start the web app in development                           |
+| `npm run build` / `npm start`                     | Production build / server                                  |
+| `npm run lint` / `npm run typecheck` / `npm test` | Quality checks (also run in CI)                            |
+| `npm run db:generate -w @tayssir/web`             | Generate a migration after editing `schema.ts`             |
+| `npm run db:studio -w @tayssir/web`               | Browse the database with Drizzle Studio                    |
+| `npm run admin -w @tayssir/web -- <command>`      | Vendor CLI, see [Licensing](#business-model-and-licensing) |
 
-   ```env
-   DATABASE_URL=postgres://user:password@localhost:5432/tayssir_pos
-   ```
+## Deployment modes
 
-4. **Run Database Migrations**
+The same app runs in one of two modes, chosen with `TAYSSIR_MODE`:
 
-   ```sh
-   npx sequelize-cli db:migrate
-   ```
+|                | `local` (default)                                 | `cloud`                                   |
+| -------------- | ------------------------------------------------- | ----------------------------------------- |
+| Used for       | Desktop app, a shop server on the local network   | Your hosted SaaS                          |
+| Stores         | One store per install, created by first-run setup | Many stores; public sign-up at `/signup`  |
+| Access control | Offline license (or 14-day trial)                 | Subscription per store (14-day trial)     |
+| Extra role     | Can link to a cloud store and sync                | License activation server and sync server |
 
-5. **Start the Application**
+## Business model and licensing
 
-   ```sh
-   npm start
-   ```
+Both models are supported, and they share one set of keys:
 
-## Usage
+- **Offline license (desktop)**: you sell a license key. The shop activates it once online (Settings → License); the desktop then works offline. Each license has a device limit and an optional expiry.
+- **Cloud subscription (SaaS)**: each store signs up on your cloud deployment and gets a 14-day trial; you then set its subscription. A desktop install linked to a cloud store is covered by that store's subscription, so a subscriber does not also need a license.
 
-Once the application is running, you can access the following features:
+When access lapses, the app switches to **read-only**: sales, products and other changes are refused, but browsing, reports, exports and backups still work, so a shop never loses its data.
 
-- **Dashboard**: Get an overview of your sales and inventory status.
-- **Sales**: Process new sales transactions and print receipts.
-- **Inventory**: Add, update, or delete products from your inventory.
-- **Reports**: Generate and view detailed reports.
+Licenses and subscriptions are Ed25519-signed tokens. The private key stays on your cloud server; desktops only hold the public key, so they verify tokens offline and cannot forge them. Activation is bound to a machine fingerprint.
 
-## Next Features to Add
-- **Dynamic Input fields**: User can add any form field to the product creation form.
-- **To Do List**: User can write down today's tasks easily.
-- **Import Existing Database**: User have the option to start a new database or import existing database
-## Contributing
+Vendor operations run against the cloud database. In the Docker image the CLI is bundled: `docker exec -it mizan node admin.mjs <command>` (same commands as below). From a checkout, run them from `apps/web` with `DATABASE_URL` set:
 
-We welcome contributions from the community! To contribute:
+```sh
+npm run admin -- keys:generate                      # once: prints LICENSE_PRIVATE_KEY / LICENSE_PUBLIC_KEY
+npm run admin -- license:create --plan pro --devices 2 --days 365 --customer "Superette X"
+npm run admin -- license:list
+npm run admin -- license:revoke <id|last 4 chars>
+npm run admin -- license:reset <id|last 4 chars>   # frees its device slots (new PC)
+npm run admin -- store:list
+npm run admin -- store:subscription <storeId> --status active --plan pro --until 2027-01-31
+npm run admin -- platform:admin <username> --name "Your Name"   # console account
+npm run admin -- platform:2fa-reset <username>                  # lost authenticator
+```
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/your-feature-name`).
-3. Make your changes.
-4. Commit your changes (`git commit -m 'Add some feature'`).
-5. Push to the branch (`git push origin feature/your-feature-name`).
-6. Open a pull request.
+Subscription payments are not connected to a payment provider yet. Shops send a payment request from their **Subscription** page and you approve it in the [platform console](#platform-console); you can also record a payment by hand (or call the same service from a payment webhook later).
+
+### Plans
+
+What shops buy is a catalog of plans, edited in the console under **Plans** (two ship by default: _Essentiel_ and _Pro_, with no prices until you set them). Each plan has:
+
+- names and descriptions in English, French and Arabic;
+- a monthly and a yearly price for online stores, and a one-time license price for PCs (whole dinars; empty = not sold that way);
+- limits: tills/PCs (desktops linked to a store, or PCs using a license) and users (empty = unlimited);
+- features: suppliers and purchases, cash register shifts, product import. Sales, stock, customers, credit, returns and reports are in every plan;
+- a "recommended" flag and an "on sale" switch (a hidden plan stays valid for shops that have it).
+
+Limits are enforced on the server: a feature outside the plan is read-only (existing data stays visible), and adding a user or linking a desktop beyond the limit is refused. The free trial has no limits. Licenses carry their plan's limits in the signed token, so they also apply offline.
+
+Plan changes:
+
+- **Upgrade** (online store): starts as soon as the payment is approved; the unused days of the old plan are converted at the new plan's price.
+- **Downgrade**: scheduled for the end of the paid period; the current plan stays until then.
+- **Renewal** of the same plan: added after the current end date.
+- **License upgrade**: same key, new plan and PC limit, no expiry; it charges the new license's full price.
+
+### Paying from the app
+
+Shop owners (admins) open **Subscription** in the app, on the web or on a desktop. They see their plan, end date, usage against the limits and their payment history, compare the plans (monthly/yearly for online stores, one-time for PCs), pay by CCP/BaridiMob/bank transfer using the details you enter in the console under **Website**, and send "I have paid" with a reference and an optional receipt photo. A reminder shows during the last 7 days of a plan or trial.
+
+The request lands in the console under **Payment requests** (with a counter in the menu). Approving records the payment and applies the plan at once; declining sends your reason back to the shop. A PC with no license yet gets a new key on approval: it is shown to you once and delivered to that PC automatically next time it is online. Desktops reach the server for this, so a desktop that is offline shows its current license and waits.
+
+Desktops check their license in with the server every 12 hours when online: renewals and plan changes reach them, and a revoked license or a freed device slot takes effect at the next check-in.
+
+Without `LICENSE_PUBLIC_KEY`, a local install is unlicensed and unrestricted, which is handy for development or for your own shop.
+
+## Stock alerts and reorder
+
+- **Runs out in X days.** Each product's sales speed is the average of the last 4 weeks of the stock ledger (sales, minus voids and restocked returns; shorter for new products). Stock divided by that speed gives the days left.
+- **Bell.** A bell on every screen counts the products that are out, low (under their alert level) or running out within the store's alert window (Settings → Store, 7 days by default), and lists the most urgent.
+- **Reorder page** (admins). Those products grouped by the supplier of their last purchase, with a suggested quantity covering the store's reorder period (14 days by default) at the last purchase price. **Create purchase** opens a prefilled purchase for that supplier (plans with suppliers). **Use suggested alert levels** sets each product's alert level to what it sells during the alert window.
+- **Daily summary** (cloud stores, and desktops linked to them). Settings → Notifications: Telegram chats (via a one-time link to the platform's bot) and email addresses get one message a day at the chosen hour and language, only when something needs attention. The platform owner sets `TELEGRAM_BOT_TOKEN` and/or `SMTP_URL` + `MAIL_FROM` on the server (see [deploy/README.md](deploy/README.md)).
+
+## Landing page
+
+In cloud mode, signed-out visitors of `/` see a public landing page (English, French, Arabic) with the features, pricing, questions and links to sign-up and the Windows download. Signed-in users go straight to the app, and local installs keep opening the sign-in screen.
+
+The pricing section lists the plans on sale with their prices and limits, from the console's **Plans** page. The free-trial length, the Windows download link and the contacts (phone, WhatsApp, email) are edited under **Website**. Changes show on the page right away. A plan without a monthly price shows "Price on request", an empty contact is hidden, and the trial length also applies to every new online sign-up (desktop installs keep a 14-day trial). "View the landing page" opens it even while you are signed in (`/?preview`). The wording itself lives in the `landing` section of `apps/web/src/messages/*.json`.
+
+## Platform console
+
+On the cloud deployment, the owner of the SaaS manages everything at `/platform`:
+
+- **Overview**: monthly recurring revenue, revenue this month and per month, paying and active stores, new sign-ups, and the stores that need attention (trials ending, renewals due, recently lapsed).
+- **Stores**: search and filter by status; per store: subscription, usage totals, users, linked desktops, payments and history. Actions: record a payment (renews the subscription from the end of the paid period), change the subscription, extend the trial, suspend or reactivate (a suspended store is read-only, on the web and on its desktops), reset a user's password.
+- **Licenses**: create (the key is shown once), edit plan/devices/end date, revoke or restore, free one or all PCs, record a payment (extends a dated license).
+- **Devices**: every linked desktop with its store, app version and last sync; "not syncing" after 3 days; revoke.
+- **Payment requests**: what shops say they have paid, with reference and receipt photo; approve (records the payment and applies the plan) or decline with a reason.
+- **Payments**: all payments with filters and totals; void a mistaken one (kept in the history, excluded from revenue).
+- **Plans**: the plan catalog: names in three languages, prices, limits and features (see [Plans](#plans)).
+- **Website**: free-trial length, payment details (CCP, RIP, RIB), download link and contacts.
+- **Audit log**: every change made in the console or with the CLI, with who, when and from which IP.
+
+The console only shows store totals, never a store's sales, customers or products.
+
+Access is limited to accounts that have the `platform` role, belong to no store **and** are listed in `PLATFORM_ADMINS`. Anyone else gets a 404. Two-step verification (authenticator app, with backup codes) is required, and console sessions expire after 12 hours. To set it up:
+
+```sh
+# On the cloud server (Docker; or `npm run admin --` from apps/web):
+docker exec -it mizan node admin.mjs platform:admin yourname --name "Your Name"   # prints a temporary password
+# Add PLATFORM_ADMINS=yourname to the server environment and restart, then
+# sign in at /login and follow the authenticator setup.
+```
+
+Payment amounts use `PLATFORM_CURRENCY` (default `DZD`).
+
+## Cloud sync for desktop installs
+
+A desktop install can be linked to a store on your cloud deployment (Settings → Sync, with the cloud administrator's username and password). After linking:
+
+- The desktop keeps working fully offline and syncs in the background every minute (`SYNC_INTERVAL_MS`) and on demand.
+- Data goes both ways: products and prices edited on the web reach the shop, and sales made in the shop appear on the web, in reports and on other linked devices.
+- The local data is uploaded on the first link, under the cloud store.
+- Each device gets a short code, and receipt numbers are prefixed with it (`D1-42`, web sales `W-7`), so numbers never collide.
+- Administrators see and revoke devices from Settings → Sync on the cloud.
+
+How it works: SQLite triggers record every change in a local change log; the desktop pushes it and pulls the cloud's changes since its last cursor. Rows have UUIDv7 ids and are soft-deleted, so they merge without conflicts; when the same row is edited in two places, the latest edit wins. Stock is not synced as a number: every stock change is a movement, and each side recomputes stock from the movements, so offline sales from several tills add up correctly.
+
+Limitations to be aware of:
+
+- "Latest edit wins" relies on device clocks, so keep them roughly correct.
+- Two offline tills can both sell the last unit; stock then goes negative and shows up in low-stock alerts.
+- Users are not synced: each install keeps its own accounts.
+
+## Backups and restore
+
+Local installs back up the database every day and before every migration into a `backups` folder next to the database (the 30 most recent are kept). From Settings → Backup you can create, download and restore a backup; a copy of the current data is taken before restoring. The restore is applied when the server restarts, which the desktop app does by itself. With Docker, run the container with `--restart unless-stopped`. On cloud deployments, use your database provider's backups (Turso point-in-time restore, volume snapshots).
+
+## Deployment options
+
+### 1. Desktop app (offline, single PC)
+
+```sh
+npm run dist:win -w @tayssir/desktop    # or dist:mac / dist:linux
+```
+
+The installer bundles the web app and starts it on `localhost` with a local SQLite database stored in the user's app-data folder (`%APPDATA%/Mizan POS` on Windows; installs from before the rename keep using `Tayssir POS`). Nothing needs to be installed or configured. To let tablets or phones on the shop's network use the same data, start it with `TAYSSIR_HOST=0.0.0.0` and `TAYSSIR_PORT=3000`.
+
+**Releases and auto-update.** Every push to `main` that changes the app (`apps/web`, `apps/desktop`, dependencies) releases a new desktop version automatically: the major and minor come from `version` in `apps/desktop/package.json` and the patch is the workflow's run number (e.g. `2.1.37`). Raise the major/minor there for bigger releases, or push a tag such as `desktop-v2.3.0` to release an exact version. The `Release desktop` workflow builds the Windows, macOS and Linux installers, uploads them to a draft release `v<version>` and publishes it once the Windows installer is there; a version already published is skipped. The Windows installer is always named `Mizan-POS-Setup.exe`, so `/releases/latest/download/Mizan-POS-Setup.exe` (the default download link of the website's `/download` page) serves the newest one. Installed apps check for updates at launch and every 6 hours, download in the background and offer to restart. Configure in the repository settings:
+
+| Name                           | Kind                | Purpose                                                          |
+| ------------------------------ | ------------------- | ---------------------------------------------------------------- |
+| `LICENSE_PUBLIC_KEY`           | Secret (optional)   | Overrides the key in `apps/desktop/release-config.json`          |
+| `LICENSE_SERVER_URL`           | Variable (optional) | Overrides the server URL in `apps/desktop/release-config.json`   |
+| `CSC_LINK`, `CSC_KEY_PASSWORD` | Secrets (optional)  | Code signing certificate (base64 `.p12`/`.pfx`) and its password |
+
+Unsigned builds work, but Windows SmartScreen warns on first install, and macOS auto-update needs a signed (and notarized) app.
+
+### 2. Shop server or cloud (Docker)
+
+**For the cloud server, follow [deploy/README.md](deploy/README.md)**: one script sets up Docker, HTTPS (Caddy), the signing keys, your console account and nightly backups on an Ubuntu VPS. The commands below are the bare image, e.g. for a shop server on a local network.
+
+```sh
+docker build -t mizan-pos .
+docker run -d --name mizan --restart unless-stopped -p 3000:3000 -v mizan-data:/data \
+  -e TAYSSIR_MODE=cloud \
+  -e BETTER_AUTH_SECRET="$(openssl rand -base64 32)" \
+  -e BETTER_AUTH_URL=https://pos.example.com \
+  -e LICENSE_PRIVATE_KEY=... -e LICENSE_PUBLIC_KEY=... \
+  mizan-pos
+```
+
+Use `TAYSSIR_MODE=local` (the default) for a single shop server on the local network.
+
+### 3. Serverless (e.g. Vercel) + Turso
+
+Set `DATABASE_URL=libsql://<db>.turso.io`, `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`, plus `TAYSSIR_MODE=cloud` and the license keys for a SaaS.
+
+Each device (desktop, tablet or phone) can then **install the app** from the browser ("Install app" / "Add to Home Screen").
+
+### Environment variables
+
+| Variable                        | Default                  | Notes                                                         |
+| ------------------------------- | ------------------------ | ------------------------------------------------------------- |
+| `TAYSSIR_MODE`                  | `local`                  | `local` or `cloud`, see [Deployment modes](#deployment-modes) |
+| `DATABASE_URL`                  | `file:./data/tayssir.db` | SQLite file or libSQL/Turso URL                               |
+| `DATABASE_AUTH_TOKEN`           |                          | Turso token                                                   |
+| `BETTER_AUTH_SECRET`            |                          | **Required in production**, 32+ random characters             |
+| `BETTER_AUTH_URL`               |                          | Public URL of the app                                         |
+| `LICENSE_PRIVATE_KEY`           |                          | Cloud only, secret: signs licenses and subscriptions          |
+| `LICENSE_PUBLIC_KEY`            |                          | Verifies them; without it, local installs are not licensed    |
+| `LICENSE_SERVER_URL`            |                          | Local: the cloud deployment used for activation and sync      |
+| `SYNC_INTERVAL_MS`              | `60000`                  | Local: background sync interval                               |
+| `TELEGRAM_BOT_TOKEN`            |                          | Cloud: bot for daily stock summaries (from @BotFather)        |
+| `TELEGRAM_BOT_USERNAME`         | from the token           | Cloud: the bot's @username, if `getMe` should be skipped      |
+| `SMTP_URL` / `MAIL_FROM`        |                          | Cloud: SMTP service and sender for summaries by email         |
+| `DIGEST_TIME_ZONE`              | `Africa/Algiers`         | Cloud: time zone of the summaries' hour                       |
+| `MIGRATIONS_DIR`                |                          | Override the migrations folder (set by the desktop app)       |
+| `TAYSSIR_HOST` / `TAYSSIR_PORT` | `127.0.0.1` / random     | Desktop app: where the local server listens                   |
+
+## Mobile app (later)
+
+The API is a plain REST API under `/api/*`, validated with the zod schemas in `src/lib/validators`. A future React Native / Expo app in `apps/mobile` can reuse those schemas and the typed Hono client (`hc<AppType>`), and sign in with the Better Auth Expo client. No backend changes are needed.
+
+## What changed from v1
+
+Issues in the original codebase that the rewrite fixes:
+
+| v1 problem                                                                                                                                | v2                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Login state lived only in React state/`localStorage`; any user id could be forged                                                         | Server-side sessions (Better Auth, httpOnly cookies); every API call is authorized on the server |
+| Preload exposed Node's `fs`, `os` and `crypto` to the page (`sandbox: false`), undoing context isolation                                  | No Node APIs in the UI; the desktop window is sandboxed and only loads the local app             |
+| License key = SHA-256 of hardware serials, checked in the renderer (trivially forgeable), and a real key was committed (`licenseKey.txt`) | Server-issued, Ed25519-signed licenses verified on the server, with device limits and revocation |
+| Sales trusted prices sent by the renderer                                                                                                 | The server prices every sale from the catalog                                                    |
+| Sale lines and stock updates ran in `Promise.all` without a transaction; stock could go negative; concurrent sales could oversell         | One database transaction per sale, with a conditional stock decrement that refuses to oversell   |
+| A "sale" was one row per product, with no ticket, payment or totals                                                                       | Proper `sales` + `sale_items` with price/cost snapshots, payment method, change and voiding      |
+| No audit of stock changes                                                                                                                 | `stock_movements` records every change (initial, sale, void, adjustment)                         |
+| Barcode generated from the product name (collisions, invalid codes)                                                                       | Random in-store EAN-13 with a valid check digit, checked for uniqueness                          |
+| IPC listeners were re-registered on every request (memory leak, duplicate handlers); the login error reply had no channel                 | Typed HTTP API with TanStack Query (caching, retries, invalidation)                              |
+| `sequelize.sync({ alter: true })` on every launch; relative DB path; production pointed to a MySQL placeholder                            | Versioned Drizzle migrations applied at startup; DB location set by configuration                |
+| Prices as floats/ints without a unit                                                                                                      | Integer minor units (e.g. centimes) with currency-aware formatting                               |
+| Users could sign up freely from the login screen                                                                                          | First-run setup creates the admin; after that, only admins create users                          |
+| DevTools always opened in production; duplicate/dead files (`Loginnnn.jsx`, `* copy.jsx`, screens copied into `assets/i18n`)              | Clean, typed, linted and tested codebase with CI                                                 |
+| README described PostgreSQL, which the app did not use                                                                                    | Accurate documentation                                                                           |
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-For any inquiries or support, please contact:
-
-- **Email**: support@tayssir.com
-- **Website**: [www.tayssir.com](http://www.tayssir.com)
+MIT

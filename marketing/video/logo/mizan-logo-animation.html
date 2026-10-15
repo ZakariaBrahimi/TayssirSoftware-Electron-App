@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100vw;height:100vh;overflow:hidden;background:radial-gradient(circle at 50% 45%,#13937F 0%,#0C3B35 55%,#081F1C 100%);font-family:"Readex Pro",sans-serif}
+#stage{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:0;height:0}
+#lock{position:absolute;left:0;top:0}
+#mark{position:absolute;width:380px;height:380px;left:-190px;top:-190px;overflow:visible}
+#word{position:absolute;top:-110px;height:220px;right:200px;font-size:190px;font-weight:700;color:#fff;white-space:nowrap;direction:rtl;line-height:220px}
+#tag{position:absolute;left:50%;top:250px;transform:translateX(-50%);white-space:nowrap;color:#F2C46A;font-size:52px;font-weight:600;direction:rtl}
+.spark{position:absolute;width:24px;height:24px;border-radius:50%;background:#F2C46A;left:-12px;top:-12px}
+</style></head><body>
+<div id="stage">
+ <div id="lock">
+  <svg id="mark" viewBox="-8 -8 80 80">
+   <defs><clipPath id="clip"><rect width="64" height="64" rx="16"/></clipPath>
+   <linearGradient id="shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+   <g id="tileg" style="transform-origin:32px 32px"><rect id="tile" width="64" height="64" rx="16" fill="#0E7C6B"/>
+     <g clip-path="url(#clip)"><rect id="sh" x="-40" y="-20" width="22" height="110" fill="url(#shine)" transform="rotate(20 32 32)"/></g></g>
+   <circle id="ring" cx="37" cy="24" r="9.5" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="59.7" stroke-dashoffset="59.7" transform="rotate(-90 37 24)"/>
+   <path id="tail" d="M28.5 28.5C23 34 21 41 22.5 50" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="23" stroke-dashoffset="23"/>
+   <circle id="dot" cx="37" cy="24" r="3.6" fill="#D6A23A" style="transform-origin:37px 24px"/>
+  </svg>
+  <div id="word">ميزان</div>
+ </div>
+ <div id="tag">برنامج الكاشير لمتجرك</div>
+ <div id="sparks"></div>
+</div>
+<script>
+const cl=x=>Math.max(0,Math.min(1,x)), eo=x=>1-Math.pow(1-cl(x),3), eio=x=>{x=cl(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const back=x=>{x=cl(x);const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const bounce=x=>{x=cl(x);const n=7.5625,d=2.75;if(x<1/d)return n*x*x;if(x<2/d)return n*(x-=1.5/d)*x+.75;if(x<2.5/d)return n*(x-=2.25/d)*x+.9375;return n*(x-=2.625/d)*x+.984375};
+const sp=document.getElementById('sparks'); const N=10; for(let i=0;i<N;i++){const d=document.createElement('div');d.className='spark';sp.appendChild(d);}
+window.setT=function(t){
+  const dot=document.getElementById('dot');
+  const dy=-90*(1-bounce(t/0.42)); const sq=t>0.3&&t<0.5?1-0.25*Math.sin((t-0.3)/0.2*Math.PI):1;
+  dot.style.transform=`translateY(${dy}px) scale(${t<0.02?0:1/sq*1},${sq})`; dot.style.opacity=t<0.02?0:1;
+  const rg=document.getElementById('ring'); rg.style.opacity=t>0.38?1:0; rg.style.strokeDashoffset=59.7*(1-eio((t-0.38)/0.5));
+  const tl=document.getElementById('tail'); tl.style.opacity=t>0.85?1:0; tl.style.strokeDashoffset=23*(1-eo((t-0.85)/0.3));
+  const tg=document.getElementById('tileg'); const ts=t<1.1?0:back((t-1.1)/0.38); tg.style.transform=`scale(${ts})`;
+  document.getElementById('sh').setAttribute('x',-40+150*eio((t-1.5)/0.55));
+  // sparks burst on impact
+  [...sp.children].forEach((d,i)=>{const a=i/N*Math.PI*2, p=eo((t-1.18)/0.6), r=90+260*p; d.style.opacity=(t>1.18&&t<1.85)?(1-p):0; d.style.transform=`translate(${Math.cos(a)*r}px,${Math.sin(a)*r}px) scale(${1-0.6*p})`;});
+  // lockup: mark slides right, word reveals
+  const m=eio((t-1.75)/0.55); const W=document.getElementById('word'); const ww=W.offsetWidth;
+  const shift=m*(ww+10)/2;
+  document.getElementById('lock').style.transform=`translateX(${shift}px)`;
+  const wr=eo((t-1.95)/0.5); W.style.clipPath=`inset(0 0 0 ${100*(1-wr)}%)`; W.style.opacity=wr>0?1:0; W.style.transform=`translateX(${20*(1-wr)}px)`;
+  const tag=document.getElementById('tag'); const tr=eo((t-2.45)/0.45); tag.style.opacity=tr; tag.style.transform=`translateX(-50%) translateY(${25*(1-tr)}px)`;
+  const g=document.getElementById('mark'); const pulse=t>1.48?1:1; g.style.transform=`scale(${pulse})`;
+};
+window.setT(0);
+</script></body></html>

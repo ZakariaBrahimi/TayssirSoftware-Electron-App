@@ -1,0 +1,64 @@
+# Mizan cloud server: the app plus Caddy for HTTPS (certificates are
+# obtained and renewed automatically). See deploy/README.md.
+#
+#   docker compose up -d --build     start or update
+#   docker compose logs -f app       follow the app's logs
+#   docker compose exec app node admin.mjs <command>   vendor CLI
+
+name: mizan
+
+services:
+  app:
+    build: ..
+    image: mizan-pos:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TAYSSIR_MODE: cloud
+      BETTER_AUTH_URL: https://${DOMAIN:?Set DOMAIN in deploy/.env}
+    volumes:
+      - mizan-data:/data
+    # Only Caddy talks to the app: nothing is published on the host.
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+volumes:
+  # The database and its daily backups (/data/tayssir.db, /data/backups).
+  mizan-data:
+  # HTTPS certificates.
+  caddy-data:
+  caddy-config:

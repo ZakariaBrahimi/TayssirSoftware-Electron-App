@@ -1,0 +1,166 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-display: var(--font-display), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-brass: var(--brass);
+  --color-brass-foreground: var(--brass-foreground);
+  --color-warning: var(--warning);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  /* Mizan brand: teal (#0E7C6B) for actions, brass (#D6A23A) for highlights,
+     ink (#0B2A26) for text; neutrals carry a slight teal tint. */
+  --radius: 0.65rem;
+  --background: oklch(0.995 0.002 180);
+  --foreground: oklch(0.22 0.03 183);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.03 183);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.03 183);
+  --primary: oklch(0.526 0.094 178.3);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.962 0.01 182);
+  --secondary-foreground: oklch(0.261 0.037 183.6);
+  --muted: oklch(0.965 0.007 182);
+  --muted-foreground: oklch(0.52 0.018 183);
+  --accent: oklch(0.949 0.016 182.7);
+  --accent-foreground: oklch(0.261 0.037 183.6);
+  --brass: oklch(0.743 0.132 81.1);
+  --brass-foreground: oklch(0.261 0.037 183.6);
+  --destructive: oklch(0.577 0.245 27.325);
+  /* A yellower green than the brand teal, so "paid" never looks like a button. */
+  --success: oklch(0.6 0.15 145);
+  --warning: oklch(0.75 0.16 70);
+  --border: oklch(0.915 0.01 182);
+  --input: oklch(0.905 0.01 182);
+  --ring: oklch(0.723 0.089 180.5);
+  --chart-1: oklch(0.526 0.094 178.3);
+  --chart-2: oklch(0.743 0.132 81.1);
+  --chart-3: oklch(0.6 0.12 250);
+  --chart-4: oklch(0.645 0.2 25);
+  --chart-5: oklch(0.55 0.15 300);
+  --sidebar: oklch(0.982 0.005 182);
+  --sidebar-foreground: oklch(0.22 0.03 183);
+  --sidebar-primary: oklch(0.526 0.094 178.3);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.949 0.016 182.7);
+  --sidebar-accent-foreground: oklch(0.261 0.037 183.6);
+  --sidebar-border: oklch(0.915 0.01 182);
+  --sidebar-ring: oklch(0.723 0.089 180.5);
+}
+
+.dark {
+  --background: oklch(0.165 0.012 183);
+  --foreground: oklch(0.96 0.006 182);
+  --card: oklch(0.205 0.014 183);
+  --card-foreground: oklch(0.96 0.006 182);
+  --popover: oklch(0.205 0.014 183);
+  --popover-foreground: oklch(0.96 0.006 182);
+  --primary: oklch(0.691 0.117 178.3);
+  --primary-foreground: oklch(0.2 0.03 183);
+  --secondary: oklch(0.27 0.018 183);
+  --secondary-foreground: oklch(0.96 0.006 182);
+  --muted: oklch(0.26 0.016 183);
+  --muted-foreground: oklch(0.72 0.02 182);
+  --accent: oklch(0.3 0.035 180);
+  --accent-foreground: oklch(0.96 0.006 182);
+  --brass: oklch(0.78 0.13 81);
+  --brass-foreground: oklch(0.2 0.03 183);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.72 0.15 145);
+  --warning: oklch(0.8 0.15 75);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.6 0.09 180);
+  --chart-1: oklch(0.691 0.117 178.3);
+  --chart-2: oklch(0.78 0.13 81);
+  --chart-3: oklch(0.68 0.12 250);
+  --chart-4: oklch(0.7 0.18 25);
+  --chart-5: oklch(0.68 0.15 300);
+  --sidebar: oklch(0.19 0.014 183);
+  --sidebar-foreground: oklch(0.96 0.006 182);
+  --sidebar-primary: oklch(0.691 0.117 178.3);
+  --sidebar-primary-foreground: oklch(0.2 0.03 183);
+  --sidebar-accent: oklch(0.28 0.03 180);
+  --sidebar-accent-foreground: oklch(0.96 0.006 182);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.6 0.09 180);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* Printing: only the receipt / labels area is printed. */
+@media print {
+  @page {
+    margin: 4mm;
+  }
+  body * {
+    visibility: hidden;
+  }
+  /* Dialogs and overlays are siblings of the print area: take them out. */
+  body > *:not(#print-root) {
+    display: none !important;
+  }
+  #print-root,
+  #print-root * {
+    visibility: visible;
+  }
+  #print-root {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    width: 100%;
+  }
+}

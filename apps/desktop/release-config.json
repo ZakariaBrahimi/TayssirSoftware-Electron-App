@@ -1,0 +1,5 @@
+{
+  "$comment": "Defaults built into desktop releases. The public key only verifies licenses (it cannot create them), so it is safe to publish. The LICENSE_PUBLIC_KEY secret and LICENSE_SERVER_URL variable of the release workflow override these.",
+  "licensePublicKey": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQTBhY1Azejhpc0daQzR2TXFQV2loSU1rUGluQ1gzcmNJVmIyYXFmcmwrb0U9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=",
+  "licenseServerUrl": "https://mizan-app-production-4542.up.railway.app"
+}

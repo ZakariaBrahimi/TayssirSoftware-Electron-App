@@ -1,6 +1,12 @@
 node_modules
-dist
-out
 .DS_Store
 *.log*
 .qodo
+.env*
+!.env.example
+.next
+out
+dist
+coverage
+*.tsbuildinfo
+apps/web/data/*.db*

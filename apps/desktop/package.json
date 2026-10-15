@@ -1,0 +1,83 @@
+{
+  "name": "@tayssir/desktop",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Mizan POS desktop app: runs the web app locally with an embedded server and database (works offline).",
+  "author": "Zakaria Abdessame Brahimi",
+  "main": "main.js",
+  "scripts": {
+    "prepare:web": "npm run build -w @tayssir/web && node scripts/prepare-web.mjs",
+    "start": "npm run prepare:web && electron .",
+    "pack": "npm run prepare:web && electron-builder --dir",
+    "dist": "npm run prepare:web && electron-builder",
+    "dist:win": "npm run prepare:web && electron-builder --win",
+    "dist:mac": "npm run prepare:web && electron-builder --mac",
+    "dist:linux": "npm run prepare:web && electron-builder --linux",
+    "release": "npm run prepare:web && electron-builder --publish always"
+  },
+  "build": {
+    "appId": "com.tayssir.pos",
+    "productName": "Mizan POS",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "web-dist",
+        "to": "web"
+      }
+    ],
+    "icon": "build/icon.png",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Mizan-POS-Setup.${ext}",
+      "shortcutName": "Mizan POS",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ZakariaBrahimi",
+        "repo": "TayssirSoftware-Electron-App",
+        "releaseType": "draft"
+      }
+    ],
+    "artifactName": "Mizan-POS-${os}-${arch}.${ext}",
+    "executableName": "mizan-pos",
+    "extraMetadata": {
+      "name": "mizan-pos"
+    }
+  },
+  "devDependencies": {
+    "electron": "44.7.1",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZakariaBrahimi/TayssirSoftware-Electron-App.git"
+  }
+}

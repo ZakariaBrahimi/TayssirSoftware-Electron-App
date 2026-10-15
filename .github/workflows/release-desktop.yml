@@ -1,0 +1,124 @@
+name: Release desktop app
+
+# Builds the Windows, macOS and Linux installers and publishes them as the
+# GitHub Release "v<version>". Installed apps update themselves from it.
+#
+# Every push that changes the app releases a new version automatically:
+# "<major>.<minor>" from apps/desktop/package.json, and this workflow's run
+# number as the patch (e.g. 2.1.37), so each release is newer than the last.
+# Raise the minor/major in package.json for bigger releases. A tag like
+# `desktop-v2.3.0` releases exactly that version instead.
+on:
+  push:
+    tags: ["desktop-v*"]
+    branches:
+      - main
+      # Branch of the pending Mizan pull request; remove once it is merged.
+      - ccr-6e8e360f-qssrnw
+    paths:
+      - apps/web/**
+      - apps/desktop/**
+      - package.json
+      - package-lock.json
+      - .github/workflows/release-desktop.yml
+      # Tests and docs don't change the app.
+      - "!**/*.test.ts"
+      - "!**/*.md"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-desktop
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      skip: ${{ steps.release.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
+            VERSION="${GITHUB_REF_NAME#desktop-v}"
+          else
+            BASE=$(node -p "require('./apps/desktop/package.json').version.split('.').slice(0, 2).join('.')")
+            VERSION="$BASE.$GITHUB_RUN_NUMBER"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          # Installers are uploaded to a draft, published at the end.
+          if draft=$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$draft" = "false" ]; then
+              echo "$TAG is already published: nothing to do."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" \
+              --title "Mizan POS ${TAG#v}" \
+              --notes "Download Mizan-POS-Setup.exe for Windows. Installed apps update themselves."
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Set version
+        shell: bash
+        run: npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version --workspace @tayssir/desktop
+      - name: Build and upload to the draft release
+        shell: bash
+        run: |
+          # An empty CSC_LINK is read as a certificate path: unset it so
+          # unsigned builds work until a certificate is added.
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          npm run release -w @tayssir/desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Override apps/desktop/release-config.json when set (see README).
+          LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
+          LICENSE_SERVER_URL: ${{ vars.LICENSE_SERVER_URL }}
+          # Optional code signing (strongly recommended for Windows/macOS).
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}
+
+  publish:
+    needs: [prepare, build]
+    # Publish when the Windows installer made it, even if another system failed.
+    if: ${{ !cancelled() && needs.prepare.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: v${{ needs.prepare.outputs.version }}
+        run: |
+          assets=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          echo "$assets"
+          grep -qx "Mizan-POS-Setup.exe" <<< "$assets" || { echo "No Windows installer: not publishing."; exit 1; }
+          gh release edit "$TAG" --draft=false --latest
